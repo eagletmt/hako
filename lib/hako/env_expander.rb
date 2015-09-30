@@ -1,0 +1,91 @@
+require 'set'
+require 'strscan'
+require 'hako/env_providers'
+require 'hako/error'
+
+module Hako
+  class EnvExpander
+    class ExpansionError < Error
+    end
+
+    class Literal < Struct.new(:literal)
+    end
+
+    class Variable < Struct.new(:name)
+    end
+
+    def initialize(providers)
+      @providers = providers
+    end
+
+    def expand(env)
+      parsed_env = {}
+      variables = Set.new
+      env.each do |key, val|
+        tokens = parse(val)
+        tokens.each do |t|
+          if t.is_a?(Variable)
+            variables << t.name
+          end
+        end
+        parsed_env[key] = tokens
+      end
+
+      values = {}
+      @providers.each do |provider|
+        if variables.empty?
+          break
+        end
+        provider.ask(variables.to_a).each do |var, val|
+          values[var] = val
+          variables.delete(var)
+        end
+      end
+      unless variables.empty?
+        raise ExpansionError.new("Unresolvable variables: #{variables.to_a}")
+      end
+
+      expanded_env = {}
+      parsed_env.each do |key, tokens|
+        expanded_env[key] = tokens.map { |t| expand_value(values, t) }.join('')
+      end
+      expanded_env
+    end
+
+    private
+
+    def parse(value)
+      s = StringScanner.new(value)
+      tokens = []
+      pos = 0
+      while s.scan_until(/#\{(.*?)\}/)
+        pre = s.string.byteslice(pos ... (s.pos - s.matched.size))
+        var = s[1]
+        unless pre.empty?
+          tokens << Literal.new(pre)
+        end
+        if var.empty?
+          raise ExpansionError.new("Empty interpolation is not allowed")
+        else
+          tokens << Variable.new(var)
+        end
+        pos = s.pos
+      end
+      unless s.rest.empty?
+        tokens << Literal.new(s.rest)
+      end
+      tokens
+    end
+
+    def expand_value(values, token)
+      case token
+      when Literal
+        token.literal
+      when Variable
+        values.fetch(token.name)
+      else
+        raise ExpansionError.new("Unknown token type: #{token.class}")
+      end
+    end
+  end
+end

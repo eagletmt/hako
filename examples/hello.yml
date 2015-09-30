@@ -1,0 +1,7 @@
+image: nginx
+env:
+  $providers:
+    - type: file
+      path: examples/hello.env
+  FOO: bar
+  MESSAGE: 'Hello, #{username}'
