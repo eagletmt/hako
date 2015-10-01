@@ -3,7 +3,7 @@ env:
   $providers:
     - type: file
       path: examples/hello.env
-  FOO: bar
+  PORT: 3000
   MESSAGE: 'Hello, #{username}'
 port_mappings:
   - container_port: 3000

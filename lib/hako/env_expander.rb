@@ -22,7 +22,7 @@ module Hako
       parsed_env = {}
       variables = Set.new
       env.each do |key, val|
-        tokens = parse(val)
+        tokens = parse(val.to_s)
         tokens.each do |t|
           if t.is_a?(Variable)
             variables << t.name
