@@ -1,5 +1,8 @@
+require 'logger'
 require "hako/version"
 
 module Hako
-  # Your code goes here...
+  def self.logger
+    @logger ||= Logger.new($stdout)
+  end
 end
