@@ -18,7 +18,9 @@ module Hako
       env = EnvExpander.new(providers).expand(env)
 
       scheduler = load_scheduler(@yaml['scheduler'])
-      port_mappings = @yaml['port_mappings'] || []
+      port_mappings = (@yaml['port_mappings'] || []).map do |mapping|
+        mapping.map { |k, v| [k.to_sym, v] }.to_h
+      end
       image_tag = @yaml['image']  # TODO: Append revision
       scheduler.deploy(image_tag, env, port_mappings)
     end
