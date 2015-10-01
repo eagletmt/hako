@@ -22,7 +22,14 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+```
+% hako apply examples/hello.yml
+I, [2015-10-01T15:39:53.661218 #20990]  INFO -- : Registered task-definition: arn:aws:ecs:ap-northeast-1:XXXXXXXXXXXX:task-definition/hello:18
+I, [2015-10-01T15:39:53.799979 #20990]  INFO -- : Updated service: arn:aws:ecs:ap-northeast-1:XXXXXXXXXXXX:service/hello
+I, [2015-10-01T15:42:42.013796 #20990]  INFO -- : Deployment completed
+% hako apply examples/hello.yml
+I, [2015-10-01T15:43:39.736100 #21117]  INFO -- : Deployment isn't needed
+```
 
 ## Development
 
