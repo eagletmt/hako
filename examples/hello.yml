@@ -4,7 +4,7 @@ env:
     - type: file
       path: examples/hello.env
   PORT: 3000
-  MESSAGE: 'Hello, #{username}'
+  MESSAGE: '#{username}-san'
 port_mappings:
   - container_port: 3000
     host_port: 3000

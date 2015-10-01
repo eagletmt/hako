@@ -1,6 +1,7 @@
 require 'aws-sdk'
 require 'hako'
 require 'hako/scheduler'
+require 'hako/schedulers/ecs_definition_comparator'
 
 module Hako
   module Schedulers
@@ -18,6 +19,10 @@ module Hako
       end
 
       def deploy(image_tag, env, port_mappings)
+        unless deploy_needed?(image_tag, env, port_mappings)
+          Hako.logger.info "Deployment isn't needed"
+          return
+        end
         task_definition = register_task_definition(image_tag, env, port_mappings)
         Hako.logger.info "Registered task-definition: #{task_definition.task_definition_arn}"
         service = create_or_update_service(task_definition.task_definition_arn)
@@ -27,6 +32,22 @@ module Hako
       end
 
       private
+
+      def deploy_needed?(image_tag, env, port_mappings)
+        task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
+        container_definitions = {}
+        task_definition.container_definitions.each do |c|
+          container_definitions[c.name] = c
+        end
+        different_definition?(front_container, container_definitions['front']) || different_definition?(app_container(image_tag, env, port_mappings), container_definitions['app'])
+      rescue Aws::ECS::Errors::ClientException
+        # Task definition does not exist
+        true
+      end
+
+      def different_definition?(expected_container, actual_container)
+        EcsDefinitionComparator.new(expected_container).different?(actual_container)
+      end
 
       def register_task_definition(image_tag, env, port_mappings)
         @ecs.register_task_definition(
@@ -48,6 +69,7 @@ module Hako
           links: [],
           port_mappings: [{container_port: 80, host_port: 80, protocol: 'tcp'}],
           essential: true,
+          environment: [],
         }
       end
 
