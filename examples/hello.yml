@@ -16,3 +16,5 @@ scheduler:
   cpu: 100
   cluster: eagletmt
   desired_count: 2
+front:
+  image_tag: nginx:1.9.5

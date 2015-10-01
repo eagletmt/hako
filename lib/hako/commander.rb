@@ -1,6 +1,7 @@
 require 'yaml'
 require 'hako/env_expander'
 require 'hako/error'
+require 'hako/front_config'
 require 'hako/schedulers'
 
 module Hako
@@ -17,12 +18,14 @@ module Hako
       providers = load_providers(env.delete(PROVIDERS_KEY) || [])
       env = EnvExpander.new(providers).expand(env)
 
+      front_config = FrontConfig.new(@yaml['front'])
+
       scheduler = load_scheduler(@yaml['scheduler'])
       port_mappings = (@yaml['port_mappings'] || []).map do |mapping|
         mapping.map { |k, v| [k.to_sym, v] }.to_h
       end
       image_tag = @yaml['image']  # TODO: Append revision
-      scheduler.deploy(image_tag, env, port_mappings)
+      scheduler.deploy(image_tag, env, port_mappings, front_config)
     end
 
     private
