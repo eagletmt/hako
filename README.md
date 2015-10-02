@@ -24,12 +24,20 @@ Or install it yourself as:
 
 ```
 % hako apply examples/hello.yml
-I, [2015-10-01T15:39:53.661218 #20990]  INFO -- : Registered task-definition: arn:aws:ecs:ap-northeast-1:XXXXXXXXXXXX:task-definition/hello:18
-I, [2015-10-01T15:39:53.799979 #20990]  INFO -- : Updated service: arn:aws:ecs:ap-northeast-1:XXXXXXXXXXXX:service/hello
-I, [2015-10-01T15:42:42.013796 #20990]  INFO -- : Deployment completed
+I, [2015-10-02T12:51:24.530274 #7988]  INFO -- : Registered task-definition: arn:aws:ecs:ap-northeast-1:XXXXXXXXXXXX:task-definition/hello:29
+I, [2015-10-02T12:51:24.750501 #7988]  INFO -- : Uploaded front configuration to s3://nanika/hako/front_config/hello.conf
+I, [2015-10-02T12:51:24.877409 #7988]  INFO -- : Updated service: arn:aws:ecs:ap-northeast-1:XXXXXXXXXXXX:service/hello
+I, [2015-10-02T12:56:07.284874 #7988]  INFO -- : Deployment completed
 % hako apply examples/hello.yml
-I, [2015-10-01T15:43:39.736100 #21117]  INFO -- : Deployment isn't needed
+I, [2015-10-02T12:56:12.262760 #8141]  INFO -- : Deployment isn't needed
+
 ```
+
+## Front image
+The front container receives these environment variables.
+
+- `S3_CONFIG_BUCKET` and `S3_CONFIG_KEY`
+    - The front container should download configuration file from S3.
 
 ## Development
 

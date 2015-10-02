@@ -18,13 +18,20 @@ module Hako
         @ecs = Aws::ECS::Client.new(region: region)
       end
 
-      def deploy(image_tag, env, port_mapping, front_config)
-        unless deploy_needed?(image_tag, env, port_mapping, front_config)
+      def deploy(image_tag, env, port_mapping, front)
+        front_env = {
+          'AWS_DEFAULT_REGION' => front.config.s3.region,
+          'S3_CONFIG_BUCKET' => front.config.s3.bucket,
+          'S3_CONFIG_KEY' => front.config.s3.key(@app_id),
+        }
+        unless deploy_needed?(image_tag, env, port_mapping, front.config, front_env)
           Hako.logger.info "Deployment isn't needed"
           return
         end
-        task_definition = register_task_definition(image_tag, env, port_mapping, front_config)
+        task_definition = register_task_definition(image_tag, env, port_mapping, front.config, front_env)
         Hako.logger.info "Registered task-definition: #{task_definition.task_definition_arn}"
+        upload_front_config(@app_id, front, port_mapping[:host_port])
+        Hako.logger.info "Uploaded front configuration to s3://#{front.config.s3.bucket}/#{front.config.s3.key(@app_id)}"
         service = create_or_update_service(task_definition.task_definition_arn)
         Hako.logger.info "Updated service: #{service.service_arn}"
         wait_for_ready(service)
@@ -33,13 +40,13 @@ module Hako
 
       private
 
-      def deploy_needed?(image_tag, env, port_mapping, front_config)
+      def deploy_needed?(image_tag, env, port_mapping, front_config, front_env)
         task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
         container_definitions = {}
         task_definition.container_definitions.each do |c|
           container_definitions[c.name] = c
         end
-        different_definition?(front_container(front_config), container_definitions['front']) || different_definition?(app_container(image_tag, env, port_mapping), container_definitions['app'])
+        different_definition?(front_container(front_config, front_env), container_definitions['front']) || different_definition?(app_container(image_tag, env, port_mapping), container_definitions['app'])
       rescue Aws::ECS::Errors::ClientException
         # Task definition does not exist
         true
@@ -49,26 +56,27 @@ module Hako
         EcsDefinitionComparator.new(expected_container).different?(actual_container)
       end
 
-      def register_task_definition(image_tag, env, port_mapping, front_config)
+      def register_task_definition(image_tag, env, port_mapping, front_config, front_env)
         @ecs.register_task_definition(
           family: @app_id,
           container_definitions: [
-            front_container(front_config),
+            front_container(front_config, front_env),
             app_container(image_tag, env, port_mapping),
           ],
         ).task_definition
       end
 
-      def front_container(front_config)
+      def front_container(front_config, env)
+        environment = env.map { |k, v| { name: k, value: v } }
         {
           name: 'front',
           image: front_config.image_tag,
-          cpu: 1,
-          memory: 1,
+          cpu: 100,
+          memory: 100,
           links: ['app:app'],
           port_mappings: [{container_port: 80, host_port: 80, protocol: 'tcp'}],
           essential: true,
-          environment: [],
+          environment: environment,
         }
       end
 

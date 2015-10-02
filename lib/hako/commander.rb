@@ -2,6 +2,7 @@ require 'yaml'
 require 'hako/env_expander'
 require 'hako/error'
 require 'hako/front_config'
+require 'hako/fronts'
 require 'hako/schedulers'
 
 module Hako
@@ -18,7 +19,7 @@ module Hako
       providers = load_providers(env.delete(PROVIDERS_KEY) || [])
       env = EnvExpander.new(providers).expand(env)
 
-      front_config = FrontConfig.new(@yaml['front'])
+      front = load_front(@yaml['front'])
 
       scheduler = load_scheduler(@yaml['scheduler'])
       port_mapping = @yaml['port_mapping']
@@ -26,7 +27,7 @@ module Hako
         port_mapping = port_mapping.map { |k, v| [k.to_sym, v] }.to_h
       end
       image_tag = @yaml['image']  # TODO: Append revision
-      scheduler.deploy(image_tag, env, port_mapping, front_config)
+      scheduler.deploy(image_tag, env, port_mapping, front)
     end
 
     private
@@ -49,6 +50,12 @@ module Hako
       end
       require "hako/schedulers/#{type}"
       Hako::Schedulers.const_get(camelize(type)).new(@app_id, scheduler_config)
+    end
+
+    def load_front(yaml)
+      front_config = FrontConfig.new(yaml)
+      require "hako/fronts/#{front_config.type}"
+      Hako::Fronts.const_get(camelize(front_config.type)).new(front_config)
     end
 
     def camelize(name)
