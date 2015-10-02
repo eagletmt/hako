@@ -65,7 +65,7 @@ module Hako
           image: front_config.image_tag,
           cpu: 1,
           memory: 1,
-          links: [],
+          links: ['app:app'],
           port_mappings: [{container_port: 80, host_port: 80, protocol: 'tcp'}],
           essential: true,
           environment: [],
