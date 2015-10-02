@@ -30,7 +30,7 @@ module Hako
         end
         task_definition = register_task_definition(image_tag, env, port_mapping, front.config, front_env)
         Hako.logger.info "Registered task-definition: #{task_definition.task_definition_arn}"
-        upload_front_config(@app_id, front, port_mapping[:host_port])
+        upload_front_config(@app_id, front, port_mapping[:container_port])
         Hako.logger.info "Uploaded front configuration to s3://#{front.config.s3.bucket}/#{front.config.s3.key(@app_id)}"
         service = create_or_update_service(task_definition.task_definition_arn)
         Hako.logger.info "Updated service: #{service.service_arn}"
