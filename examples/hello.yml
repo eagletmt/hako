@@ -5,10 +5,10 @@ env:
       path: examples/hello.env
   PORT: 3000
   MESSAGE: '#{username}-san'
-port_mappings:
-  - container_port: 3000
-    host_port: 3000
-    protocol: tcp
+port_mapping:
+  container_port: 3000
+  host_port: 3000
+  protocol: tcp
 scheduler:
   type: ecs
   region: ap-northeast-1
