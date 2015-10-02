@@ -16,6 +16,7 @@ module Hako
         @memory = options.fetch('memory') { validation_error!('memory must be set') }
         region = options.fetch('region') { validation_error!('region must be set') }
         @ecs = Aws::ECS::Client.new(region: region)
+        @elb_config = options.fetch('elb', nil)
       end
 
       def deploy(image_tag, env, port_mapping, front)
@@ -97,13 +98,25 @@ module Hako
       def create_or_update_service(task_definition_arn)
         services = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services
         if services.empty?
-          @ecs.create_service(
+          params = {
             cluster: @cluster,
             service_name: @app_id,
             task_definition: task_definition_arn,
-            # TODO: load_balancers
             desired_count: @desired_count,
-          ).service
+          }
+          if @elb_config
+            params.merge!(
+              load_balancers: [
+                {
+                  load_balancer_name: @elb_config.fetch('name'),
+                  container_name: 'front',
+                  container_port: 80,
+                },
+              ],
+              role: @elb_config.fetch('role'),
+            )
+          end
+          @ecs.create_service(params).service
         else
           @ecs.update_service(
             cluster: @cluster,
