@@ -7,6 +7,7 @@ module Hako
   module Schedulers
     class Ecs < Scheduler
       DEFAULT_CLUSTER = 'default'
+      DEFAULT_FRONT_PORT = 10000
 
       def initialize(app_id, options)
         @app_id = app_id
@@ -25,7 +26,8 @@ module Hako
           'S3_CONFIG_BUCKET' => front.config.s3.bucket,
           'S3_CONFIG_KEY' => front.config.s3.key(@app_id),
         }
-        task_definition = register_task_definition(image_tag, env, port_mapping, front.config, front_env)
+        front_port = determine_front_port(front)
+        task_definition = register_task_definition(image_tag, env, port_mapping, front.config, front_env, front_port)
         if task_definition == :noop
           Hako.logger.info "Task definition isn't changed"
           task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
@@ -46,6 +48,34 @@ module Hako
 
       private
 
+      def determine_front_port(front)
+        service = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services[0]
+        if service
+          find_front_port(service)
+        else
+          max_port = -1
+          @ecs.list_services(cluster: @cluster).each do |page|
+            @ecs.describe_services(cluster: @cluster, services: page.service_arns).services.each do |service|
+              max_port = [max_port, find_front_port(service)].max
+            end
+          end
+          if max_port == -1
+            DEFAULT_FRONT_PORT
+          else
+            max_port
+          end
+        end
+      end
+
+      def find_front_port(service)
+        task_definition = @ecs.describe_task_definition(task_definition: service.task_definition).task_definition
+        container_definitions = {}
+        task_definition.container_definitions.each do |c|
+          container_definitions[c.name] = c
+        end
+        container_definitions['front'].port_mappings[0].host_port
+      end
+
       def task_definition_changed?(front, app)
         task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
         container_definitions = {}
@@ -62,8 +92,8 @@ module Hako
         EcsDefinitionComparator.new(expected_container).different?(actual_container)
       end
 
-      def register_task_definition(image_tag, env, port_mapping, front_config, front_env)
-        front = front_container(front_config, front_env)
+      def register_task_definition(image_tag, env, port_mapping, front_config, front_env, front_port)
+        front = front_container(front_config, front_env, front_port)
         app = app_container(image_tag, env, port_mapping)
         if task_definition_changed?(front, app)
           @ecs.register_task_definition(
@@ -75,7 +105,7 @@ module Hako
         end
       end
 
-      def front_container(front_config, env)
+      def front_container(front_config, env, front_port)
         environment = env.map { |k, v| { name: k, value: v } }
         {
           name: 'front',
@@ -83,7 +113,7 @@ module Hako
           cpu: 100,
           memory: 100,
           links: ['app:app'],
-          port_mappings: [{container_port: 80, host_port: 80, protocol: 'tcp'}],
+          port_mappings: [{container_port: 80, host_port: front_port, protocol: 'tcp'}],
           essential: true,
           environment: environment,
         }
