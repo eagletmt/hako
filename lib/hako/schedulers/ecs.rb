@@ -25,29 +25,34 @@ module Hako
           'S3_CONFIG_BUCKET' => front.config.s3.bucket,
           'S3_CONFIG_KEY' => front.config.s3.key(@app_id),
         }
-        unless deploy_needed?(image_tag, env, port_mapping, front.config, front_env)
-          Hako.logger.info "Deployment isn't needed"
-          return
-        end
         task_definition = register_task_definition(image_tag, env, port_mapping, front.config, front_env)
-        Hako.logger.info "Registered task-definition: #{task_definition.task_definition_arn}"
-        upload_front_config(@app_id, front, port_mapping[:container_port])
-        Hako.logger.info "Uploaded front configuration to s3://#{front.config.s3.bucket}/#{front.config.s3.key(@app_id)}"
+        if task_definition == :noop
+          Hako.logger.info "Task definition isn't changed"
+          task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
+        else
+          Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
+          upload_front_config(@app_id, front, port_mapping[:container_port])
+          Hako.logger.info "Uploaded front configuration to s3://#{front.config.s3.bucket}/#{front.config.s3.key(@app_id)}"
+        end
         service = create_or_update_service(task_definition.task_definition_arn)
-        Hako.logger.info "Updated service: #{service.service_arn}"
-        wait_for_ready(service)
+        if service == :noop
+          Hako.logger.info "Service isn't changed"
+        else
+          Hako.logger.info "Updated service: #{service.service_arn}"
+          wait_for_ready(service)
+        end
         Hako.logger.info "Deployment completed"
       end
 
       private
 
-      def deploy_needed?(image_tag, env, port_mapping, front_config, front_env)
+      def task_definition_changed?(front, app)
         task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
         container_definitions = {}
         task_definition.container_definitions.each do |c|
           container_definitions[c.name] = c
         end
-        different_definition?(front_container(front_config, front_env), container_definitions['front']) || different_definition?(app_container(image_tag, env, port_mapping), container_definitions['app'])
+        different_definition?(front, container_definitions['front']) || different_definition?(app, container_definitions['app'])
       rescue Aws::ECS::Errors::ClientException
         # Task definition does not exist
         true
@@ -58,13 +63,16 @@ module Hako
       end
 
       def register_task_definition(image_tag, env, port_mapping, front_config, front_env)
-        @ecs.register_task_definition(
-          family: @app_id,
-          container_definitions: [
-            front_container(front_config, front_env),
-            app_container(image_tag, env, port_mapping),
-          ],
-        ).task_definition
+        front = front_container(front_config, front_env)
+        app = app_container(image_tag, env, port_mapping)
+        if task_definition_changed?(front, app)
+          @ecs.register_task_definition(
+            family: @app_id,
+            container_definitions: [front, app],
+          ).task_definition
+        else
+          :noop
+        end
       end
 
       def front_container(front_config, env)
@@ -118,13 +126,29 @@ module Hako
           end
           @ecs.create_service(params).service
         else
-          @ecs.update_service(
+          params = {
             cluster: @cluster,
             service: @app_id,
             desired_count: @desired_count,
             task_definition: task_definition_arn,
-          ).service
+          }
+          if service_changed?(services[0], params)
+            @ecs.update_service(params).service
+          else
+            :noop
+          end
         end
+      end
+
+      SERVICE_KEYS = %i[desired_count task_definition]
+
+      def service_changed?(service, params)
+        SERVICE_KEYS.each do |key|
+          if service.public_send(key) != params[key]
+            return true
+          end
+        end
+        false
       end
 
       def wait_for_ready(service)
