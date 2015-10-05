@@ -20,6 +20,7 @@ module Hako
         @role = options.fetch('role', nil)
         @ecs = Aws::ECS::Client.new(region: region)
         @elb = Aws::ElasticLoadBalancing::Client.new(region: region)
+        @ec2 = Aws::EC2::Client.new(region: region)
         @elb_config = options.fetch('elb', nil)
       end
 
@@ -47,6 +48,63 @@ module Hako
           wait_for_ready(service)
         end
         Hako.logger.info "Deployment completed"
+      end
+
+      def status
+        service = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services[0]
+        unless service
+          puts 'Unavailable'
+          exit 1
+        end
+
+        unless service.load_balancers.empty?
+          lb = service.load_balancers[0]
+          lb_detail = @elb.describe_load_balancers(load_balancer_names: [lb.load_balancer_name]).load_balancer_descriptions[0]
+          puts 'Load balancer:'
+          lb_detail.listener_descriptions.each do |ld|
+            l = ld.listener
+            puts "  #{lb_detail.dns_name}:#{l.load_balancer_port} -> #{lb.container_name}:#{lb.container_port}"
+          end
+        end
+
+        puts 'Deployments:'
+        service.deployments.each do |d|
+          puts "  [#{d.status}] desired_count=#{d.desired_count}, pending_count=#{d.pending_count}, running_count=#{d.running_count}"
+        end
+
+        puts 'Tasks:'
+        @ecs.list_tasks(cluster: @cluster, service_name: @app_id).each do |page|
+          unless page.task_arns.empty?
+            tasks = @ecs.describe_tasks(cluster: @cluster, tasks: page.task_arns).tasks
+            container_instances = {}
+            @ecs.describe_container_instances(cluster: @cluster, container_instances: tasks.map(&:container_instance_arn)).container_instances.each do |ci|
+              container_instances[ci.container_instance_arn] = ci
+            end
+            ec2_instances = {}
+            @ec2.describe_instances(instance_ids: container_instances.values.map(&:ec2_instance_id)).reservations.each do |r|
+              r.instances.each do |i|
+                ec2_instances[i.instance_id] = i
+              end
+            end
+            tasks.each do |task|
+              ci = container_instances[task.container_instance_arn]
+              instance = ec2_instances[ci.ec2_instance_id]
+              print "  [#{task.last_status}]: #{ci.ec2_instance_id}"
+              if instance
+                name_tag = instance.tags.find { |t| t.key == 'Name' }
+                if name_tag
+                  print " (#{name_tag.value})"
+                end
+              end
+              puts
+            end
+          end
+        end
+
+        puts 'Events:'
+        service.events.first(10).each do |e|
+          puts "  #{e.created_at}: #{e.message}"
+        end
       end
 
       private

@@ -12,6 +12,10 @@ module Hako
       raise NotImplementedError
     end
 
+    def status
+      raise NotImplementedError
+    end
+
     def upload_front_config(app_id, front, app_port)
       front_conf = front.generate_config(app_port)
       s3_config = front.config.s3

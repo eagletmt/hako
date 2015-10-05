@@ -27,6 +27,10 @@ module Hako
       scheduler.deploy(image_tag, env, app_port, front)
     end
 
+    def status
+      load_scheduler(@yaml['scheduler']).status
+    end
+
     private
 
     def load_providers(provider_configs)
