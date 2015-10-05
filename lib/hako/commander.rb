@@ -14,7 +14,7 @@ module Hako
       @yaml = YAML.load_file(yaml_path)
     end
 
-    def deploy(force: false)
+    def deploy(force: false, tag: 'latest')
       env = @yaml['env'].dup
       providers = load_providers(env.delete(PROVIDERS_KEY) || [])
       env = EnvExpander.new(providers).expand(env)
@@ -23,7 +23,8 @@ module Hako
 
       scheduler = load_scheduler(@yaml['scheduler'])
       app_port = @yaml.fetch('port', nil)
-      image_tag = @yaml['image']  # TODO: Append revision
+      image = @yaml.fetch('image') { raise Error.new("image must be set") }
+      image_tag = "#{image}:#{tag}"
       scheduler.deploy(image_tag, env, app_port, front, force: force)
     end
 
