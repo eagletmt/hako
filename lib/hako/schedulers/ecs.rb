@@ -17,6 +17,7 @@ module Hako
         @cpu = options.fetch('cpu') { validation_error!('cpu must be set') }
         @memory = options.fetch('memory') { validation_error!('memory must be set') }
         region = options.fetch('region') { validation_error!('region must be set') }
+        @role = options.fetch('role', nil)
         @ecs = Aws::ECS::Client.new(region: region)
         @elb = Aws::ElasticLoadBalancing::Client.new(region: region)
         @elb_config = options.fetch('elb', nil)
@@ -145,6 +146,7 @@ module Hako
             service_name: @app_id,
             task_definition: task_definition_arn,
             desired_count: @desired_count,
+            role: @role,
           }
           if @elb_config
             name = find_or_create_load_balancer(front_port)
@@ -156,7 +158,6 @@ module Hako
                   container_port: 80,
                 },
               ],
-              role: @elb_config.fetch('role'),
             )
           end
           @ecs.create_service(params).service

@@ -16,6 +16,7 @@ scheduler:
   cpu: 100
   cluster: eagletmt
   desired_count: 2
+  role: ecsServiceRole
   elb:
     listeners:
       - load_balancer_port: 80
@@ -24,7 +25,6 @@ scheduler:
       - subnet-YYYYYYYY
     security_groups:
       - sg-ZZZZZZZZ
-    role: ecsServiceRole
 front:
   type: nginx
   image_tag: hako-nginx
