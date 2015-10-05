@@ -16,7 +16,7 @@ module Hako
         if different_members?(@expected_container, actual_container, CONTAINER_KEYS)
           return true
         end
-        if @expected_container[:port_mappings].size != actual_container.port_mappings
+        if @expected_container[:port_mappings].size != actual_container.port_mappings.size
           return true
         end
         @expected_container[:port_mappings].zip(actual_container.port_mappings) do |e, a|
@@ -24,7 +24,7 @@ module Hako
             return true
           end
         end
-        if @expected_container[:environment].size != actual_container.environment
+        if @expected_container[:environment].size != actual_container.environment.size
           return true
         end
         @expected_container[:environment].zip(actual_container.environment) do |e, a|
