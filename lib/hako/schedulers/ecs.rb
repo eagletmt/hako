@@ -17,6 +17,7 @@ module Hako
         @memory = options.fetch('memory') { validation_error!('memory must be set') }
         region = options.fetch('region') { validation_error!('region must be set') }
         @ecs = Aws::ECS::Client.new(region: region)
+        @elb = Aws::ElasticLoadBalancing::Client.new(region: region)
         @elb_config = options.fetch('elb', nil)
       end
 
@@ -36,7 +37,7 @@ module Hako
           upload_front_config(@app_id, front, port_mapping[:container_port])
           Hako.logger.info "Uploaded front configuration to s3://#{front.config.s3.bucket}/#{front.config.s3.key(@app_id)}"
         end
-        service = create_or_update_service(task_definition.task_definition_arn)
+        service = create_or_update_service(task_definition.task_definition_arn, front_port)
         if service == :noop
           Hako.logger.info "Service isn't changed"
         else
@@ -55,8 +56,10 @@ module Hako
         else
           max_port = -1
           @ecs.list_services(cluster: @cluster).each do |page|
-            @ecs.describe_services(cluster: @cluster, services: page.service_arns).services.each do |service|
-              max_port = [max_port, find_front_port(service)].max
+            unless page.service_arns.empty?
+              @ecs.describe_services(cluster: @cluster, services: page.service_arns).services.each do |service|
+                max_port = [max_port, find_front_port(service)].max
+              end
             end
           end
           if max_port == -1
@@ -133,7 +136,7 @@ module Hako
         }
       end
 
-      def create_or_update_service(task_definition_arn)
+      def create_or_update_service(task_definition_arn, front_port)
         services = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services
         if services.empty?
           params = {
@@ -143,10 +146,11 @@ module Hako
             desired_count: @desired_count,
           }
           if @elb_config
+            name = find_or_create_load_balancer(front_port)
             params.merge!(
               load_balancers: [
                 {
-                  load_balancer_name: @elb_config.fetch('name'),
+                  load_balancer_name: name,
                   container_name: 'front',
                   container_port: 80,
                 },
@@ -191,6 +195,39 @@ module Hako
             sleep 1
           end
         end
+      end
+
+      def find_or_create_load_balancer(front_port)
+        unless load_balancer_exist?(elb_name)
+          listeners = @elb_config.fetch('listeners').map do |l|
+            {
+              protocol: 'tcp',
+              load_balancer_port: l.fetch('load_balancer_port'),
+              instance_port: front_port,
+              ssl_certificate_id: l.fetch('ssl_certificate_id', nil),
+            }
+          end
+          lb = @elb.create_load_balancer(
+            load_balancer_name: elb_name,
+            listeners: listeners,
+            subnets: @elb_config.fetch('subnets'),
+            security_groups: @elb_config.fetch('security_groups'),
+            tags: @elb_config.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } },
+          )
+          Hako.logger.info "Created ELB #{lb.dns_name} with instance_port=#{front_port}"
+        end
+        elb_name
+      end
+
+      def load_balancer_exist?(name)
+        @elb.describe_load_balancers(load_balancer_names: [elb_name])
+        true
+      rescue Aws::ElasticLoadBalancing::Errors::LoadBalancerNotFound
+        false
+      end
+
+      def elb_name
+        "hako-#{@app_id}"
       end
     end
   end
