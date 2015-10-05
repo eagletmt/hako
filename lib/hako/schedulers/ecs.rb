@@ -3,6 +3,7 @@ require 'hako'
 require 'hako/error'
 require 'hako/scheduler'
 require 'hako/schedulers/ecs_definition_comparator'
+require 'hako/schedulers/ecs_elb'
 
 module Hako
   module Schedulers
@@ -19,9 +20,8 @@ module Hako
         region = options.fetch('region') { validation_error!('region must be set') }
         @role = options.fetch('role', nil)
         @ecs = Aws::ECS::Client.new(region: region)
-        @elb = Aws::ElasticLoadBalancing::Client.new(region: region)
+        @elb = EcsElb.new(app_id, Aws::ElasticLoadBalancing::Client.new(region: region), options.fetch('elb', nil))
         @ec2 = Aws::EC2::Client.new(region: region)
-        @elb_config = options.fetch('elb', nil)
       end
 
       def deploy(image_tag, env, app_port, front, force: false)
@@ -60,7 +60,7 @@ module Hako
 
         unless service.load_balancers.empty?
           lb = service.load_balancers[0]
-          lb_detail = @elb.describe_load_balancers(load_balancer_names: [lb.load_balancer_name]).load_balancer_descriptions[0]
+          lb_detail = @elb.describe_load_balancer
           puts 'Load balancer:'
           lb_detail.listener_descriptions.each do |ld|
             l = ld.listener
@@ -210,8 +210,8 @@ module Hako
             desired_count: @desired_count,
             role: @role,
           }
-          if @elb_config
-            name = find_or_create_load_balancer(front_port)
+          name = @elb.find_or_create_load_balancer(front_port)
+          if name
             params.merge!(
               load_balancers: [
                 {
@@ -271,39 +271,6 @@ module Hako
             sleep 1
           end
         end
-      end
-
-      def find_or_create_load_balancer(front_port)
-        unless load_balancer_exist?(elb_name)
-          listeners = @elb_config.fetch('listeners').map do |l|
-            {
-              protocol: 'tcp',
-              load_balancer_port: l.fetch('load_balancer_port'),
-              instance_port: front_port,
-              ssl_certificate_id: l.fetch('ssl_certificate_id', nil),
-            }
-          end
-          lb = @elb.create_load_balancer(
-            load_balancer_name: elb_name,
-            listeners: listeners,
-            subnets: @elb_config.fetch('subnets'),
-            security_groups: @elb_config.fetch('security_groups'),
-            tags: @elb_config.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } },
-          )
-          Hako.logger.info "Created ELB #{lb.dns_name} with instance_port=#{front_port}"
-        end
-        elb_name
-      end
-
-      def load_balancer_exist?(name)
-        @elb.describe_load_balancers(load_balancer_names: [elb_name])
-        true
-      rescue Aws::ElasticLoadBalancing::Errors::LoadBalancerNotFound
-        false
-      end
-
-      def elb_name
-        "hako-#{@app_id}"
       end
     end
   end
