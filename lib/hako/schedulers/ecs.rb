@@ -30,7 +30,7 @@ module Hako
           'S3_CONFIG_KEY' => front.config.s3.key(@app_id),
         }
         front_port = determine_front_port(front)
-        task_definition = register_task_definition(image_tag, env, port_mapping, front.config, front_env, front_port)
+        task_definition = register_task_definition(image_tag, env, front.config, front_env, front_port)
         if task_definition == :noop
           Hako.logger.info "Task definition isn't changed"
           task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
@@ -97,7 +97,7 @@ module Hako
         EcsDefinitionComparator.new(expected_container).different?(actual_container)
       end
 
-      def register_task_definition(image_tag, env, port_mapping, front_config, front_env, front_port)
+      def register_task_definition(image_tag, env, front_config, front_env, front_port)
         front = front_container(front_config, front_env, front_port)
         app = app_container(image_tag, env)
         if task_definition_changed?(front, app)
