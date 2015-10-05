@@ -108,6 +108,25 @@ module Hako
         end
       end
 
+      def remove(elb: false)
+        service = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services[0]
+        if service
+          @ecs.delete_service(cluster: @cluster, service: @app_id)
+          Hako.logger.info "#{service.service_arn} is deleted"
+        else
+          puts "Service #{@app_id} doesn't exist"
+        end
+
+        if elb
+          @elb.destroy
+        else
+          if @elb.exist?
+            lb_detail = @elb.describe_load_balancer
+            Hako.logger.info "Leave ELB #{lb_detail.dns_name}"
+          end
+        end
+      end
+
       private
 
       def determine_front_port(front)

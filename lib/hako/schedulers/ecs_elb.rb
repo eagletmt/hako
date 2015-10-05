@@ -40,19 +40,27 @@ module Hako
         end
       end
 
-      private
-
-      def name
-        "hako-#{@app_id}"
+      def destroy
+        if exist?
+          @elb.delete_load_balancer(load_balancer_name: name)
+          Hako.logger.info "Deleted ELB #{name}"
+        else
+          Hako.logger.info "ELB #{name} doesn't exist"
+        end
       end
 
       def exist?
-        @elb.describe_load_balancers(load_balancer_names: [name])
+        describe_load_balancer
         true
       rescue Aws::ElasticLoadBalancing::Errors::LoadBalancerNotFound
         false
       end
 
+      private
+
+      def name
+        "hako-#{@app_id}"
+      end
     end
   end
 end
