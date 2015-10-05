@@ -250,8 +250,16 @@ module Hako
       end
 
       def wait_for_ready(service)
+        latest_event_id = service.events[0].id
         loop do
           s = @ecs.describe_services(cluster: service.cluster_arn, services: [service.service_arn]).services[0]
+          s.events.each do |e|
+            if e.id == latest_event_id
+              break
+            end
+            Hako.logger.info "#{e.created_at}: #{e.message}"
+          end
+          latest_event_id = s.events[0].id
           finished = s.deployments.all? { |d| d.status != 'ACTIVE' }
           if finished
             return
