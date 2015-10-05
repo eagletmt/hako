@@ -2,10 +2,10 @@ require 'thor'
 
 module Hako
   class CLI < Thor
-    desc 'apply FILE', 'Run'
-    def apply(yaml_path)
+    desc 'deploy FILE', 'Run deployment'
+    def deploy(yaml_path)
       require 'hako/commander'
-      Commander.new(yaml_path).apply
+      Commander.new(yaml_path).deploy
     end
 
     desc 'status FILE', 'Show deployment status'

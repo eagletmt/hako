@@ -14,7 +14,7 @@ module Hako
       @yaml = YAML.load_file(yaml_path)
     end
 
-    def apply
+    def deploy
       env = @yaml['env'].dup
       providers = load_providers(env.delete(PROVIDERS_KEY) || [])
       env = EnvExpander.new(providers).expand(env)
