@@ -32,8 +32,8 @@ module Hako
       load_scheduler(@yaml['scheduler']).status
     end
 
-    def remove(elb: false)
-      load_scheduler(@yaml['scheduler']).remove(elb: elb)
+    def remove
+      load_scheduler(@yaml['scheduler']).remove
     end
 
     private

@@ -108,7 +108,7 @@ module Hako
         end
       end
 
-      def remove(elb: false)
+      def remove
         service = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services[0]
         if service
           @ecs.delete_service(cluster: @cluster, service: @app_id)
@@ -117,14 +117,7 @@ module Hako
           puts "Service #{@app_id} doesn't exist"
         end
 
-        if elb
-          @elb.destroy
-        else
-          if @elb.exist?
-            lb_detail = @elb.describe_load_balancer
-            Hako.logger.info "Leave ELB #{lb_detail.dns_name}"
-          end
-        end
+        @elb.destroy
       end
 
       private

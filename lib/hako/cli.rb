@@ -17,10 +17,9 @@ module Hako
     end
 
     desc 'remove FILE', 'Destroy the application'
-    option :with_elb, type: :boolean, default: false, desc: 'Also remove ELB'
     def remove(yaml_path)
       require 'hako/commander'
-      Commander.new(yaml_path).remove(elb: options[:with_elb])
+      Commander.new(yaml_path).remove
     end
   end
 end
