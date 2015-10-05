@@ -62,7 +62,7 @@ module Hako
           if max_port == -1
             DEFAULT_FRONT_PORT
           else
-            max_port
+            max_port+1
           end
         end
       end
