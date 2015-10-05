@@ -24,7 +24,8 @@ module Hako
         @elb_config = options.fetch('elb', nil)
       end
 
-      def deploy(image_tag, env, app_port, front)
+      def deploy(image_tag, env, app_port, front, force: false)
+        @force_mode = force
         front_env = {
           'AWS_DEFAULT_REGION' => front.config.s3.region,
           'S3_CONFIG_BUCKET' => front.config.s3.bucket,
@@ -140,6 +141,9 @@ module Hako
       end
 
       def task_definition_changed?(front, app)
+        if @force_mode
+          return true
+        end
         task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
         container_definitions = {}
         task_definition.container_definitions.each do |c|
