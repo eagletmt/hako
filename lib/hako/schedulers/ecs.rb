@@ -23,7 +23,7 @@ module Hako
         @elb_config = options.fetch('elb', nil)
       end
 
-      def deploy(image_tag, env, port_mapping, front)
+      def deploy(image_tag, env, app_port, front)
         front_env = {
           'AWS_DEFAULT_REGION' => front.config.s3.region,
           'S3_CONFIG_BUCKET' => front.config.s3.bucket,
@@ -36,7 +36,7 @@ module Hako
           task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
         else
           Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
-          upload_front_config(@app_id, front, port_mapping[:container_port])
+          upload_front_config(@app_id, front, app_port)
           Hako.logger.info "Uploaded front configuration to s3://#{front.config.s3.bucket}/#{front.config.s3.key(@app_id)}"
         end
         service = create_or_update_service(task_definition.task_definition_arn, front_port)

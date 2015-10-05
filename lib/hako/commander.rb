@@ -22,12 +22,9 @@ module Hako
       front = load_front(@yaml['front'])
 
       scheduler = load_scheduler(@yaml['scheduler'])
-      port_mapping = @yaml['port_mapping']
-      if port_mapping
-        port_mapping = port_mapping.map { |k, v| [k.to_sym, v] }.to_h
-      end
+      app_port = @yaml.fetch('port', nil)
       image_tag = @yaml['image']  # TODO: Append revision
-      scheduler.deploy(image_tag, env, port_mapping, front)
+      scheduler.deploy(image_tag, env, app_port, front)
     end
 
     private
