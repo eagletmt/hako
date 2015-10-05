@@ -16,10 +16,16 @@ module Hako
         if different_members?(@expected_container, actual_container, CONTAINER_KEYS)
           return true
         end
+        if @expected_container[:port_mappings].size != actual_container.port_mappings
+          return true
+        end
         @expected_container[:port_mappings].zip(actual_container.port_mappings) do |e, a|
           if different_members?(e, a, PORT_MAPPING_KEYS)
             return true
           end
+        end
+        if @expected_container[:environment].size != actual_container.environment
+          return true
         end
         @expected_container[:environment].zip(actual_container.environment) do |e, a|
           if different_members?(e, a, ENVIRONMENT_KEYS)
