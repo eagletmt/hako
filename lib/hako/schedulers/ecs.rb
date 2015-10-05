@@ -98,7 +98,7 @@ module Hako
 
       def register_task_definition(image_tag, env, port_mapping, front_config, front_env, front_port)
         front = front_container(front_config, front_env, front_port)
-        app = app_container(image_tag, env, port_mapping)
+        app = app_container(image_tag, env)
         if task_definition_changed?(front, app)
           @ecs.register_task_definition(
             family: @app_id,
@@ -123,7 +123,7 @@ module Hako
         }
       end
 
-      def app_container(image_tag, env, port_mapping)
+      def app_container(image_tag, env)
         environment = env.map { |k, v| { name: k, value: v } }
         {
           name: 'app',
@@ -131,7 +131,7 @@ module Hako
           cpu: @cpu,
           memory: @memory,
           links: [],
-          port_mappings: [port_mapping].compact,
+          port_mappings: [],
           essential: true,
           environment: environment,
         }
