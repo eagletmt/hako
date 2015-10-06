@@ -1,0 +1,14 @@
+<%- if location.allow_only_from -%>
+  <%- location.allow_only_from.each do |ip| -%>
+allow <%= ip %>;
+  <%- end -%>
+deny all;
+<%- end -%>
+
+proxy_pass http://<%= listen_spec %>;
+proxy_set_header Host $host;
+proxy_set_header Connection ""; # for upstream keepalive
+proxy_http_version 1.1;         # for upstream keepalive
+proxy_connect_timeout 5s;
+proxy_send_timeout 20s;
+proxy_read_timeout 20s;

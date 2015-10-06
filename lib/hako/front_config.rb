@@ -1,7 +1,7 @@
 require 'erb'
 
 module Hako
-  class FrontConfig < Struct.new(:type, :image_tag, :s3)
+  class FrontConfig < Struct.new(:type, :image_tag, :s3, :extra)
     class S3Config < Struct.new(:region, :bucket, :prefix)
       def initialize(options)
         self.region = options.fetch('region')
@@ -22,6 +22,7 @@ module Hako
       self.type = options.fetch('type')
       self.image_tag = options.fetch('image_tag')
       self.s3 = S3Config.new(options.fetch('s3'))
+      self.extra = options.fetch('extra', {})
     end
   end
 end
