@@ -48,7 +48,12 @@ module Hako
         end
 
         def allow_only_from
-          @config.fetch('allow_only_from', nil)
+          allow = @config.fetch('allow_only_from', nil)
+          if allow
+            allow.flatten
+          else
+            nil
+          end
         end
       end
     end

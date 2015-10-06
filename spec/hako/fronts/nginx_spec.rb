@@ -28,9 +28,10 @@ RSpec.describe Hako::Fronts::Nginx do
       it 'adds allow directive' do
         extra['locations'] = {
           '/' => {
-            'allow_only_from' => ['10.0.0.0/24'],
+            'allow_only_from' => ['127.0.0.1', ['10.0.0.0/24']],
           },
         }
+        expect(front.generate_config(3000)).to include('allow 127.0.0.1;')
         expect(front.generate_config(3000)).to include('allow 10.0.0.0/24;')
         expect(front.generate_config(3000)).to include('deny all;')
       end
