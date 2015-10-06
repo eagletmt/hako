@@ -70,7 +70,8 @@ module Hako
 
         puts 'Deployments:'
         service.deployments.each do |d|
-          puts "  [#{d.status}] desired_count=#{d.desired_count}, pending_count=#{d.pending_count}, running_count=#{d.running_count}"
+          abbrev_task_definition = d.task_definition.slice(%r{task-definition/(.+)\z}, 1)
+          puts "  [#{d.status}] #{abbrev_task_definition} desired_count=#{d.desired_count}, pending_count=#{d.pending_count}, running_count=#{d.running_count}"
         end
 
         puts 'Tasks:'

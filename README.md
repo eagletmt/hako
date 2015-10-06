@@ -39,7 +39,7 @@ I, [2015-10-02T12:56:12.262760 #8141]  INFO -- : Deployment isn't needed
 Load balancer:
   hako-hello-XXXXXXXXXX.ap-northeast-1.elb.amazonaws.com:80 -> front:80
 Deployments:
-  [PRIMARY] desired_count=2, pending_count=0, running_count=2
+  [PRIMARY] hello:30 desired_count=2, pending_count=0, running_count=2
 Tasks:
   [RUNNING]: i-XXXXXXXX (ecs-001)
   [RUNNING]: i-YYYYYYYY (ecs-002)
