@@ -39,5 +39,12 @@ RSpec.describe Hako::Fronts::Nginx do
         expect(front.generate_config(3000)).to_not include('deny all;')
       end
     end
+
+    describe 'client_max_body_size' do
+      it 'adds client_max_body_size directive' do
+        extra['client_max_body_size'] = '1G'
+        expect(front.generate_config(3000)).to include('client_max_body_size 1G;')
+      end
+    end
   end
 end

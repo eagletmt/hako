@@ -1,6 +1,10 @@
 server {
   listen 80;
 
+  <%- if client_max_body_size -%>
+  client_max_body_size <%= client_max_body_size %>;
+  <%- end -%>
+
   <%- locations.each do |path, location| -%>
   location <%= path %> {
 <%= render_location(listen_spec, location) %>

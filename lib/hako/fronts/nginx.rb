@@ -32,6 +32,10 @@ module Hako
         locs
       end
 
+      def client_max_body_size
+        @config.extra.fetch('client_max_body_size', nil)
+      end
+
       def render_location(listen_spec, location)
         ERB.new(File.read(nginx_location_conf_erb), nil, '-').result(binding).each_line.map do |line|
           "    #{line}"
