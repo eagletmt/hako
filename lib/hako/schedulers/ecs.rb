@@ -131,8 +131,8 @@ module Hako
           max_port = -1
           @ecs.list_services(cluster: @cluster).each do |page|
             unless page.service_arns.empty?
-              @ecs.describe_services(cluster: @cluster, services: page.service_arns).services.each do |service|
-                max_port = [max_port, find_front_port(service)].max
+              @ecs.describe_services(cluster: @cluster, services: page.service_arns).services.each do |s|
+                max_port = [max_port, find_front_port(s)].max
               end
             end
           end
