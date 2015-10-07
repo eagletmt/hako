@@ -8,11 +8,8 @@ module Hako
     class ExpansionError < Error
     end
 
-    class Literal < Struct.new(:literal)
-    end
-
-    class Variable < Struct.new(:name)
-    end
+    Literal = Struct.new(:literal)
+    Variable = Struct.new(:name)
 
     def initialize(providers)
       @providers = providers
