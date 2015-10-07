@@ -17,6 +17,7 @@ scheduler:
   elb:
     listeners:
       - load_balancer_port: 80
+        protocol: HTTP
     subnets:
       - subnet-XXXXXXXX
       - subnet-YYYYYYYY

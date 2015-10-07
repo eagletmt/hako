@@ -19,7 +19,7 @@ module Hako
           unless exist?
             listeners = @elb_config.fetch('listeners').map do |l|
               {
-                protocol: 'tcp',
+                protocol: l.fetch('protocol'),
                 load_balancer_port: l.fetch('load_balancer_port'),
                 instance_port: front_port,
                 ssl_certificate_id: l.fetch('ssl_certificate_id', nil),
