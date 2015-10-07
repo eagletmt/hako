@@ -23,7 +23,7 @@ module Hako
 
       scheduler = load_scheduler(@yaml['scheduler'])
       app_port = @yaml.fetch('port', nil)
-      image = @yaml.fetch('image') { raise Error.new("image must be set") }
+      image = @yaml.fetch('image') { raise Error.new('image must be set') }
       image_tag = "#{image}:#{tag}"
       scheduler.deploy(image_tag, env, app_port, front, force: force)
     end

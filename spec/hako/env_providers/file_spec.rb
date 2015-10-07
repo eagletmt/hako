@@ -7,7 +7,7 @@ RSpec.describe Hako::EnvProviders::File do
 
   describe '#ask' do
     it 'returns known variables' do
-      expect(provider.ask(['username'])).to eq({'username' => 'eagletmt'})
+      expect(provider.ask(['username'])).to eq('username' => 'eagletmt')
     end
 
     it 'returns empty to unknown variables' do

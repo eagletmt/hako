@@ -5,7 +5,7 @@ module Hako
     class File < EnvProvider
       def initialize(options)
         unless options['path']
-          validation_error!("path must be set")
+          validation_error!('path must be set')
         end
         @path = options['path']
       end

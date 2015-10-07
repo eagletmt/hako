@@ -9,17 +9,17 @@ RSpec.describe Hako::EnvExpander do
 
   describe '#expand' do
     it 'does nothing when no interpolation is found' do
-      expect(expander.expand(env)).to eq({'FOO' => 'BAR'})
+      expect(expander.expand(env)).to eq('FOO' => 'BAR')
     end
 
     context 'with interploation' do
       before do
         env['MESSAGE'] = 'Hello, #{username}'
-        allow(provider).to receive(:ask).with(['username']).and_return({'username' => 'eagletmt'})
+        allow(provider).to receive(:ask).with(['username']).and_return('username' => 'eagletmt')
       end
 
       it 'resolves interpolated variables with EnvProvider' do
-        expect(expander.expand(env)).to eq({'FOO' => 'BAR', 'MESSAGE' => 'Hello, eagletmt'})
+        expect(expander.expand(env)).to eq('FOO' => 'BAR', 'MESSAGE' => 'Hello, eagletmt')
       end
     end
 
@@ -39,13 +39,13 @@ RSpec.describe Hako::EnvExpander do
 
       before do
         providers << another_provider
-        allow(provider).to receive(:ask).with(['foo', 'bar']).and_return({'foo' => 'hoge'})
-        allow(another_provider).to receive(:ask).with(['bar']).and_return({'bar' => 'fuga'})
+        allow(provider).to receive(:ask).with(%w[foo bar]).and_return('foo' => 'hoge')
+        allow(another_provider).to receive(:ask).with(['bar']).and_return('bar' => 'fuga')
         env['MESSAGE'] = '#{foo}, #{bar}'
       end
 
       it 'asks providers in order' do
-        expect(expander.expand(env)).to eq({'FOO' => 'BAR', 'MESSAGE' => 'hoge, fuga'})
+        expect(expander.expand(env)).to eq('FOO' => 'BAR', 'MESSAGE' => 'hoge, fuga')
       end
     end
   end

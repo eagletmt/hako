@@ -35,8 +35,6 @@ module Hako
             Hako.logger.info "Created ELB #{lb.dns_name} with instance_port=#{front_port}"
           end
           name
-        else
-          nil
         end
       end
 

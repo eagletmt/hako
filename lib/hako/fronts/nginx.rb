@@ -51,8 +51,6 @@ module Hako
           allow = @config.fetch('allow_only_from', nil)
           if allow
             allow.flatten
-          else
-            nil
           end
         end
       end

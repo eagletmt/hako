@@ -1,5 +1,5 @@
 require 'logger'
-require "hako/version"
+require 'hako/version'
 
 module Hako
   def self.logger

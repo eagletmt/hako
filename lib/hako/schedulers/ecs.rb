@@ -48,7 +48,7 @@ module Hako
           Hako.logger.info "Updated service: #{service.service_arn}"
           wait_for_ready(service)
         end
-        Hako.logger.info "Deployment completed"
+        Hako.logger.info 'Deployment completed'
       end
 
       def status
@@ -139,7 +139,7 @@ module Hako
           if max_port == -1
             DEFAULT_FRONT_PORT
           else
-            max_port+1
+            max_port + 1
           end
         end
       end
@@ -193,7 +193,7 @@ module Hako
           cpu: 100,
           memory: 100,
           links: ['app:app'],
-          port_mappings: [{container_port: 80, host_port: front_port, protocol: 'tcp'}],
+          port_mappings: [{ container_port: 80, host_port: front_port, protocol: 'tcp' }],
           essential: true,
           environment: environment,
         }

@@ -59,13 +59,13 @@ module Hako
       tokens = []
       pos = 0
       while s.scan_until(/#\{(.*?)\}/)
-        pre = s.string.byteslice(pos ... (s.pos - s.matched.size))
+        pre = s.string.byteslice(pos...(s.pos - s.matched.size))
         var = s[1]
         unless pre.empty?
           tokens << Literal.new(pre)
         end
         if var.empty?
-          raise ExpansionError.new("Empty interpolation is not allowed")
+          raise ExpansionError.new('Empty interpolation is not allowed')
         else
           tokens << Variable.new(var)
         end
