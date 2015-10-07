@@ -31,7 +31,7 @@ module Hako
           'S3_CONFIG_BUCKET' => front.config.s3.bucket,
           'S3_CONFIG_KEY' => front.config.s3.key(@app_id),
         }
-        front_port = determine_front_port(front)
+        front_port = determine_front_port
         task_definition = register_task_definition(image_tag, env, front.config, front_env, front_port)
         if task_definition == :noop
           Hako.logger.info "Task definition isn't changed"
@@ -123,7 +123,7 @@ module Hako
 
       private
 
-      def determine_front_port(front)
+      def determine_front_port
         service = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services[0]
         if service
           find_front_port(service)
