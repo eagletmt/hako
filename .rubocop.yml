@@ -1,0 +1,30 @@
+inherit_from: .rubocop_todo.yml
+
+Style/GuardClause:
+  Enabled: false
+
+Style/HashSyntax:
+  Enabled: false
+
+Style/IfUnlessModifier:
+  Enabled: false
+
+Style/Next:
+  Enabled: false
+
+Style/NumericLiterals:
+  Enabled: false
+
+Style/PercentLiteralDelimiters:
+  PreferredDelimiters:
+    '%w': '[]'
+    '%i': '[]'
+
+Style/RaiseArgs:
+  EnforcedStyle: compact
+
+Style/SignalException:
+  Enabled: false
+
+Style/TrailingComma:
+  Enabled: false
