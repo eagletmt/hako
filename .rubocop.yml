@@ -4,7 +4,8 @@ Style/GuardClause:
   Enabled: false
 
 Style/HashSyntax:
-  Enabled: false
+  Exclude:
+    - 'Rakefile'
 
 Style/IfUnlessModifier:
   Enabled: false
