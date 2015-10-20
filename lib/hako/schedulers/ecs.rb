@@ -1,6 +1,5 @@
 require 'aws-sdk'
 require 'hako'
-require 'hako/error'
 require 'hako/scheduler'
 require 'hako/schedulers/ecs_definition_comparator'
 require 'hako/schedulers/ecs_elb'
@@ -237,17 +236,13 @@ module Hako
           end
           @ecs.create_service(params).service
         else
-          service = services[0]
-          if service.status != 'ACTIVE'
-            raise Error.new("Service #{service.service_arn} is already exist but the status is #{service.status}")
-          end
           params = {
             cluster: @cluster,
             service: @app_id,
             desired_count: @desired_count,
             task_definition: task_definition_arn,
           }
-          if service_changed?(service, params)
+          if service_changed?(services[0], params)
             @ecs.update_service(params).service
           else
             :noop
