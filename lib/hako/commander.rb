@@ -9,31 +9,30 @@ module Hako
   class Commander
     PROVIDERS_KEY = '$providers'
 
-    def initialize(yaml_path)
-      @app_id = Pathname.new(yaml_path).basename.sub_ext('').to_s
-      @yaml = YAML.load_file(yaml_path)
+    def initialize(app)
+      @app = app
     end
 
     def deploy(force: false, tag: 'latest')
-      env = @yaml['env'].dup
+      env = app.yaml['env'].dup
       providers = load_providers(env.delete(PROVIDERS_KEY) || [])
       env = EnvExpander.new(providers).expand(env)
 
-      front = load_front(@yaml['front'])
+      front = load_front(app.yaml['front'])
 
-      scheduler = load_scheduler(@yaml['scheduler'])
-      app_port = @yaml.fetch('port', nil)
-      image = @yaml.fetch('image') { raise Error.new('image must be set') }
+      scheduler = load_scheduler(app.yaml['scheduler'])
+      app_port = app.yaml.fetch('port', nil)
+      image = app.yaml.fetch('image') { raise Error.new('image must be set') }
       image_tag = "#{image}:#{tag}"
       scheduler.deploy(image_tag, env, app_port, front, force: force)
     end
 
     def status
-      load_scheduler(@yaml['scheduler']).status
+      load_scheduler(app.yaml['scheduler']).status
     end
 
     def remove
-      load_scheduler(@yaml['scheduler']).remove
+      load_scheduler(app.yaml['scheduler']).remove
     end
 
     private
@@ -55,7 +54,7 @@ module Hako
         raise Error.new('type must be set in scheduler')
       end
       require "hako/schedulers/#{type}"
-      Hako::Schedulers.const_get(camelize(type)).new(@app_id, scheduler_config)
+      Hako::Schedulers.const_get(camelize(type)).new(@app.id, scheduler_config)
     end
 
     def load_front(yaml)
