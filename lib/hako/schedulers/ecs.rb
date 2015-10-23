@@ -51,7 +51,7 @@ module Hako
       end
 
       def status
-        service = get_service
+        service = describe_service
         unless service
           puts 'Unavailable'
           exit 1
@@ -109,7 +109,7 @@ module Hako
       end
 
       def remove
-        service = get_service
+        service = describe_service
         if service
           @ecs.delete_service(cluster: @cluster, service: @app_id)
           Hako.logger.info "#{service.service_arn} is deleted"
@@ -122,17 +122,15 @@ module Hako
 
       private
 
-      def get_service
+      def describe_service
         service = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services[0]
         if service && service.status != 'INACTIVE'
           service
-        else
-          nil
         end
       end
 
       def determine_front_port
-        service = get_service
+        service = describe_service
         if service
           find_front_port(service)
         else
