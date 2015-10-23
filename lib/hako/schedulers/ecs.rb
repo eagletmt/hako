@@ -51,7 +51,7 @@ module Hako
       end
 
       def status
-        service = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services[0]
+        service = get_service
         unless service
           puts 'Unavailable'
           exit 1
@@ -109,7 +109,7 @@ module Hako
       end
 
       def remove
-        service = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services[0]
+        service = get_service
         if service
           @ecs.delete_service(cluster: @cluster, service: @app_id)
           Hako.logger.info "#{service.service_arn} is deleted"
@@ -122,8 +122,17 @@ module Hako
 
       private
 
-      def determine_front_port
+      def get_service
         service = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services[0]
+        if service && service.status != 'INACTIVE'
+          service
+        else
+          nil
+        end
+      end
+
+      def determine_front_port
+        service = get_service
         if service
           find_front_port(service)
         else
@@ -131,7 +140,9 @@ module Hako
           @ecs.list_services(cluster: @cluster).each do |page|
             unless page.service_arns.empty?
               @ecs.describe_services(cluster: @cluster, services: page.service_arns).services.each do |s|
-                max_port = [max_port, find_front_port(s)].max
+                if s.status != 'INACTIVE'
+                  max_port = [max_port, find_front_port(s)].max
+                end
               end
             end
           end
