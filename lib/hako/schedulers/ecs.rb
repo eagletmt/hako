@@ -222,8 +222,8 @@ module Hako
       end
 
       def create_or_update_service(task_definition_arn, front_port)
-        services = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services
-        if services.empty?
+        service = describe_service
+        if service.nil?
           params = {
             cluster: @cluster,
             service_name: @app_id,
