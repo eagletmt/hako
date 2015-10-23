@@ -5,7 +5,7 @@ module Hako
     class ValidationError < Error
     end
 
-    def initialize(_options)
+    def initialize(_root_path, _options)
       raise NotImplementedError
     end
 

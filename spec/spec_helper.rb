@@ -1,8 +1,8 @@
 require 'pathname'
 
 module SpecHelper
-  def fixture_path(path)
-    Pathname.new(__FILE__).dirname.join('fixtures', path)
+  def fixture_root
+    Pathname.new(__FILE__).dirname.join('fixtures')
   end
 end
 

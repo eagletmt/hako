@@ -43,7 +43,7 @@ module Hako
           raise Error.new("type must be set in each #{PROVIDERS_KEY} element")
         end
         require "hako/env_providers/#{type}"
-        Hako::EnvProviders.const_get(camelize(type)).new(config)
+        Hako::EnvProviders.const_get(camelize(type)).new(@app.root_path, config)
       end
     end
 

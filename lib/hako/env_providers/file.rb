@@ -3,11 +3,11 @@ require 'hako/env_provider'
 module Hako
   module EnvProviders
     class File < EnvProvider
-      def initialize(options)
+      def initialize(root_path, options)
         unless options['path']
           validation_error!('path must be set')
         end
-        @path = options['path']
+        @path = root_path.join(options['path'])
       end
 
       def ask(variables)
