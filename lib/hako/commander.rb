@@ -1,4 +1,3 @@
-require 'yaml'
 require 'hako/env_expander'
 require 'hako/error'
 require 'hako/front_config'

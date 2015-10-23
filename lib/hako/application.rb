@@ -1,3 +1,5 @@
+require 'yaml'
+
 module Hako
   class Application
     attr_reader :id, :yaml
