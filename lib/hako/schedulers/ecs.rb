@@ -139,7 +139,10 @@ module Hako
             unless page.service_arns.empty?
               @ecs.describe_services(cluster: @cluster, services: page.service_arns).services.each do |s|
                 if s.status != 'INACTIVE'
-                  max_port = [max_port, find_front_port(s)].max
+                  port = find_front_port(s)
+                  if port
+                    max_port = [max_port, port].max
+                  end
                 end
               end
             end
@@ -158,7 +161,9 @@ module Hako
         task_definition.container_definitions.each do |c|
           container_definitions[c.name] = c
         end
-        container_definitions['front'].port_mappings[0].host_port
+        if container_definitions.size == 2 && container_definitions['front'] && container_definitions['app']
+          container_definitions['front'].port_mappings[0].host_port
+        end
       end
 
       def task_definition_changed?(front, app)
