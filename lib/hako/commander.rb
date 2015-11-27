@@ -1,3 +1,4 @@
+require 'hako/after_scripts'
 require 'hako/env_expander'
 require 'hako/error'
 require 'hako/front_config'
@@ -23,7 +24,11 @@ module Hako
       app_port = @app.yaml.fetch('port', nil)
       image = @app.yaml.fetch('image') { raise Error.new('image must be set') }
       image_tag = "#{image}:#{tag}"
+      after_scripts = @app.yaml.fetch('after_scripts', []).map { |config| load_after_script(config) }
+
       scheduler.deploy(image_tag, env, app_port, front, force: force)
+
+      after_scripts.each(&:run)
     end
 
     def status
@@ -60,6 +65,12 @@ module Hako
       front_config = FrontConfig.new(yaml)
       require "hako/fronts/#{front_config.type}"
       Hako::Fronts.const_get(camelize(front_config.type)).new(front_config)
+    end
+
+    def load_after_script(config)
+      type = config.fetch('type')
+      require "hako/after_scripts/#{type}"
+      Hako::AfterScripts.const_get(camelize(type)).new(config)
     end
 
     def camelize(name)
