@@ -71,7 +71,7 @@ module Hako
     def load_after_script(config)
       type = config.fetch('type')
       require "hako/after_scripts/#{type}"
-      Hako::AfterScripts.const_get(camelize(type)).new(config)
+      Hako::AfterScripts.const_get(camelize(type)).new(@app, config)
     end
 
     def camelize(name)
