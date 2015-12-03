@@ -29,7 +29,7 @@ module Hako
 
       scheduler.deploy(image_tag, env, app_port, front, force: force)
 
-      after_scripts.each(&:run)
+      after_scripts.each(&:after_deploy)
     end
 
     def status
@@ -37,7 +37,9 @@ module Hako
     end
 
     def remove
+      after_scripts = @app.yaml.fetch('after_scripts', []).map { |config| load_after_script(config) }
       load_scheduler(@app.yaml['scheduler']).remove
+      after_scripts.each(&:after_remove)
     end
 
     private
