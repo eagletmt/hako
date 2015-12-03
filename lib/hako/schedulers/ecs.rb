@@ -256,7 +256,7 @@ module Hako
             desired_count: @desired_count,
             task_definition: task_definition_arn,
           }
-          if service_changed?(services[0], params)
+          if service_changed?(service, params)
             @ecs.update_service(params).service
           else
             :noop
