@@ -8,15 +8,15 @@ module Hako
       path = Pathname.new(yaml_path)
       @id = path.basename.sub_ext('').to_s
       @root_path = path.parent
-      @yaml = load_default_yaml(@root_path).merge(YAML.load_file(yaml_path))
+      @yaml = YAML.load(load_default_yaml(@root_path) + path.read)
     end
 
     private
 
     def load_default_yaml(root_path)
-      YAML.load_file(root_path.join('default.yml').to_s)
+      root_path.join('default.yml').read
     rescue Errno::ENOENT
-      {}
+      ''
     end
   end
 end
