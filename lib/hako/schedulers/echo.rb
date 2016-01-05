@@ -14,6 +14,15 @@ module Hako
           puts "  #{key}=#{val.inspect}"
         end
       end
+
+      def oneshot(image_tag, env, commands)
+        puts "Run #{image_tag} with oneshot commands=#{commands.inspect}"
+        puts 'Environment variables:'
+        env.each do |key, val|
+          puts "  #{key}=#{val.inspect}"
+        end
+        0
+      end
     end
   end
 end

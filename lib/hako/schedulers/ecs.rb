@@ -50,6 +50,16 @@ module Hako
         Hako.logger.info 'Deployment completed'
       end
 
+      def oneshot(image_tag, env, commands)
+        task_definition = register_task_definition_for_oneshot(image_tag)
+        Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
+        task = run_task(task_definition, env, commands)
+        Hako.logger.info "Started task: #{task.task_arn}"
+        exit_code = wait_for_task(task)
+        Hako.logger.info 'Oneshot task finished'
+        exit_code
+      end
+
       def status
         service = describe_service
         unless service
@@ -198,6 +208,23 @@ module Hako
         end
       end
 
+      def register_task_definition_for_oneshot(image_tag)
+        @ecs.register_task_definition(
+          family: "#{@app_id}-oneshot",
+          container_definitions: [
+            {
+              name: 'oneshot',
+              image: image_tag,
+              cpu: @cpu,
+              memory: @memory,
+              links: [],
+              port_mappings: [],
+              environment: [],
+            },
+          ],
+        ).task_definition
+      end
+
       def front_container(front_config, env, front_port)
         environment = env.map { |k, v| { name: k, value: v } }
         {
@@ -224,6 +251,66 @@ module Hako
           essential: true,
           environment: environment,
         }
+      end
+
+      def run_task(task_definition, env, commands)
+        environment = env.map { |k, v| { name: k, value: v } }
+        @ecs.run_task(
+          cluster: @cluster,
+          task_definition: task_definition.task_definition_arn,
+          overrides: {
+            container_overrides: [
+              {
+                name: 'oneshot',
+                command: commands,
+                environment: environment,
+              },
+            ],
+          },
+          count: 1,
+          started_by: "hako oneshot #{@app_id}",
+        ).tasks[0]
+      end
+
+      def wait_for_task(task)
+        task_arn = task.task_arn
+        container_instance_arn = nil
+        started_at = nil
+        loop do
+          task = @ecs.describe_tasks(cluster: @cluster, tasks: [task_arn]).tasks[0]
+          if container_instance_arn != task.container_instance_arn
+            container_instance_arn = task.container_instance_arn
+            report_container_instance(container_instance_arn)
+          end
+          unless started_at
+            started_at = task.started_at
+            if started_at
+              Hako.logger.info "Started at #{started_at}"
+            end
+          end
+
+          Hako.logger.info "  status #{task.last_status}"
+
+          if task.last_status == 'STOPPED'
+            Hako.logger.info "Stopped at #{task.stopped_at}"
+            container = task.containers[0]
+            Hako.logger.info "Exit code is #{container.exit_code}"
+            return container.exit_code
+          end
+          sleep 1
+        end
+      end
+
+      def report_container_instance(container_instance_arn)
+        container_instance = @ecs.describe_container_instances(cluster: @cluster, container_instances: [container_instance_arn]).container_instances[0]
+        @ec2.describe_tags(filters: [{ name: 'resource-id', values: [container_instance.ec2_instance_id] }]).each do |page|
+          tag = page.tags.find { |t| t.key == 'Name' }
+          if tag
+            Hako.logger.info "  Container instance is #{container_instance_arn} (#{tag.value} #{container_instance.ec2_instance_id})"
+          else
+            Hako.logger.info "  Container instance is #{container_instance_arn} (#{container_instance.ec2_instance_id})"
+          end
+        end
       end
 
       def create_or_update_service(task_definition_arn, front_port)

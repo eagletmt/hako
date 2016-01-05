@@ -15,12 +15,8 @@ module Hako
     end
 
     def deploy(force: false, tag: 'latest')
-      env = @app.yaml['env'].dup
-      providers = load_providers(env.delete(PROVIDERS_KEY) || [])
-      env = EnvExpander.new(providers).expand(env)
-
+      env = load_environment(@app.yaml['env'])
       front = load_front(@app.yaml['front'])
-
       scheduler = load_scheduler(@app.yaml['scheduler'])
       app_port = @app.yaml.fetch('port', nil)
       image = @app.yaml.fetch('image') { raise Error.new('image must be set') }
@@ -30,6 +26,14 @@ module Hako
       scheduler.deploy(image_tag, env, app_port, front, force: force)
 
       after_scripts.each(&:after_deploy)
+    end
+
+    def oneshot(commands, tag: 'latest')
+      env = load_environment(@app.yaml['env'])
+      scheduler = load_scheduler(@app.yaml['scheduler'])
+      image = @app.yaml.fetch('image') { raise Error.new('image must be set') }
+      image_tag = "#{image}:#{tag}"
+      exit scheduler.oneshot(image_tag, env, commands)
     end
 
     def status
@@ -43,6 +47,12 @@ module Hako
     end
 
     private
+
+    def load_environment(env)
+      env = env.dup
+      providers = load_providers(env.delete(PROVIDERS_KEY) || [])
+      EnvExpander.new(providers).expand(env)
+    end
 
     def load_providers(provider_configs)
       provider_configs.map do |config|

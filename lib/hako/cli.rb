@@ -11,6 +11,14 @@ module Hako
       Commander.new(Application.new(yaml_path)).deploy(force: options[:force], tag: options[:tag])
     end
 
+    desc 'oneshot FILE COMMAND ARG...', 'Run oneshot task'
+    option :tag, aliases: %w[-t], type: :string, default: 'latest', desc: 'Specify tag (default: latest)'
+    def oneshot(yaml_path, command, *args)
+      require 'hako/application'
+      require 'hako/commander'
+      Commander.new(Application.new(yaml_path)).oneshot([command, *args], tag: options[:tag])
+    end
+
     desc 'status FILE', 'Show deployment status'
     def status(yaml_path)
       require 'hako/application'
