@@ -306,9 +306,9 @@ module Hako
         @ec2.describe_tags(filters: [{ name: 'resource-id', values: [container_instance.ec2_instance_id] }]).each do |page|
           tag = page.tags.find { |t| t.key == 'Name' }
           if tag
-            Hako.logger.info "  Container instance is #{container_instance_arn} (#{tag.value} #{container_instance.ec2_instance_id})"
+            Hako.logger.info "Container instance is #{container_instance_arn} (#{tag.value} #{container_instance.ec2_instance_id})"
           else
-            Hako.logger.info "  Container instance is #{container_instance_arn} (#{container_instance.ec2_instance_id})"
+            Hako.logger.info "Container instance is #{container_instance_arn} (#{container_instance.ec2_instance_id})"
           end
         end
       end
