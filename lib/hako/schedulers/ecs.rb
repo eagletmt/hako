@@ -84,7 +84,7 @@ module Hako
         end
 
         puts 'Tasks:'
-        @ecs.list_tasks(cluster: @cluster, service_name: @app_id).each do |page|
+        @ecs.list_tasks(cluster: @cluster, service_name: service.service_arn).each do |page|
           unless page.task_arns.empty?
             tasks = @ecs.describe_tasks(cluster: @cluster, tasks: page.task_arns).tasks
             container_instances = {}
