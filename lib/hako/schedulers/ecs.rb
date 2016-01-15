@@ -7,7 +7,7 @@ require 'hako/schedulers/ecs_elb'
 module Hako
   module Schedulers
     class Ecs < Scheduler
-      DEFAULT_CLUSTER = 'default'
+      DEFAULT_CLUSTER = 'default'.freeze
       DEFAULT_FRONT_PORT = 10000
 
       def initialize(app_id, options)
@@ -325,15 +325,13 @@ module Hako
           }
           name = @elb.find_or_create_load_balancer(front_port)
           if name
-            params.merge!(
-              load_balancers: [
-                {
-                  load_balancer_name: name,
-                  container_name: 'front',
-                  container_port: 80,
-                },
-              ],
-            )
+            params[:load_balancers] = [
+              {
+                load_balancer_name: name,
+                container_name: 'front',
+                container_port: 80,
+              },
+            ]
           end
           @ecs.create_service(params).service
         else
@@ -351,7 +349,7 @@ module Hako
         end
       end
 
-      SERVICE_KEYS = %i[desired_count task_definition]
+      SERVICE_KEYS = %i[desired_count task_definition].freeze
 
       def service_changed?(service, params)
         SERVICE_KEYS.each do |key|

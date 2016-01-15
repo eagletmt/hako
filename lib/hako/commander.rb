@@ -7,7 +7,7 @@ require 'hako/schedulers'
 
 module Hako
   class Commander
-    PROVIDERS_KEY = '$providers'
+    PROVIDERS_KEY = '$providers'.freeze
 
     def initialize(app)
       @app = app

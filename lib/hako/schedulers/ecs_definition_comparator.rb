@@ -5,9 +5,9 @@ module Hako
         @expected_container = expected_container
       end
 
-      CONTAINER_KEYS = %i[image cpu memory links]
-      PORT_MAPPING_KEYS = %i[container_port host_port protocol]
-      ENVIRONMENT_KEYS = %i[name value]
+      CONTAINER_KEYS = %i[image cpu memory links].freeze
+      PORT_MAPPING_KEYS = %i[container_port host_port protocol].freeze
+      ENVIRONMENT_KEYS = %i[name value].freeze
 
       def different?(actual_container)
         unless actual_container

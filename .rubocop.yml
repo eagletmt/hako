@@ -30,5 +30,11 @@ Style/RaiseArgs:
 Style/SignalException:
   Enabled: false
 
-Style/TrailingComma:
+Style/TrailingCommaInArguments:
+  Enabled: false
+
+Style/TrailingCommaInLiteral:
+  Enabled: false
+
+Performance/RedundantBlockCall:
   Enabled: false
