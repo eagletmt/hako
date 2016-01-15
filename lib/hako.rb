@@ -3,6 +3,10 @@ require 'hako/version'
 
 module Hako
   def self.logger
-    @logger ||= Logger.new($stdout)
+    @logger ||=
+      begin
+        $stdout.sync = true
+        Logger.new($stdout)
+      end
   end
 end
