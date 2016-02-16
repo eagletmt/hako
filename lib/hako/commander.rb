@@ -1,10 +1,10 @@
-require 'hako/after_scripts'
 require 'hako/container'
 require 'hako/env_expander'
 require 'hako/error'
 require 'hako/front_config'
 require 'hako/fronts'
 require 'hako/schedulers'
+require 'hako/scripts'
 
 module Hako
   class Commander
@@ -22,12 +22,12 @@ module Hako
       docker_labels = @app.yaml.fetch('docker_labels', {})
       image = @app.yaml.fetch('image') { raise Error.new('image must be set') }
       image_tag = "#{image}:#{tag}"
-      after_scripts = @app.yaml.fetch('after_scripts', []).map { |config| load_after_script(config) }
+      scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config) }
 
       app = Container.new('image_tag' => image_tag, 'docker_labels' => docker_labels)
       scheduler.deploy(app, env, app_port, front, force: force)
 
-      after_scripts.each(&:after_deploy)
+      scripts.each(&:after_deploy)
     end
 
     def oneshot(commands, tag: 'latest')
@@ -43,9 +43,9 @@ module Hako
     end
 
     def remove
-      after_scripts = @app.yaml.fetch('after_scripts', []).map { |config| load_after_script(config) }
+      scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config) }
       load_scheduler(@app.yaml['scheduler']).remove
-      after_scripts.each(&:after_remove)
+      scripts.each(&:after_remove)
     end
 
     private
@@ -82,10 +82,10 @@ module Hako
       Hako::Fronts.const_get(camelize(front_config.type)).new(front_config)
     end
 
-    def load_after_script(config)
+    def load_script(config)
       type = config.fetch('type')
-      require "hako/after_scripts/#{type}"
-      Hako::AfterScripts.const_get(camelize(type)).new(@app, config)
+      require "hako/scripts/#{type}"
+      Hako::Scripts.const_get(camelize(type)).new(@app, config)
     end
 
     def camelize(name)

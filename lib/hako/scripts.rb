@@ -1,4 +1,4 @@
 module Hako
-  module AfterScripts
+  module Scripts
   end
 end
