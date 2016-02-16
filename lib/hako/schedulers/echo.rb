@@ -7,7 +7,7 @@ module Hako
         @app_id = app_id
       end
 
-      def deploy(image_tag, env, app_port, _front, force: false)
+      def deploy(image_tag, env, app_port, _docker_labels, _front, force: false)
         puts "Deploy #{image_tag} with app_port=#{app_port}, force=#{force}"
         puts 'Environment variables:'
         env.each do |key, val|

@@ -23,7 +23,7 @@ module Hako
         @ec2 = Aws::EC2::Client.new(region: region)
       end
 
-      def deploy(image_tag, env, app_port, front, force: false)
+      def deploy(image_tag, env, app_port, docker_labels, front, force: false)
         @force_mode = force
         front_env = {
           'AWS_DEFAULT_REGION' => front.config.s3.region,
@@ -31,7 +31,7 @@ module Hako
           'S3_CONFIG_KEY' => front.config.s3.key(@app_id),
         }
         front_port = determine_front_port
-        task_definition = register_task_definition(image_tag, env, front.config, front_env, front_port)
+        task_definition = register_task_definition(image_tag, env, docker_labels, front.config, front_env, front_port)
         if task_definition == :noop
           Hako.logger.info "Task definition isn't changed"
           task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
@@ -195,9 +195,9 @@ module Hako
         EcsDefinitionComparator.new(expected_container).different?(actual_container)
       end
 
-      def register_task_definition(image_tag, env, front_config, front_env, front_port)
+      def register_task_definition(image_tag, env, docker_labels, front_config, front_env, front_port)
         front = front_container(front_config, front_env, front_port)
-        app = app_container(image_tag, env)
+        app = app_container(image_tag, env, docker_labels)
         if task_definition_changed?(front, app)
           @ecs.register_task_definition(
             family: @app_id,
@@ -239,7 +239,7 @@ module Hako
         }
       end
 
-      def app_container(image_tag, env)
+      def app_container(image_tag, env, docker_labels)
         environment = env.map { |k, v| { name: k, value: v } }
         {
           name: 'app',
@@ -250,6 +250,7 @@ module Hako
           port_mappings: [],
           essential: true,
           environment: environment,
+          docker_labels: docker_labels,
         }
       end
 
