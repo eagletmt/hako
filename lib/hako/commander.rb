@@ -11,7 +11,6 @@ module Hako
 
     def initialize(app)
       @app = app
-      $LOAD_PATH << @app.root_path.join('lib')
     end
 
     def deploy(force: false, tag: 'latest')
