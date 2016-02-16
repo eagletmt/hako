@@ -21,7 +21,3 @@ Metrics/BlockNesting:
 
 Style/Documentation:
   Enabled: false
-
-# Temporarily...
-Metrics/ParameterLists:
-  Enabled: false

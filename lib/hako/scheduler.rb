@@ -8,7 +8,7 @@ module Hako
     def initialize(_app_id, _options)
     end
 
-    def deploy(_image_tag, _env, _app_port, _docker_labels, _front_config, _options)
+    def deploy(_app, _env, _app_port, _front_config, _options)
       raise NotImplementedError
     end
 

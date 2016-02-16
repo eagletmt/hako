@@ -23,7 +23,7 @@ module Hako
         @ec2 = Aws::EC2::Client.new(region: region)
       end
 
-      def deploy(image_tag, env, app_port, docker_labels, front, force: false)
+      def deploy(app, env, app_port, front, force: false)
         @force_mode = force
         front_env = {
           'AWS_DEFAULT_REGION' => front.config.s3.region,
@@ -31,7 +31,7 @@ module Hako
           'S3_CONFIG_KEY' => front.config.s3.key(@app_id),
         }
         front_port = determine_front_port
-        task_definition = register_task_definition(image_tag, env, docker_labels, front.config, front_env, front_port)
+        task_definition = register_task_definition(app, env, front.config, front_env, front_port)
         if task_definition == :noop
           Hako.logger.info "Task definition isn't changed"
           task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
@@ -50,8 +50,8 @@ module Hako
         Hako.logger.info 'Deployment completed'
       end
 
-      def oneshot(image_tag, env, commands)
-        task_definition = register_task_definition_for_oneshot(image_tag)
+      def oneshot(app, env, commands)
+        task_definition = register_task_definition_for_oneshot(app)
         Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
         task = run_task(task_definition, env, commands)
         Hako.logger.info "Started task: #{task.task_arn}"
@@ -195,26 +195,26 @@ module Hako
         EcsDefinitionComparator.new(expected_container).different?(actual_container)
       end
 
-      def register_task_definition(image_tag, env, docker_labels, front_config, front_env, front_port)
-        front = front_container(front_config, front_env, front_port)
-        app = app_container(image_tag, env, docker_labels)
-        if task_definition_changed?(front, app)
+      def register_task_definition(app, env, front_config, front_env, front_port)
+        front_def = front_container(front_config, front_env, front_port)
+        app_def = app_container(app, env)
+        if task_definition_changed?(front_def, app_def)
           @ecs.register_task_definition(
             family: @app_id,
-            container_definitions: [front, app],
+            container_definitions: [front_def, app_def],
           ).task_definition
         else
           :noop
         end
       end
 
-      def register_task_definition_for_oneshot(image_tag)
+      def register_task_definition_for_oneshot(app)
         @ecs.register_task_definition(
           family: "#{@app_id}-oneshot",
           container_definitions: [
             {
               name: 'oneshot',
-              image: image_tag,
+              image: app.image_tag,
               cpu: @cpu,
               memory: @memory,
               links: [],
@@ -239,18 +239,18 @@ module Hako
         }
       end
 
-      def app_container(image_tag, env, docker_labels)
+      def app_container(app, env)
         environment = env.map { |k, v| { name: k, value: v } }
         {
           name: 'app',
-          image: image_tag,
+          image: app.image_tag,
           cpu: @cpu,
           memory: @memory,
           links: [],
           port_mappings: [],
           essential: true,
           environment: environment,
-          docker_labels: docker_labels,
+          docker_labels: app.docker_labels,
         }
       end
 

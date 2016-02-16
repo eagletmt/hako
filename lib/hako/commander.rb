@@ -1,4 +1,5 @@
 require 'hako/after_scripts'
+require 'hako/container'
 require 'hako/env_expander'
 require 'hako/error'
 require 'hako/front_config'
@@ -23,7 +24,8 @@ module Hako
       image_tag = "#{image}:#{tag}"
       after_scripts = @app.yaml.fetch('after_scripts', []).map { |config| load_after_script(config) }
 
-      scheduler.deploy(image_tag, env, app_port, docker_labels, front, force: force)
+      app = Container.new('image_tag' => image_tag, 'docker_labels' => docker_labels)
+      scheduler.deploy(app, env, app_port, front, force: force)
 
       after_scripts.each(&:after_deploy)
     end
@@ -33,7 +35,7 @@ module Hako
       scheduler = load_scheduler(@app.yaml['scheduler'])
       image = @app.yaml.fetch('image') { raise Error.new('image must be set') }
       image_tag = "#{image}:#{tag}"
-      exit scheduler.oneshot(image_tag, env, commands)
+      exit scheduler.oneshot(Container.new('image_tag' => image_tag), env, commands)
     end
 
     def status

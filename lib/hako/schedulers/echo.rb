@@ -7,16 +7,16 @@ module Hako
         @app_id = app_id
       end
 
-      def deploy(image_tag, env, app_port, _docker_labels, _front, force: false)
-        puts "Deploy #{image_tag} with app_port=#{app_port}, force=#{force}"
+      def deploy(app, env, app_port, _front, force: false)
+        puts "Deploy #{app.image_tag} with app_port=#{app_port}, force=#{force}"
         puts 'Environment variables:'
         env.each do |key, val|
           puts "  #{key}=#{val.inspect}"
         end
       end
 
-      def oneshot(image_tag, env, commands)
-        puts "Run #{image_tag} with oneshot commands=#{commands.inspect}"
+      def oneshot(app, env, commands)
+        puts "Run #{app.image_tag} with oneshot commands=#{commands.inspect}"
         puts 'Environment variables:'
         env.each do |key, val|
           puts "  #{key}=#{val.inspect}"
