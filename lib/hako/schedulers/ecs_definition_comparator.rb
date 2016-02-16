@@ -5,7 +5,7 @@ module Hako
         @expected_container = expected_container
       end
 
-      CONTAINER_KEYS = %i[image cpu memory links].freeze
+      CONTAINER_KEYS = %i[image cpu memory links docker_labels].freeze
       PORT_MAPPING_KEYS = %i[container_port host_port protocol].freeze
       ENVIRONMENT_KEYS = %i[name value].freeze
 
