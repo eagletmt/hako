@@ -19,15 +19,16 @@ module Hako
       front = load_front(@app.yaml['front'])
       scheduler = load_scheduler(@app.yaml['scheduler'])
       app_port = @app.yaml.fetch('port', nil)
-      docker_labels = @app.yaml.fetch('docker_labels', {})
       image = @app.yaml.fetch('image') { raise Error.new('image must be set') }
-      image_tag = "#{image}:#{tag}"
+      app = Container.new(
+        'image_tag' => "#{image}:#{tag}",
+        'docker_labels' => @app.yaml.fetch('docker_labels', {}),
+      )
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config) }
 
-      app = Container.new('image_tag' => image_tag, 'docker_labels' => docker_labels)
+      scripts.each { |script| script.before_deploy(app) }
       scheduler.deploy(app, env, app_port, front, force: force)
-
-      scripts.each(&:after_deploy)
+      scripts.each { |script| script.after_deploy(app) }
     end
 
     def oneshot(commands, tag: 'latest')
