@@ -26,9 +26,10 @@ module Hako
       )
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config) }
 
-      scripts.each { |script| script.before_deploy(app) }
-      scheduler.deploy(app, env, app_port, front, force: force)
-      scripts.each { |script| script.after_deploy(app) }
+      containers = { 'app' => app, 'front' => front }
+      scripts.each { |script| script.before_deploy(containers) }
+      scheduler.deploy(containers, env, app_port, force: force)
+      scripts.each { |script| script.after_deploy(containers) }
     end
 
     def oneshot(commands, tag: 'latest')

@@ -7,8 +7,8 @@ module Hako
         @app_id = app_id
       end
 
-      def deploy(app, env, app_port, _front, force: false)
-        puts "Deploy #{app.image_tag} with app_port=#{app_port}, force=#{force}"
+      def deploy(containers, env, app_port, force: false)
+        puts "Deploy #{containers.fetch('app').image_tag} with app_port=#{app_port}, force=#{force}"
         puts 'Environment variables:'
         env.each do |key, val|
           puts "  #{key}=#{val.inspect}"

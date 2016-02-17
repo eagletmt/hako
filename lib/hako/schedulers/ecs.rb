@@ -23,8 +23,10 @@ module Hako
         @ec2 = Aws::EC2::Client.new(region: region)
       end
 
-      def deploy(app, env, app_port, front, force: false)
+      def deploy(containers, env, app_port, force: false)
         @force_mode = force
+        app = containers.fetch('app')
+        front = containers.fetch('front')
         front_env = {
           'AWS_DEFAULT_REGION' => front.config.s3.region,
           'S3_CONFIG_BUCKET' => front.config.s3.bucket,
