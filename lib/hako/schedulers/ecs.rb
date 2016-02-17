@@ -25,7 +25,6 @@ module Hako
 
       def deploy(containers, env, app_port, force: false)
         @force_mode = force
-        app = containers.fetch('app')
         front = containers.fetch('front')
         front_env = {
           'AWS_DEFAULT_REGION' => front.config.s3.region,
