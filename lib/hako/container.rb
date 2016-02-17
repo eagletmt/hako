@@ -11,6 +11,8 @@ module Hako
     %w[
       image_tag
       docker_labels
+      cpu
+      memory
     ].each do |name|
       define_method(name) do
         @definition[name]

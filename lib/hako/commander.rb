@@ -16,14 +16,12 @@ module Hako
 
     def deploy(force: false, tag: 'latest')
       env = load_environment(@app.yaml['env'])
+      app_hash = @app.yaml['app']
       front = load_front(@app.yaml['front'])
       scheduler = load_scheduler(@app.yaml['scheduler'])
       app_port = @app.yaml.fetch('port', nil)
-      image = @app.yaml.fetch('image') { raise Error.new('image must be set') }
-      app = Container.new(
-        'image_tag' => "#{image}:#{tag}",
-        'docker_labels' => @app.yaml.fetch('docker_labels', {}),
-      )
+      image = app_hash.fetch('image') { raise Error.new('image must be set') }
+      app = Container.new(app_hash.merge('image_tag' => "#{image}:#{tag}"))
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config) }
 
       containers = { 'app' => app, 'front' => front }
@@ -34,10 +32,11 @@ module Hako
 
     def oneshot(commands, tag: 'latest')
       env = load_environment(@app.yaml['env'])
+      app_hash = @app.yaml['app']
       scheduler = load_scheduler(@app.yaml['scheduler'])
-      image = @app.yaml.fetch('image') { raise Error.new('image must be set') }
-      image_tag = "#{image}:#{tag}"
-      exit scheduler.oneshot(Container.new('image_tag' => image_tag), env, commands)
+      image = app_hash.fetch('image') { raise Error.new('image must be set') }
+      app = Container.new(app_hash.merge('image_tag' => "#{image}:#{tag}"))
+      exit scheduler.oneshot(app, env, commands)
     end
 
     def status

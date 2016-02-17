@@ -14,8 +14,6 @@ module Hako
         @app_id = app_id
         @cluster = options.fetch('cluster', DEFAULT_CLUSTER)
         @desired_count = options.fetch('desired_count') { validation_error!('desired_count must be set') }
-        @cpu = options.fetch('cpu') { validation_error!('cpu must be set') }
-        @memory = options.fetch('memory') { validation_error!('memory must be set') }
         region = options.fetch('region') { validation_error!('region must be set') }
         @role = options.fetch('role', nil)
         @ecs = Aws::ECS::Client.new(region: region)
@@ -216,8 +214,8 @@ module Hako
             {
               name: 'oneshot',
               image: app.image_tag,
-              cpu: @cpu,
-              memory: @memory,
+              cpu: app.cpu,
+              memory: app.memory,
               links: [],
               port_mappings: [],
               environment: [],
@@ -246,8 +244,8 @@ module Hako
         {
           name: 'app',
           image: app.image_tag,
-          cpu: @cpu,
-          memory: @memory,
+          cpu: app.cpu,
+          memory: app.memory,
           links: [],
           port_mappings: [],
           essential: true,
