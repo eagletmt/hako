@@ -229,13 +229,14 @@ module Hako
         environment = env.map { |k, v| { name: k, value: v } }
         {
           name: 'front',
-          image: front_config.image_tag,
+          image: front_config.container.image_tag,
           cpu: 100,
           memory: 100,
           links: ['app:app'],
           port_mappings: [{ container_port: 80, host_port: front_port, protocol: 'tcp' }],
           essential: true,
           environment: environment,
+          docker_labels: front_config.container.docker_labels,
         }
       end
 
