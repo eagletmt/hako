@@ -1,7 +1,11 @@
 module Hako
   class Container
+    DEFAULT_CONFIG = {
+      'docker_labels' => {},
+    }.freeze
+
     def initialize(definition)
-      @definition = definition
+      @definition = definition.merge(DEFAULT_CONFIG)
     end
 
     %w[
