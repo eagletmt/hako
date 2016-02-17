@@ -33,7 +33,7 @@ module Hako
           'S3_CONFIG_KEY' => front.config.s3.key(@app_id),
         }
         front_port = determine_front_port
-        task_definition = register_task_definition(app, env, front.config, front_env, front_port)
+        task_definition = register_task_definition(containers, env, front_env, front_port)
         if task_definition == :noop
           Hako.logger.info "Task definition isn't changed"
           task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
@@ -197,9 +197,9 @@ module Hako
         EcsDefinitionComparator.new(expected_container).different?(actual_container)
       end
 
-      def register_task_definition(app, env, front_config, front_env, front_port)
-        front_def = front_container(front_config, front_env, front_port)
-        app_def = app_container(app, env)
+      def register_task_definition(containers, env, front_env, front_port)
+        front_def = front_container(containers.fetch('front'), front_env, front_port)
+        app_def = app_container(containers.fetch('app'), env)
         if task_definition_changed?(front_def, app_def)
           @ecs.register_task_definition(
             family: @app_id,
@@ -227,18 +227,18 @@ module Hako
         ).task_definition
       end
 
-      def front_container(front_config, env, front_port)
+      def front_container(front, env, front_port)
         environment = env.map { |k, v| { name: k, value: v } }
         {
           name: 'front',
-          image: front_config.container.image_tag,
+          image: front.image_tag,
           cpu: 100,
           memory: 100,
           links: ['app:app'],
           port_mappings: [{ container_port: 80, host_port: front_port, protocol: 'tcp' }],
           essential: true,
           environment: environment,
-          docker_labels: front_config.container.docker_labels,
+          docker_labels: front.docker_labels,
         }
       end
 
