@@ -197,7 +197,7 @@ module Hako
       end
 
       def register_task_definition(containers, env, front_env, front_port)
-        front_def = front_container(containers.fetch('front'), front_env, front_port)
+        front_def = front_container(containers.fetch('front').config.container, front_env, front_port)
         app_def = app_container(containers.fetch('app'), env)
         if task_definition_changed?(front_def, app_def)
           @ecs.register_task_definition(
