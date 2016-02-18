@@ -8,14 +8,11 @@ require 'hako/scripts'
 
 module Hako
   class Commander
-    PROVIDERS_KEY = '$providers'.freeze
-
     def initialize(app)
       @app = app
     end
 
     def deploy(force: false, tag: 'latest')
-      env = load_environment(@app.yaml['env'])
       app = AppContainer.new(@app.yaml['app'].merge('tag' => tag))
       front = load_front(@app.yaml['front'])
       scheduler = load_scheduler(@app.yaml['scheduler'])
@@ -23,15 +20,14 @@ module Hako
 
       containers = { 'app' => app, 'front' => front }
       scripts.each { |script| script.before_deploy(containers) }
-      scheduler.deploy(containers, env, force: force)
+      scheduler.deploy(containers, force: force)
       scripts.each { |script| script.after_deploy(containers) }
     end
 
     def oneshot(commands, tag: 'latest')
-      env = load_environment(@app.yaml['env'])
       app = AppContainer.new(@app.yaml['app'].merge('tag' => tag))
       scheduler = load_scheduler(@app.yaml['scheduler'])
-      exit scheduler.oneshot(app, env, commands)
+      exit scheduler.oneshot(app, commands)
     end
 
     def status
@@ -50,12 +46,6 @@ module Hako
       env = env.dup
       providers = load_providers(env.delete(PROVIDERS_KEY) || [])
       EnvExpander.new(providers).expand(env)
-    end
-
-    def load_providers(provider_configs)
-      provider_configs.map do |yaml|
-        Loader.new(Hako::EnvProviders, 'hako/env_providers').load(yaml.fetch('type')).new(@app.root_path, yaml)
-      end
     end
 
     def load_scheduler(yaml)

@@ -27,11 +27,11 @@ module Hako
     end
 
     def env
-      {
+      super.merge(
         'AWS_DEFAULT_REGION' => @s3.region,
         'S3_CONFIG_BUCKET' => @s3.bucket,
         'S3_CONFIG_KEY' => @s3.key(@app_id),
-      }
+      )
     end
 
     def extra

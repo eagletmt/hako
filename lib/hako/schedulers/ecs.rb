@@ -21,11 +21,12 @@ module Hako
         @ec2 = Aws::EC2::Client.new(region: region)
       end
 
-      def deploy(containers, env, force: false)
+      def deploy(containers, force: false)
         @force_mode = force
+        app = containers.fetch('app')
         front = containers.fetch('front')
         front_port = determine_front_port
-        task_definition = register_task_definition(containers, env, front_port)
+        task_definition = register_task_definition(containers, front_port)
         if task_definition == :noop
           Hako.logger.info "Task definition isn't changed"
           task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
@@ -44,10 +45,10 @@ module Hako
         Hako.logger.info 'Deployment completed'
       end
 
-      def oneshot(app, env, commands)
+      def oneshot(app, commands)
         task_definition = register_task_definition_for_oneshot(app)
         Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
-        task = run_task(task_definition, env, commands)
+        task = run_task(task_definition, app.env, commands)
         Hako.logger.info "Started task: #{task.task_arn}"
         exit_code = wait_for_task(task)
         Hako.logger.info 'Oneshot task finished'
@@ -189,9 +190,9 @@ module Hako
         EcsDefinitionComparator.new(expected_container).different?(actual_container)
       end
 
-      def register_task_definition(containers, env, front_port)
+      def register_task_definition(containers, front_port)
         front_def = front_container(containers.fetch('front'), front_port)
-        app_def = app_container(containers.fetch('app'), env)
+        app_def = app_container(containers.fetch('app'))
         if task_definition_changed?(front_def, app_def)
           @ecs.register_task_definition(
             family: @app_id,
@@ -234,8 +235,8 @@ module Hako
         }
       end
 
-      def app_container(app, env)
-        environment = env.map { |k, v| { name: k, value: v } }
+      def app_container(app)
+        environment = app.env.map { |k, v| { name: k, value: v } }
         {
           name: 'app',
           image: app.image_tag,
