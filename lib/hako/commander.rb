@@ -13,7 +13,7 @@ module Hako
     end
 
     def deploy(force: false, tag: 'latest')
-      app = AppContainer.new(@app.yaml['app'].merge('tag' => tag))
+      app = AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag))
       front = load_front(@app.yaml['front'])
       scheduler = load_scheduler(@app.yaml['scheduler'])
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config) }
@@ -25,7 +25,7 @@ module Hako
     end
 
     def oneshot(commands, tag: 'latest')
-      app = AppContainer.new(@app.yaml['app'].merge('tag' => tag))
+      app = AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag))
       scheduler = load_scheduler(@app.yaml['scheduler'])
       exit scheduler.oneshot(app, commands)
     end
@@ -53,7 +53,7 @@ module Hako
     end
 
     def load_front(yaml)
-      Loader.new(Hako::Fronts, 'hako/fronts').load(yaml.fetch('type')).new(@app.id, yaml)
+      Loader.new(Hako::Fronts, 'hako/fronts').load(yaml.fetch('type')).new(@app, yaml)
     end
 
     def load_script(yaml)

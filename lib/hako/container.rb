@@ -4,7 +4,8 @@ module Hako
       'docker_labels' => {},
     }.freeze
 
-    def initialize(definition)
+    def initialize(app, definition)
+      @app = app
       @definition = definition.merge(DEFAULT_CONFIG)
     end
 

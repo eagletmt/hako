@@ -20,9 +20,8 @@ module Hako
 
     attr_reader :s3
 
-    def initialize(app_id, config)
-      super(config)
-      @app_id = app_id
+    def initialize(app, config)
+      super(app, config)
       @s3 = S3Config.new(@definition.fetch('s3'))
     end
 
@@ -30,7 +29,7 @@ module Hako
       super.merge(
         'AWS_DEFAULT_REGION' => @s3.region,
         'S3_CONFIG_BUCKET' => @s3.bucket,
-        'S3_CONFIG_KEY' => @s3.key(@app_id),
+        'S3_CONFIG_KEY' => @s3.key(@app.id),
       )
     end
 
