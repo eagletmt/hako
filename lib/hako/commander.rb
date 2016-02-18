@@ -1,4 +1,4 @@
-require 'hako/container'
+require 'hako/app_container'
 require 'hako/env_expander'
 require 'hako/error'
 require 'hako/front_config'
@@ -16,12 +16,10 @@ module Hako
 
     def deploy(force: false, tag: 'latest')
       env = load_environment(@app.yaml['env'])
-      app_hash = @app.yaml['app']
+      app = AppContainer.new(@app.yaml['app'].merge('tag' => tag))
       front = load_front(@app.yaml['front'])
       scheduler = load_scheduler(@app.yaml['scheduler'])
       app_port = @app.yaml.fetch('port', nil)
-      image = app_hash.fetch('image') { raise Error.new('image must be set') }
-      app = Container.new(app_hash.merge('image_tag' => "#{image}:#{tag}"))
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config) }
 
       containers = { 'app' => app, 'front' => front }
@@ -32,10 +30,8 @@ module Hako
 
     def oneshot(commands, tag: 'latest')
       env = load_environment(@app.yaml['env'])
-      app_hash = @app.yaml['app']
+      app = AppContainer.new(@app.yaml['app'].merge('tag' => tag))
       scheduler = load_scheduler(@app.yaml['scheduler'])
-      image = app_hash.fetch('image') { raise Error.new('image must be set') }
-      app = Container.new(app_hash.merge('image_tag' => "#{image}:#{tag}"))
       exit scheduler.oneshot(app, env, commands)
     end
 
