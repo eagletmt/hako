@@ -24,7 +24,7 @@ module Hako
       end
 
       def locations
-        locs = @config.extra.fetch('locations', {}).dup
+        locs = extra.fetch('locations', {}).dup
         locs['/'] ||= {}
         locs.keys.each do |k|
           locs[k] = Location.new(locs[k])
@@ -33,7 +33,7 @@ module Hako
       end
 
       def client_max_body_size
-        @config.extra.fetch('client_max_body_size', nil)
+        extra.fetch('client_max_body_size', nil)
       end
 
       def render_location(listen_spec, location)

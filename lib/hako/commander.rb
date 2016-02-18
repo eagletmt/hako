@@ -1,7 +1,6 @@
 require 'hako/app_container'
 require 'hako/env_expander'
 require 'hako/error'
-require 'hako/front_config'
 require 'hako/fronts'
 require 'hako/schedulers'
 require 'hako/scripts'
@@ -74,9 +73,9 @@ module Hako
     end
 
     def load_front(yaml)
-      front_config = FrontConfig.new(yaml)
-      require "hako/fronts/#{front_config.type}"
-      Hako::Fronts.const_get(camelize(front_config.type)).new(front_config)
+      type = yaml['type']
+      require "hako/fronts/#{type}"
+      Hako::Fronts.const_get(camelize(type)).new(@app.id, yaml)
     end
 
     def load_script(config)

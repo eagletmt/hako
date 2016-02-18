@@ -22,7 +22,7 @@ module Hako
 
     def upload_front_config(app_id, front, app_port)
       front_conf = front.generate_config(app_port)
-      s3_config = front.config.s3
+      s3_config = front.s3
       s3 = Aws::S3::Client.new(region: s3_config.region)
       s3.put_object(
         body: front_conf,

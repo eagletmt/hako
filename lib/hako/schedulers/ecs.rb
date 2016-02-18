@@ -24,20 +24,15 @@ module Hako
       def deploy(containers, env, app_port, force: false)
         @force_mode = force
         front = containers.fetch('front')
-        front_env = {
-          'AWS_DEFAULT_REGION' => front.config.s3.region,
-          'S3_CONFIG_BUCKET' => front.config.s3.bucket,
-          'S3_CONFIG_KEY' => front.config.s3.key(@app_id),
-        }
         front_port = determine_front_port
-        task_definition = register_task_definition(containers, env, front_env, front_port)
+        task_definition = register_task_definition(containers, env, front_port)
         if task_definition == :noop
           Hako.logger.info "Task definition isn't changed"
           task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
         else
           Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
           upload_front_config(@app_id, front, app_port)
-          Hako.logger.info "Uploaded front configuration to s3://#{front.config.s3.bucket}/#{front.config.s3.key(@app_id)}"
+          Hako.logger.info "Uploaded front configuration to s3://#{front.s3.bucket}/#{front.s3.key(@app_id)}"
         end
         service = create_or_update_service(task_definition.task_definition_arn, front_port)
         if service == :noop
@@ -194,8 +189,8 @@ module Hako
         EcsDefinitionComparator.new(expected_container).different?(actual_container)
       end
 
-      def register_task_definition(containers, env, front_env, front_port)
-        front_def = front_container(containers.fetch('front').config.container, front_env, front_port)
+      def register_task_definition(containers, env, front_port)
+        front_def = front_container(containers.fetch('front'), front_port)
         app_def = app_container(containers.fetch('app'), env)
         if task_definition_changed?(front_def, app_def)
           @ecs.register_task_definition(
@@ -224,8 +219,8 @@ module Hako
         ).task_definition
       end
 
-      def front_container(front, env, front_port)
-        environment = env.map { |k, v| { name: k, value: v } }
+      def front_container(front, front_port)
+        environment = front.env.map { |k, v| { name: k, value: v } }
         {
           name: 'front',
           image: front.image_tag,

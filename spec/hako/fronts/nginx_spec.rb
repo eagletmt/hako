@@ -1,11 +1,10 @@
 require 'spec_helper'
 require 'hako/fronts/nginx'
-require 'hako/front_config'
 
 RSpec.describe Hako::Fronts::Nginx do
-  let(:front) { described_class.new(front_config) }
-  let(:front_config) { Hako::FrontConfig.new(raw_config) }
-  let(:raw_config) do
+  let(:front) { described_class.new(app_id, front_config) }
+  let(:app_id) { 'nanika' }
+  let(:front_config) do
     {
       'type' => 'nginx',
       'image_tag' => 'hako-nginx',
