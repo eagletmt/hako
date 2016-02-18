@@ -2,6 +2,7 @@ require 'hako/app_container'
 require 'hako/env_expander'
 require 'hako/error'
 require 'hako/fronts'
+require 'hako/loader'
 require 'hako/schedulers'
 require 'hako/scripts'
 
@@ -52,39 +53,21 @@ module Hako
     end
 
     def load_providers(provider_configs)
-      provider_configs.map do |config|
-        type = config['type']
-        unless type
-          raise Error.new("type must be set in each #{PROVIDERS_KEY} element")
-        end
-        require "hako/env_providers/#{type}"
-        Hako::EnvProviders.const_get(camelize(type)).new(@app.root_path, config)
+      provider_configs.map do |yaml|
+        Loader.new(Hako::EnvProviders, 'hako/env_providers').load(yaml.fetch('type')).new(@app.root_path, yaml)
       end
     end
 
-    def load_scheduler(scheduler_config)
-      type = scheduler_config['type']
-      unless type
-        raise Error.new('type must be set in scheduler')
-      end
-      require "hako/schedulers/#{type}"
-      Hako::Schedulers.const_get(camelize(type)).new(@app.id, scheduler_config)
+    def load_scheduler(yaml)
+      Loader.new(Hako::Schedulers, 'hako/schedulers').load(yaml.fetch('type')).new(@app.id, yaml)
     end
 
     def load_front(yaml)
-      type = yaml['type']
-      require "hako/fronts/#{type}"
-      Hako::Fronts.const_get(camelize(type)).new(@app.id, yaml)
+      Loader.new(Hako::Fronts, 'hako/fronts').load(yaml.fetch('type')).new(@app.id, yaml)
     end
 
-    def load_script(config)
-      type = config.fetch('type')
-      require "hako/scripts/#{type}"
-      Hako::Scripts.const_get(camelize(type)).new(@app, config)
-    end
-
-    def camelize(name)
-      name.split('_').map(&:capitalize).join('')
+    def load_script(yaml)
+      Loader.new(Hako::Scripts, 'hako/scripts').load(yaml.fetch('type')).new(@app, yaml)
     end
   end
 end
