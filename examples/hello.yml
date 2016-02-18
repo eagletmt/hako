@@ -17,6 +17,8 @@ app:
 front:
   type: nginx
   image_tag: hako-nginx
+  memory: 100
+  cpu: 100
   s3:
     region: ap-northeast-1
     bucket: nanika

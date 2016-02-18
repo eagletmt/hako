@@ -225,8 +225,8 @@ module Hako
         {
           name: 'front',
           image: front.image_tag,
-          cpu: 100,
-          memory: 100,
+          cpu: front.cpu,
+          memory: front.memory,
           links: ['app:app'],
           port_mappings: [{ container_port: 80, host_port: front_port, protocol: 'tcp' }],
           essential: true,
