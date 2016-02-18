@@ -4,7 +4,6 @@ env:
       path: examples/hello.env
   PORT: 3000
   MESSAGE: '#{username}-san'
-port: 3000
 scheduler:
   type: ecs
   region: ap-northeast-1
@@ -24,6 +23,7 @@ app:
   image: ryotarai/hello-sinatra
   memory: 100
   cpu: 100
+  port: 3000
 front:
   type: nginx
   image_tag: hako-nginx

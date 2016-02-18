@@ -18,12 +18,11 @@ module Hako
       app = AppContainer.new(@app.yaml['app'].merge('tag' => tag))
       front = load_front(@app.yaml['front'])
       scheduler = load_scheduler(@app.yaml['scheduler'])
-      app_port = @app.yaml.fetch('port', nil)
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config) }
 
       containers = { 'app' => app, 'front' => front }
       scripts.each { |script| script.before_deploy(containers) }
-      scheduler.deploy(containers, env, app_port, force: force)
+      scheduler.deploy(containers, env, force: force)
       scripts.each { |script| script.after_deploy(containers) }
     end
 

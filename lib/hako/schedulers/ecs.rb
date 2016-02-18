@@ -21,7 +21,7 @@ module Hako
         @ec2 = Aws::EC2::Client.new(region: region)
       end
 
-      def deploy(containers, env, app_port, force: false)
+      def deploy(containers, env, force: false)
         @force_mode = force
         front = containers.fetch('front')
         front_port = determine_front_port
@@ -31,7 +31,7 @@ module Hako
           task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
         else
           Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
-          upload_front_config(@app_id, front, app_port)
+          upload_front_config(@app_id, front, app.port)
           Hako.logger.info "Uploaded front configuration to s3://#{front.s3.bucket}/#{front.s3.key(@app_id)}"
         end
         service = create_or_update_service(task_definition.task_definition_arn, front_port)
