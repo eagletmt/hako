@@ -2,6 +2,7 @@ module Hako
   class Container
     DEFAULT_CONFIG = {
       'docker_labels' => {},
+      'links' => [],
     }.freeze
 
     def initialize(app, definition)
@@ -14,6 +15,7 @@ module Hako
       docker_labels
       cpu
       memory
+      links
     ].each do |name|
       define_method(name) do
         @definition[name]

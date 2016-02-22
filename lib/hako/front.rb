@@ -33,6 +33,12 @@ module Hako
       )
     end
 
+    DEFAULT_LINK = ['app:app'].freeze
+
+    def links
+      DEFAULT_LINK + super
+    end
+
     def extra
       @definition.fetch('extra', {})
     end

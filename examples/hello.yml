@@ -8,6 +8,8 @@ app:
   memory: 128
   cpu: 256
   port: 3000
+  links:
+    - redis:redis
   env:
     $providers:
       - type: file
