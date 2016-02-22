@@ -6,7 +6,7 @@ module Hako
 
     def initialize(app, definition)
       @app = app
-      @definition = definition.merge(DEFAULT_CONFIG)
+      @definition = DEFAULT_CONFIG.merge(definition)
     end
 
     %w[
