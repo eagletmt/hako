@@ -15,8 +15,8 @@ scheduler:
       - sg-ZZZZZZZZ
 app:
   image: ryotarai/hello-sinatra
-  memory: 100
-  cpu: 100
+  memory: 128
+  cpu: 256
   port: 3000
   env:
     $providers:
@@ -27,8 +27,8 @@ app:
 front:
   type: nginx
   image_tag: hako-nginx
-  memory: 100
-  cpu: 100
+  memory: 32
+  cpu: 32
   s3:
     region: ap-northeast-1
     bucket: nanika
