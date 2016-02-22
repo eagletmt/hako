@@ -1,13 +1,8 @@
 module Hako
   class Container
-    DEFAULT_CONFIG = {
-      'docker_labels' => {},
-      'links' => [],
-    }.freeze
-
     def initialize(app, definition)
       @app = app
-      @definition = DEFAULT_CONFIG.merge(definition)
+      @definition = default_config.merge(definition)
     end
 
     %w[
@@ -44,6 +39,13 @@ module Hako
       provider_configs.map do |yaml|
         Loader.new(Hako::EnvProviders, 'hako/env_providers').load(yaml.fetch('type')).new(@app.root_path, yaml)
       end
+    end
+
+    def default_config
+      {
+        'docker_labels' => {},
+        'links' => [],
+      }
     end
   end
 end
