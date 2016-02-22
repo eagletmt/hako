@@ -23,3 +23,8 @@ front:
     region: ap-northeast-1
     bucket: nanika
     prefix: hako/front_config
+additional_containers:
+  redis:
+    image_tag: redis:3.0
+    cpu: 64
+    memory: 512

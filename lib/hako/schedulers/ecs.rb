@@ -166,12 +166,12 @@ module Hako
         task_definition.container_definitions.each do |c|
           container_definitions[c.name] = c
         end
-        if container_definitions.size == 2 && container_definitions['front'] && container_definitions['app']
+        if container_definitions['front']
           container_definitions['front'].port_mappings[0].host_port
         end
       end
 
-      def task_definition_changed?(front, app)
+      def task_definition_changed?(definitions)
         if @force_mode
           return true
         end
@@ -180,7 +180,10 @@ module Hako
         task_definition.container_definitions.each do |c|
           container_definitions[c.name] = c
         end
-        different_definition?(front, container_definitions['front']) || different_definition?(app, container_definitions['app'])
+        if definitions.any? { |definition| different_definition?(definition, container_definitions.delete(definition[:name])) }
+          return true
+        end
+        !container_definitions.empty?
       rescue Aws::ECS::Errors::ClientException
         # Task definition does not exist
         true
@@ -191,12 +194,18 @@ module Hako
       end
 
       def register_task_definition(containers, front_port)
-        front_def = front_container(containers.fetch('front'), front_port)
-        app_def = app_container(containers.fetch('app'))
-        if task_definition_changed?(front_def, app_def)
+        definitions = containers.map do |name, container|
+          case name
+          when 'front'
+            front_container(container, front_port)
+          else
+            app_container(name, container)
+          end
+        end
+        if task_definition_changed?(definitions)
           @ecs.register_task_definition(
             family: @app_id,
-            container_definitions: [front_def, app_def],
+            container_definitions: definitions,
           ).task_definition
         else
           :noop
@@ -235,10 +244,10 @@ module Hako
         }
       end
 
-      def app_container(app)
+      def app_container(name, app)
         environment = app.env.map { |k, v| { name: k, value: v } }
         {
-          name: 'app',
+          name: name,
           image: app.image_tag,
           cpu: app.cpu,
           memory: app.memory,

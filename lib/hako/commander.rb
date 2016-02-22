@@ -1,4 +1,5 @@
 require 'hako/app_container'
+require 'hako/container'
 require 'hako/env_expander'
 require 'hako/error'
 require 'hako/fronts'
@@ -19,6 +20,9 @@ module Hako
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config) }
 
       containers = { 'app' => app, 'front' => front }
+      @app.yaml.fetch('additional_containers', {}).each do |name, container|
+        containers[name] = Container.new(@app, container)
+      end
       scripts.each { |script| script.before_deploy(containers) }
       scheduler.deploy(containers, force: force)
       scripts.each { |script| script.after_deploy(containers) }
