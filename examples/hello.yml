@@ -17,14 +17,7 @@ app:
     PORT: 3000
     MESSAGE: '#{username}-san'
 front:
-  type: nginx
-  image_tag: hako-nginx
-  memory: 32
-  cpu: 32
-  s3:
-    region: ap-northeast-1
-    bucket: nanika
-    prefix: hako/front_config
+  !include front.yml
 additional_containers:
   redis:
     image_tag: redis:3.0
