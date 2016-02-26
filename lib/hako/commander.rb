@@ -25,7 +25,7 @@ module Hako
     end
 
     def oneshot(commands, tag: 'latest')
-      app = AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag))
+      app = AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag), dry_run: false)
       scheduler = load_scheduler(@app.yaml['scheduler'])
       exit scheduler.oneshot(app, commands)
     end
