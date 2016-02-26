@@ -145,6 +145,9 @@ module Hako
       end
 
       def determine_front_port
+        if @dry_run
+          return DEFAULT_FRONT_PORT
+        end
         service = describe_service
         if service
           find_front_port(service)

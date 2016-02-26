@@ -55,8 +55,6 @@ module Hako
         false
       end
 
-      private
-
       def name
         "hako-#{@app_id}"
       end
