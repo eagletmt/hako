@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'set'
 require 'strscan'
 require 'hako/env_providers'

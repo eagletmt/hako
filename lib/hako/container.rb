@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Hako
   class Container
     def initialize(app, definition, dry_run:)
@@ -28,7 +29,7 @@ module Hako
 
     private
 
-    PROVIDERS_KEY = '$providers'.freeze
+    PROVIDERS_KEY = '$providers'
 
     def expand_env(env)
       env = env.dup

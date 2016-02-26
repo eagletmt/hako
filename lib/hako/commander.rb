@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'hako/app_container'
 require 'hako/container'
 require 'hako/env_expander'

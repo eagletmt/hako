@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 module Hako
   class Loader
     def initialize(base_module, base_path)

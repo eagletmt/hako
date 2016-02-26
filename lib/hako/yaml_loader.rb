@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'psych'
 
 module Hako
@@ -20,8 +21,8 @@ module Hako
     end
 
     class Visitor < Psych::Visitors::ToRuby
-      INCLUDE_TAG = 'tag:include'.freeze
-      SHOVEL = '<<'.freeze
+      INCLUDE_TAG = 'tag:include'
+      SHOVEL = '<<'
 
       def initialize(scanner, class_loader, &block)
         super(scanner, class_loader)

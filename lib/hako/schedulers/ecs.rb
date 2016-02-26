@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'aws-sdk'
 require 'hako'
 require 'hako/scheduler'
@@ -7,7 +8,7 @@ require 'hako/schedulers/ecs_elb'
 module Hako
   module Schedulers
     class Ecs < Scheduler
-      DEFAULT_CLUSTER = 'default'.freeze
+      DEFAULT_CLUSTER = 'default'
       DEFAULT_FRONT_PORT = 10000
 
       def initialize(app_id, options, force:, dry_run:)
