@@ -9,7 +9,7 @@ module Hako
       path = Pathname.new(yaml_path)
       @id = path.basename.sub_ext('').to_s
       @root_path = path.parent
-      @yaml = YamlLoader.load(path)
+      @yaml = YamlLoader.new.load(path)
     end
   end
 end

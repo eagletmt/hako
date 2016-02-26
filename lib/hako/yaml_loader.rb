@@ -2,22 +2,24 @@
 require 'psych'
 
 module Hako
-  module YamlLoader
-    class << self
-      def load(path)
-        class_loader = Psych::ClassLoader.new
-        scanner = Psych::ScalarScanner.new(class_loader)
-        prev_path = @current_path
-        @current_path = path
-        visitor = Visitor.new(scanner, class_loader) do |_, val|
-          load(@current_path.parent.join(val))
-        end
-        path.open do |f|
-          visitor.accept(Psych.parse(f))
-        end
-      ensure
-        @current_path = prev_path
+  class YamlLoader
+    def initialize
+      @current_path = nil
+    end
+
+    def load(path)
+      class_loader = Psych::ClassLoader.new
+      scanner = Psych::ScalarScanner.new(class_loader)
+      prev_path = @current_path
+      @current_path = path
+      visitor = Visitor.new(scanner, class_loader) do |_, val|
+        load(@current_path.parent.join(val))
       end
+      path.open do |f|
+        visitor.accept(Psych.parse(f))
+      end
+    ensure
+      @current_path = prev_path
     end
 
     class Visitor < Psych::Visitors::ToRuby

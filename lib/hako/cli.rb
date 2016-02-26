@@ -24,7 +24,7 @@ module Hako
     desc 'show-yaml FILE', 'Show expanded YAML'
     def show_yaml(yaml_path)
       require 'hako/yaml_loader'
-      puts YamlLoader.load(Pathname.new(yaml_path)).to_yaml
+      puts YamlLoader.new.load(Pathname.new(yaml_path)).to_yaml
     end
 
     desc 'status FILE', 'Show deployment status'
