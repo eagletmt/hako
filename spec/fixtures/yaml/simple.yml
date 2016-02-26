@@ -1,0 +1,2 @@
+scheduler:
+  type: ecs
