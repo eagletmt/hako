@@ -1,9 +1,12 @@
 # frozen_string_literal: true
+require 'hako/version'
+
 module Hako
   class Container
     def initialize(app, definition, dry_run:)
       @app = app
       @definition = default_config.merge(definition)
+      @definition['docker_labels'].merge!(default_labels)
       @dry_run = dry_run
     end
 
@@ -52,6 +55,12 @@ module Hako
       {
         'docker_labels' => {},
         'links' => [],
+      }
+    end
+
+    def default_labels
+      {
+        'cc.wanko.hako.version' => VERSION,
       }
     end
   end
