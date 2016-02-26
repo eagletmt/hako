@@ -2,7 +2,7 @@ require 'spec_helper'
 require 'hako/fronts/nginx'
 
 RSpec.describe Hako::Fronts::Nginx do
-  let(:front) { described_class.new(app_id, front_config) }
+  let(:front) { described_class.new(app_id, front_config, dry_run: false) }
   let(:app_id) { 'nanika' }
   let(:front_config) do
     {

@@ -10,7 +10,7 @@ module Hako
       DEFAULT_CLUSTER = 'default'.freeze
       DEFAULT_FRONT_PORT = 10000
 
-      def initialize(app_id, options)
+      def initialize(app_id, options, force:, dry_run:)
         @app_id = app_id
         @cluster = options.fetch('cluster', DEFAULT_CLUSTER)
         @desired_count = options.fetch('desired_count') { validation_error!('desired_count must be set') }
@@ -19,30 +19,39 @@ module Hako
         @ecs = Aws::ECS::Client.new(region: region)
         @elb = EcsElb.new(app_id, Aws::ElasticLoadBalancing::Client.new(region: region), options.fetch('elb', nil))
         @ec2 = Aws::EC2::Client.new(region: region)
+        @force = force
+        @dry_run = dry_run
       end
 
-      def deploy(containers, force: false)
-        @force_mode = force
+      def deploy(containers)
         app = containers.fetch('app')
         front = containers.fetch('front')
         front_port = determine_front_port
-        task_definition = register_task_definition(containers, front_port)
-        if task_definition == :noop
-          Hako.logger.info "Task definition isn't changed"
-          task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
+        definitions = create_definitions(containers, front_port)
+
+        if @dry_run
+          definitions.each do |d|
+            Hako.logger.info "Add container #{d}"
+          end
         else
-          Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
-          upload_front_config(@app_id, front, app.port)
-          Hako.logger.info "Uploaded front configuration to s3://#{front.s3.bucket}/#{front.s3.key(@app_id)}"
+          task_definition = register_task_definition(definitions)
+          if task_definition == :noop
+            Hako.logger.info "Task definition isn't changed"
+            task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
+          else
+            Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
+            upload_front_config(@app_id, front, app.port)
+            Hako.logger.info "Uploaded front configuration to s3://#{front.s3.bucket}/#{front.s3.key(@app_id)}"
+          end
+          service = create_or_update_service(task_definition.task_definition_arn, front_port)
+          if service == :noop
+            Hako.logger.info "Service isn't changed"
+          else
+            Hako.logger.info "Updated service: #{service.service_arn}"
+            wait_for_ready(service)
+          end
+          Hako.logger.info 'Deployment completed'
         end
-        service = create_or_update_service(task_definition.task_definition_arn, front_port)
-        if service == :noop
-          Hako.logger.info "Service isn't changed"
-        else
-          Hako.logger.info "Updated service: #{service.service_arn}"
-          wait_for_ready(service)
-        end
-        Hako.logger.info 'Deployment completed'
       end
 
       def oneshot(app, commands)
@@ -172,7 +181,7 @@ module Hako
       end
 
       def task_definition_changed?(definitions)
-        if @force_mode
+        if @force
           return true
         end
         task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
@@ -193,15 +202,7 @@ module Hako
         EcsDefinitionComparator.new(expected_container).different?(actual_container)
       end
 
-      def register_task_definition(containers, front_port)
-        definitions = containers.map do |name, container|
-          case name
-          when 'front'
-            front_container(container, front_port)
-          else
-            app_container(name, container)
-          end
-        end
+      def register_task_definition(definitions)
         if task_definition_changed?(definitions)
           @ecs.register_task_definition(
             family: @app_id,
@@ -209,6 +210,17 @@ module Hako
           ).task_definition
         else
           :noop
+        end
+      end
+
+      def create_definitions(containers, front_port)
+        containers.map do |name, container|
+          case name
+          when 'front'
+            front_container(container, front_port)
+          else
+            app_container(name, container)
+          end
         end
       end
 

@@ -1,8 +1,9 @@
 module Hako
   class Container
-    def initialize(app, definition)
+    def initialize(app, definition, dry_run:)
       @app = app
       @definition = default_config.merge(definition)
+      @dry_run = dry_run
     end
 
     %w[
@@ -31,8 +32,13 @@ module Hako
 
     def expand_env(env)
       env = env.dup
-      providers = load_providers(env.delete(PROVIDERS_KEY) || [])
-      EnvExpander.new(providers).expand(env)
+      provider_types = env.delete(PROVIDERS_KEY) || []
+      if @dry_run
+        env
+      else
+        providers = load_providers(provider_types)
+        EnvExpander.new(providers).expand(env)
+      end
     end
 
     def load_providers(provider_configs)

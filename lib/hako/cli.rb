@@ -5,10 +5,11 @@ module Hako
     desc 'deploy FILE', 'Run deployment'
     option :force, aliases: %w[-f], type: :boolean, default: false, desc: 'Run deployment even if nothing is changed'
     option :tag, aliases: %w[-t], type: :string, default: 'latest', desc: 'Specify tag (default: latest)'
+    option :dry_run, aliases: %w[-n], type: :boolean, default: false, desc: 'Enable dry-run mode'
     def deploy(yaml_path)
       require 'hako/application'
       require 'hako/commander'
-      Commander.new(Application.new(yaml_path)).deploy(force: options[:force], tag: options[:tag])
+      Commander.new(Application.new(yaml_path)).deploy(force: options[:force], tag: options[:tag], dry_run: options[:dry_run])
     end
 
     desc 'oneshot FILE COMMAND ARG...', 'Run oneshot task'

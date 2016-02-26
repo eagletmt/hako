@@ -2,6 +2,7 @@ inherit_from: .rubocop_todo.yml
 
 AllCops:
   DisplayCopNames: true
+  TargetRubyVersion: 2.2  # TODO: Upgrade to 2.3
 
 Style/GuardClause:
   Enabled: false

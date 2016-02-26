@@ -20,8 +20,8 @@ module Hako
 
     attr_reader :s3
 
-    def initialize(app, config)
-      super(app, config)
+    def initialize(*)
+      super
       @s3 = S3Config.new(@definition.fetch('s3'))
     end
 
