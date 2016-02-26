@@ -20,6 +20,12 @@ module Hako
       Commander.new(Application.new(yaml_path)).oneshot([command, *args], tag: options[:tag])
     end
 
+    desc 'show-yaml FILE', 'Show expanded YAML'
+    def show_yaml(yaml_path)
+      require 'hako/yaml_loader'
+      puts YamlLoader.load(Pathname.new(yaml_path)).to_yaml
+    end
+
     desc 'status FILE', 'Show deployment status'
     def status(yaml_path)
       require 'hako/application'
