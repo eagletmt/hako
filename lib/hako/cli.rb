@@ -54,5 +54,15 @@ module Hako
       require 'hako/commander'
       Commander.new(Application.new(yaml_path)).remove
     end
+
+    desc 'version', 'Show version'
+    option :numeric, type: :boolean, default: false, desc: 'Show numeric only'
+    def version
+      if options[:numeric]
+        say VERSION
+      else
+        say "hako v#{VERSION}"
+      end
+    end
   end
 end
