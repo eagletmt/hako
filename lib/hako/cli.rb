@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'hako'
 require 'thor'
 
 module Hako
@@ -7,18 +8,30 @@ module Hako
     option :force, aliases: %w[-f], type: :boolean, default: false, desc: 'Run deployment even if nothing is changed'
     option :tag, aliases: %w[-t], type: :string, default: 'latest', desc: 'Specify tag (default: latest)'
     option :dry_run, aliases: %w[-n], type: :boolean, default: false, desc: 'Enable dry-run mode'
+    option :verbose, aliases: %w[-v], type: :boolean, default: false, desc: 'Enable verbose logging'
     def deploy(yaml_path)
       require 'hako/application'
       require 'hako/commander'
+
+      if options[:verbose]
+        Hako.logger.level = Logger::DEBUG
+      end
+
       Commander.new(Application.new(yaml_path)).deploy(force: options[:force], tag: options[:tag], dry_run: options[:dry_run])
     end
 
     desc 'oneshot FILE COMMAND ARG...', 'Run oneshot task'
     option :tag, aliases: %w[-t], type: :string, default: 'latest', desc: 'Specify tag (default: latest)'
     option :containers, aliases: %w[-c], type: :string, default: '', banner: 'NAME1,NAME2', desc: 'Comma-separated additional container names to start with the app container (default: "")'
+    option :verbose, aliases: %w[-v], type: :boolean, default: false, desc: 'Enable verbose logging'
     def oneshot(yaml_path, command, *args)
       require 'hako/application'
       require 'hako/commander'
+
+      if options[:verbose]
+        Hako.logger.level = Logger::DEBUG
+      end
+
       Commander.new(Application.new(yaml_path)).oneshot([command, *args], tag: options[:tag], containers: options[:containers].split(','))
     end
 

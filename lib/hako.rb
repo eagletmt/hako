@@ -7,7 +7,9 @@ module Hako
     @logger ||=
       begin
         $stdout.sync = true
-        Logger.new($stdout)
+        Logger.new($stdout).tap do |l|
+          l.level = Logger::INFO
+        end
       end
   end
 end

@@ -42,7 +42,7 @@ module Hako
           else
             Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
             upload_front_config(@app_id, front, app.port)
-            Hako.logger.info "Uploaded front configuration to s3://#{front.s3.bucket}/#{front.s3.key(@app_id)}"
+            Hako.logger.debug "Uploaded front configuration to s3://#{front.s3.bucket}/#{front.s3.key(@app_id)}"
           end
           service = create_or_update_service(task_definition.task_definition_arn, front_port)
           if service == :noop
@@ -317,7 +317,7 @@ module Hako
             end
           end
 
-          Hako.logger.info "  status #{task.last_status}"
+          Hako.logger.debug "  status #{task.last_status}"
 
           if task.last_status == 'STOPPED'
             Hako.logger.info "Stopped at #{task.stopped_at}"
