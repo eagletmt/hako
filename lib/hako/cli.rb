@@ -1,67 +1,207 @@
 # frozen_string_literal: true
 require 'hako'
-require 'thor'
+require 'optparse'
 
 module Hako
-  class CLI < Thor
-    desc 'deploy FILE', 'Run deployment'
-    option :force, aliases: %w[-f], type: :boolean, default: false, desc: 'Run deployment even if nothing is changed'
-    option :tag, aliases: %w[-t], type: :string, default: 'latest', desc: 'Specify tag (default: latest)'
-    option :dry_run, aliases: %w[-n], type: :boolean, default: false, desc: 'Enable dry-run mode'
-    option :verbose, aliases: %w[-v], type: :boolean, default: false, desc: 'Enable verbose logging'
-    def deploy(yaml_path)
-      require 'hako/application'
-      require 'hako/commander'
+  class CLI
+    SUB_COMMANDS = %w[
+      deploy
+      oneshot
+      show-yaml
+      status
+      remove
+    ].freeze
 
-      if options[:verbose]
-        Hako.logger.level = Logger::DEBUG
-      end
-
-      Commander.new(Application.new(yaml_path)).deploy(force: options[:force], tag: options[:tag], dry_run: options[:dry_run])
+    def self.start(argv)
+      new(argv).run
     end
 
-    desc 'oneshot FILE COMMAND ARG...', 'Run oneshot task'
-    option :tag, aliases: %w[-t], type: :string, default: 'latest', desc: 'Specify tag (default: latest)'
-    option :containers, aliases: %w[-c], type: :string, default: '', banner: 'NAME1,NAME2', desc: 'Comma-separated additional container names to start with the app container (default: "")'
-    option :verbose, aliases: %w[-v], type: :boolean, default: false, desc: 'Enable verbose logging'
-    def oneshot(yaml_path, command, *args)
-      require 'hako/application'
-      require 'hako/commander'
-
-      if options[:verbose]
-        Hako.logger.level = Logger::DEBUG
-      end
-
-      Commander.new(Application.new(yaml_path)).oneshot([command, *args], tag: options[:tag], containers: options[:containers].split(','))
+    def initialize(argv)
+      @argv = argv.dup
+      @help = false
+      parser.order!(@argv)
     end
 
-    desc 'show-yaml FILE', 'Show expanded YAML'
-    def show_yaml(yaml_path)
-      require 'hako/yaml_loader'
-      puts YamlLoader.new.load(Pathname.new(yaml_path)).to_yaml
-    end
-
-    desc 'status FILE', 'Show deployment status'
-    def status(yaml_path)
-      require 'hako/application'
-      require 'hako/commander'
-      Commander.new(Application.new(yaml_path)).status
-    end
-
-    desc 'remove FILE', 'Destroy the application'
-    def remove(yaml_path)
-      require 'hako/application'
-      require 'hako/commander'
-      Commander.new(Application.new(yaml_path)).remove
-    end
-
-    desc 'version', 'Show version'
-    option :numeric, type: :boolean, default: false, desc: 'Show numeric only'
-    def version
-      if options[:numeric]
-        say VERSION
+    def run
+      if @help || @argv.empty?
+        puts parser.help
+        SUB_COMMANDS.each do |subcommand|
+          puts create_subcommand(subcommand).new.parser.help
+        end
       else
-        say "hako v#{VERSION}"
+        create_subcommand(@argv.shift).new.run(@argv)
+      end
+    end
+
+    private
+
+    def parser
+      @parser ||= OptionParser.new do |opts|
+        opts.banner = 'hako'
+        opts.version = VERSION
+        opts.on('-h', '--help', 'Show help') { @help = true }
+      end
+    end
+
+    def create_subcommand(sub)
+      if SUB_COMMANDS.include?(sub)
+        CLI.const_get(sub.split('-').map(&:capitalize).join(''))
+      else
+        $stderr.puts "No such subcommand: #{sub}"
+        exit 1
+      end
+    end
+
+    class Deploy
+      def run(argv)
+        parse!(argv)
+        require 'hako/application'
+        require 'hako/commander'
+
+        if @verbose
+          Hako.logger.level = Logger::DEBUG
+        end
+
+        Commander.new(Application.new(@yaml_path)).deploy(force: @force, tag: @tag, dry_run: @dry_run)
+      end
+
+      def parse!(argv)
+        @force = false
+        @tag = 'latest'
+        @dry_run = false
+        @verbose = false
+        parser.parse!(argv)
+        @yaml_path = argv.first
+
+        if @yaml_path.nil?
+          puts parser.help
+          exit 1
+        end
+      end
+
+      def parser
+        @parser ||= OptionParser.new do |opts|
+          opts.banner = 'hako deploy [OPTIONS] FILE'
+          opts.version = VERSION
+          opts.on('-f', '--force', 'Run deployment even if nothing is changed') { @force = true }
+          opts.on('-t', '--tag=TAG', 'Specify tag (default: latest)') { |v| @tag = v }
+          opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
+          opts.on('-v', '--verbose', 'Enable verbose logging') { @verbose = true }
+        end
+      end
+    end
+
+    class Oneshot
+      def run(argv)
+        parse!(argv)
+        require 'hako/application'
+        require 'hako/commander'
+
+        if @verbose
+          Hako.logger.level = Logger::DEBUG
+        end
+
+        Commander.new(Application.new(@yaml_path)).oneshot(@argv, tag: @tag, containers: @containers)
+      end
+
+      def parse!(argv)
+        @tag = nil
+        @containers = []
+        @verbose = false
+        parser.parse!(argv)
+        @yaml_path = argv.shift
+        @argv = argv
+
+        if @yaml_path.nil? || @argv.empty?
+          puts parser.help
+          exit 1
+        end
+      end
+
+      def parser
+        @parser ||= OptionParser.new do |opts|
+          opts.banner = 'hako oneshot [OPTIONS] FILE COMMAND ARG...'
+          opts.version = VERSION
+          opts.on('-t', '--tag=TAG', 'Specify tag (default: latest)') { @tag = tag }
+          opts.on('-c', '--container=NAME', 'Additional container name to start with the app container') { |v| @containers << v }
+          opts.on('-v', '--verbose', 'Enable verbose logging') { @verbose = true }
+        end
+      end
+    end
+
+    class ShowYaml
+      def run(argv)
+        parse!(argv)
+        require 'hako/yaml_loader'
+        puts YamlLoader.new.load(Pathname.new(@yaml_path)).to_yaml
+      end
+
+      def parse!(argv)
+        parser.parse!(argv)
+        @yaml_path = argv.first
+        if @yaml_path.nil?
+          puts parser.help
+          exit 1
+        end
+      end
+
+      def parser
+        @parser ||= OptionParser.new do |opts|
+          opts.banner = 'hako show-yaml FILE'
+          opts.version = VERSION
+        end
+      end
+    end
+
+    class Status
+      def run(argv)
+        parse!(argv)
+        require 'hako/application'
+        require 'hako/commander'
+        Commander.new(Application.new(@yaml_path)).status
+      end
+
+      def parse!(argv)
+        parser.parse!(argv)
+        @yaml_path = argv.first
+
+        if @yaml_path.nil?
+          puts parser.help
+          exit 1
+        end
+      end
+
+      def parser
+        @parser ||= OptionParser.new do |opts|
+          opts.banner = 'hako status FILE'
+          opts.version = VERSION
+        end
+      end
+    end
+
+    class Remove
+      def run
+        parse!(argv)
+        require 'hako/application'
+        require 'hako/commander'
+        Commander.new(Application.new(@yaml_path)).remove
+      end
+
+      def parse!(argv)
+        parser.parse!(argv)
+        @yaml_path = argv.first
+
+        if @yaml_path.nil?
+          puts parser.help
+          exit 1
+        end
+      end
+
+      def parser
+        @parser ||= OptionParser.new do |opts|
+          opts.banner = 'hako remove FILE'
+          opts.version = VERSION
+        end
       end
     end
   end

@@ -2,4 +2,4 @@
 # frozen_string_literal: true
 require 'hako/cli'
 
-Hako::CLI.start
+Hako::CLI.start(ARGV)
