@@ -15,10 +15,11 @@ module Hako
 
     desc 'oneshot FILE COMMAND ARG...', 'Run oneshot task'
     option :tag, aliases: %w[-t], type: :string, default: 'latest', desc: 'Specify tag (default: latest)'
+    option :containers, aliases: %w[-c], type: :string, default: '', banner: 'NAME1,NAME2', desc: 'Comma-separated additional container names to start with the app container (default: "")'
     def oneshot(yaml_path, command, *args)
       require 'hako/application'
       require 'hako/commander'
-      Commander.new(Application.new(yaml_path)).oneshot([command, *args], tag: options[:tag])
+      Commander.new(Application.new(yaml_path)).oneshot([command, *args], tag: options[:tag], containers: options[:containers].split(','))
     end
 
     desc 'show-yaml FILE', 'Show expanded YAML'

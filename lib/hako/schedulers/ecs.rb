@@ -55,10 +55,19 @@ module Hako
         end
       end
 
-      def oneshot(app, commands)
-        task_definition = register_task_definition_for_oneshot(app)
-        Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
-        task = run_task(task_definition, app.env, commands)
+      def oneshot(containers, commands)
+        definitions = create_definitions(containers, -1)
+        definitions.each do |definition|
+          definition.delete(:essential)
+        end
+        task_definition = register_task_definition_for_oneshot(definitions)
+        if task_definition == :noop
+          Hako.logger.info "Task definition isn't changed"
+          task_definition = @ecs.describe_task_definition(task_definition: "#{@app_id}-oneshot").task_definition
+        else
+          Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
+        end
+        task = run_task(task_definition, commands)
         Hako.logger.info "Started task: #{task.task_arn}"
         exit_code = wait_for_task(task)
         Hako.logger.info 'Oneshot task finished'
@@ -188,11 +197,11 @@ module Hako
         end
       end
 
-      def task_definition_changed?(definitions)
+      def task_definition_changed?(family, definitions)
         if @force
           return true
         end
-        task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
+        task_definition = @ecs.describe_task_definition(task_definition: family).task_definition
         container_definitions = {}
         task_definition.container_definitions.each do |c|
           container_definitions[c.name] = c
@@ -211,7 +220,7 @@ module Hako
       end
 
       def register_task_definition(definitions)
-        if task_definition_changed?(definitions)
+        if task_definition_changed?(@app_id, definitions)
           @ecs.register_task_definition(
             family: @app_id,
             container_definitions: definitions,
@@ -232,21 +241,16 @@ module Hako
         end
       end
 
-      def register_task_definition_for_oneshot(app)
-        @ecs.register_task_definition(
-          family: "#{@app_id}-oneshot",
-          container_definitions: [
-            {
-              name: 'oneshot',
-              image: app.image_tag,
-              cpu: app.cpu,
-              memory: app.memory,
-              links: [],
-              port_mappings: [],
-              environment: [],
-            },
-          ],
-        ).task_definition
+      def register_task_definition_for_oneshot(definitions)
+        family = "#{@app_id}-oneshot"
+        if task_definition_changed?(family, definitions)
+          @ecs.register_task_definition(
+            family: "#{@app_id}-oneshot",
+            container_definitions: definitions,
+          ).task_definition
+        else
+          :noop
+        end
       end
 
       def front_container(front, front_port)
@@ -279,17 +283,15 @@ module Hako
         }
       end
 
-      def run_task(task_definition, env, commands)
-        environment = env.map { |k, v| { name: k, value: v } }
+      def run_task(task_definition, commands)
         @ecs.run_task(
           cluster: @cluster,
           task_definition: task_definition.task_definition_arn,
           overrides: {
             container_overrides: [
               {
-                name: 'oneshot',
+                name: 'app',
                 command: commands,
-                environment: environment,
               },
             ],
           },
@@ -319,9 +321,13 @@ module Hako
 
           if task.last_status == 'STOPPED'
             Hako.logger.info "Stopped at #{task.stopped_at}"
-            container = task.containers[0]
-            Hako.logger.info "Exit code is #{container.exit_code}"
-            return container.exit_code
+            containers = {}
+            task.containers.each do |c|
+              containers[c.name] = c
+            end
+            app = containers.fetch('app')
+            Hako.logger.info "Exit code is #{app.exit_code}"
+            return app.exit_code
           end
           sleep 1
         end

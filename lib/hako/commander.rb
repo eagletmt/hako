@@ -24,10 +24,10 @@ module Hako
       scripts.each { |script| script.after_deploy(containers) }
     end
 
-    def oneshot(commands, tag: 'latest')
-      app = AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag), dry_run: false)
+    def oneshot(commands, tag:, containers:)
+      containers = load_containers(tag, dry_run: false, with: containers)
       scheduler = load_scheduler(@app.yaml['scheduler'])
-      exit scheduler.oneshot(app, commands)
+      exit scheduler.oneshot(containers, commands)
     end
 
     def status
@@ -42,13 +42,21 @@ module Hako
 
     private
 
-    def load_containers(tag, dry_run:)
+    def load_containers(tag, dry_run:, with: nil)
       app = AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag), dry_run: dry_run)
       front = load_front(@app.yaml['front'], dry_run: dry_run)
 
       containers = { 'app' => app, 'front' => front }
       @app.yaml.fetch('additional_containers', {}).each do |name, container|
         containers[name] = Container.new(@app, container, dry_run: dry_run)
+      end
+      if with
+        keys = ['app'] + with
+        containers.keys.each do |key|
+          unless keys.include?(key)
+            containers.delete(key)
+          end
+        end
       end
       containers
     end
