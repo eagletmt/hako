@@ -152,24 +152,28 @@ module Hako
         if service
           find_front_port(service)
         else
-          max_port = -1
-          @ecs.list_services(cluster: @cluster).each do |page|
-            unless page.service_arns.empty?
-              @ecs.describe_services(cluster: @cluster, services: page.service_arns).services.each do |s|
-                if s.status != 'INACTIVE'
-                  port = find_front_port(s)
-                  if port
-                    max_port = [max_port, port].max
-                  end
+          new_front_port
+        end
+      end
+
+      def new_front_port
+        max_port = -1
+        @ecs.list_services(cluster: @cluster).each do |page|
+          unless page.service_arns.empty?
+            @ecs.describe_services(cluster: @cluster, services: page.service_arns).services.each do |s|
+              if s.status != 'INACTIVE'
+                port = find_front_port(s)
+                if port
+                  max_port = [max_port, port].max
                 end
               end
             end
           end
-          if max_port == -1
-            DEFAULT_FRONT_PORT
-          else
-            max_port + 1
-          end
+        end
+        if max_port == -1
+          DEFAULT_FRONT_PORT
+        else
+          max_port + 1
         end
       end
 
