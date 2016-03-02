@@ -105,7 +105,7 @@ module Hako
       end
 
       def parse!(argv)
-        @tag = nil
+        @tag = 'latest'
         @containers = []
         @verbose = false
         parser.parse!(argv)
