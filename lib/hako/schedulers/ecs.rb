@@ -69,8 +69,19 @@ module Hako
         end
         task = run_task(task_definition, commands)
         Hako.logger.info "Started task: #{task.task_arn}"
-        exit_code = wait_for_task(task)
+        containers = wait_for_task(task)
         Hako.logger.info 'Oneshot task finished'
+        exit_code = 127
+        containers.each do |name, container|
+          if container.exit_code.nil?
+            Hako.logger.info "#{name} has stopped without exit_code: reason=#{container.reason}"
+          else
+            Hako.logger.info "#{name} has stopped with exit_code=#{container.exit_code}"
+            if name == 'app'
+              exit_code = container.exit_code
+            end
+          end
+        end
         exit_code
       end
 
@@ -325,9 +336,7 @@ module Hako
             task.containers.each do |c|
               containers[c.name] = c
             end
-            app = containers.fetch('app')
-            Hako.logger.info "Exit code is #{app.exit_code}"
-            return app.exit_code
+            return containers
           end
           sleep 1
         end
