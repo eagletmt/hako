@@ -36,5 +36,19 @@ RSpec.describe Hako::YamlLoader do
         },
       )
     end
+
+    it 'keeps ordering' do
+      expect(yaml_loader.load(fixture_root.join('yaml', 'include_before.yml'))).to eq(
+        'foo' => 1,
+        'bar' => 3,
+        'baz' => 4,
+      )
+
+      expect(yaml_loader.load(fixture_root.join('yaml', 'include_after.yml'))).to eq(
+        'bar' => 2,
+        'baz' => 4,
+        'foo' => 1,
+      )
+    end
   end
 end
