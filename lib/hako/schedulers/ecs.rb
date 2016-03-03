@@ -346,7 +346,7 @@ module Hako
           Hako.logger.debug "  status #{task.last_status}"
 
           if task.last_status == 'STOPPED'
-            Hako.logger.info "Stopped at #{task.stopped_at}"
+            Hako.logger.info "Stopped at #{task.stopped_at} (reason: #{task.stopped_reason})"
             containers = {}
             task.containers.each do |c|
               containers[c.name] = c
