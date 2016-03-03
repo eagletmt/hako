@@ -22,6 +22,8 @@ module Hako
         @ec2 = Aws::EC2::Client.new(region: region)
         @force = force
         @dry_run = dry_run
+        @started_at = nil
+        @container_instance_arn = nil
       end
 
       def deploy(containers)
@@ -328,18 +330,16 @@ module Hako
 
       def wait_for_task(task)
         task_arn = task.task_arn
-        container_instance_arn = nil
-        started_at = nil
         loop do
           task = @ecs.describe_tasks(cluster: @cluster, tasks: [task_arn]).tasks[0]
-          if container_instance_arn != task.container_instance_arn
-            container_instance_arn = task.container_instance_arn
-            report_container_instance(container_instance_arn)
+          if @container_instance_arn != task.container_instance_arn
+            @container_instance_arn = task.container_instance_arn
+            report_container_instance(@container_instance_arn)
           end
-          unless started_at
-            started_at = task.started_at
-            if started_at
-              Hako.logger.info "Started at #{started_at}"
+          unless @started_at
+            @started_at = task.started_at
+            if @started_at
+              Hako.logger.info "Started at #{@started_at}"
             end
           end
 
