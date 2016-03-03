@@ -122,7 +122,7 @@ module Hako
         @parser ||= OptionParser.new do |opts|
           opts.banner = 'hako oneshot [OPTIONS] FILE COMMAND ARG...'
           opts.version = VERSION
-          opts.on('-t', '--tag=TAG', 'Specify tag (default: latest)') { @tag = tag }
+          opts.on('-t', '--tag=TAG', 'Specify tag (default: latest)') { |v| @tag = v }
           opts.on('-c', '--container=NAME', 'Additional container name to start with the app container') { |v| @containers << v }
           opts.on('-v', '--verbose', 'Enable verbose logging') { @verbose = true }
         end
