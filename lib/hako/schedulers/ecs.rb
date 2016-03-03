@@ -55,7 +55,7 @@ module Hako
         end
       end
 
-      def oneshot(containers, commands)
+      def oneshot(containers, commands, env)
         definitions = create_definitions(containers, -1)
         definitions.each do |definition|
           definition.delete(:essential)
@@ -67,7 +67,7 @@ module Hako
         else
           Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
         end
-        task = run_task(task_definition, commands)
+        task = run_task(task_definition, commands, env)
         Hako.logger.info "Started task: #{task.task_arn}"
         containers = wait_for_task(task)
         Hako.logger.info 'Oneshot task finished'
@@ -294,7 +294,8 @@ module Hako
         }
       end
 
-      def run_task(task_definition, commands)
+      def run_task(task_definition, commands, env)
+        environment = env.map { |k, v| { name: k, value: v } }
         @ecs.run_task(
           cluster: @cluster,
           task_definition: task_definition.task_definition_arn,
@@ -303,6 +304,7 @@ module Hako
               {
                 name: 'app',
                 command: commands,
+                environment: environment,
               },
             ],
           },

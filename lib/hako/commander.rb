@@ -24,10 +24,10 @@ module Hako
       scripts.each { |script| script.after_deploy(containers) }
     end
 
-    def oneshot(commands, tag:, containers:)
+    def oneshot(commands, tag:, containers:, env: {})
       containers = load_containers(tag, dry_run: false, with: containers)
       scheduler = load_scheduler(@app.yaml['scheduler'])
-      exit scheduler.oneshot(containers, commands)
+      exit scheduler.oneshot(containers, commands, env)
     end
 
     def status
