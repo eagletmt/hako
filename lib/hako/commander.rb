@@ -27,7 +27,9 @@ module Hako
     def oneshot(commands, tag:, containers:, env: {})
       containers = load_containers(tag, dry_run: false, with: containers)
       scheduler = load_scheduler(@app.yaml['scheduler'])
-      exit scheduler.oneshot(containers, commands, env)
+      with_oneshot_signal_handlers(scheduler) do
+        exit scheduler.oneshot(containers, commands, env)
+      end
     end
 
     def status
@@ -41,6 +43,32 @@ module Hako
     end
 
     private
+
+    TRAP_SIGNALS = %i[INT TERM].freeze
+    class SignalTrapped < StandardError; end
+
+    def with_oneshot_signal_handlers(scheduler, &block)
+      old_handlers = {}
+      trapped = false
+
+      begin
+        TRAP_SIGNALS.each do |sig|
+          old_handlers[sig] = Signal.trap(sig) { raise SignalTrapped }
+        end
+        block.call
+      rescue SignalTrapped
+        trapped = true
+      ensure
+        old_handlers.each do |sig, command|
+          Signal.trap(sig, command)
+        end
+      end
+
+      if trapped
+        scheduler.stop_oneshot
+      end
+      nil
+    end
 
     def load_containers(tag, dry_run:, with: nil)
       app = AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag), dry_run: dry_run)
