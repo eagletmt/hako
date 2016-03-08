@@ -21,7 +21,7 @@ app:
   env:
     $providers:
       - type: file
-        path: examples/hello.env
+        path: hello.env
     PORT: 3000
     MESSAGE: '#{username}-san'
 front:

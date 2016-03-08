@@ -11,8 +11,7 @@ module Hako
       DEFAULT_CLUSTER = 'default'
       DEFAULT_FRONT_PORT = 10000
 
-      def initialize(app_id, options, force:, dry_run:)
-        @app_id = app_id
+      def configure(options)
         @cluster = options.fetch('cluster', DEFAULT_CLUSTER)
         @desired_count = options.fetch('desired_count') { validation_error!('desired_count must be set') }
         region = options.fetch('region') { validation_error!('region must be set') }
@@ -20,8 +19,6 @@ module Hako
         @ecs = Aws::ECS::Client.new(region: region)
         @elb = EcsElb.new(app_id, Aws::ElasticLoadBalancing::Client.new(region: region), options.fetch('elb', nil))
         @ec2 = Aws::EC2::Client.new(region: region)
-        @force = force
-        @dry_run = dry_run
         @started_at = nil
         @container_instance_arn = nil
       end

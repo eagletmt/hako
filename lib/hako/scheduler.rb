@@ -6,7 +6,14 @@ module Hako
     class ValidationError < Error
     end
 
-    def initialize(_app_id, _options)
+    def initialize(app_id, options, dry_run:, force:)
+      @app_id = app_id
+      @dry_run = dry_run
+      @force = force
+      configure(options)
+    end
+
+    def configure(_options)
     end
 
     def deploy(_containers, _options)
