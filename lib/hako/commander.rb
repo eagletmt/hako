@@ -24,21 +24,23 @@ module Hako
       scripts.each { |script| script.after_deploy(containers) }
     end
 
-    def oneshot(commands, tag:, containers:, env: {})
-      containers = load_containers(tag, dry_run: false, with: containers)
-      scheduler = load_scheduler(@app.yaml['scheduler'])
+    def oneshot(commands, tag:, containers:, env: {}, dry_run: false)
+      containers = load_containers(tag, dry_run: dry_run, with: containers)
+      scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
+      scheduler = load_scheduler(@app.yaml['scheduler'], scripts)
+
       with_oneshot_signal_handlers(scheduler) do
         exit scheduler.oneshot(containers, commands, env)
       end
     end
 
     def status
-      load_scheduler(@app.yaml['scheduler']).status
+      load_scheduler(@app.yaml['scheduler'], []).status
     end
 
     def remove
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
-      load_scheduler(@app.yaml['scheduler']).remove
+      load_scheduler(@app.yaml['scheduler'], scripts).remove
       scripts.each(&:after_remove)
     end
 
@@ -89,8 +91,8 @@ module Hako
       containers
     end
 
-    def load_scheduler(yaml, force: false, dry_run: false)
-      Loader.new(Hako::Schedulers, 'hako/schedulers').load(yaml.fetch('type')).new(@app.id, yaml, force: force, dry_run: dry_run)
+    def load_scheduler(yaml, scripts, force: false, dry_run: false)
+      Loader.new(Hako::Schedulers, 'hako/schedulers').load(yaml.fetch('type')).new(@app.id, yaml, scripts: scripts, force: force, dry_run: dry_run)
     end
 
     def load_front(yaml, dry_run:)

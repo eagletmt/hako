@@ -11,13 +11,15 @@ module Hako
       DEFAULT_CLUSTER = 'default'
       DEFAULT_FRONT_PORT = 10000
 
+      attr_reader :task
+
       def configure(options)
         @cluster = options.fetch('cluster', DEFAULT_CLUSTER)
         @desired_count = options.fetch('desired_count') { validation_error!('desired_count must be set') }
         region = options.fetch('region') { validation_error!('region must be set') }
         @role = options.fetch('role', nil)
         @ecs = Aws::ECS::Client.new(region: region)
-        @elb = EcsElb.new(app_id, Aws::ElasticLoadBalancing::Client.new(region: region), options.fetch('elb', nil))
+        @elb = EcsElb.new(@app_id, Aws::ElasticLoadBalancing::Client.new(region: region), options.fetch('elb', nil))
         @ec2 = Aws::EC2::Client.new(region: region)
         @started_at = nil
         @container_instance_arn = nil
@@ -68,6 +70,7 @@ module Hako
         end
         @task = run_task(task_definition, commands, env)
         Hako.logger.info "Started task: #{@task.task_arn}"
+        @scripts.each { |script| script.oneshot_started(self) }
         wait_for_oneshot_finish
       end
 
