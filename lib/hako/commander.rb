@@ -29,9 +29,10 @@ module Hako
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
       scheduler = load_scheduler(@app.yaml['scheduler'], scripts)
 
-      with_oneshot_signal_handlers(scheduler) do
-        exit scheduler.oneshot(containers, commands, env)
+      exit_code = with_oneshot_signal_handlers(scheduler) do
+        scheduler.oneshot(containers, commands, env)
       end
+      exit exit_code
     end
 
     def status
@@ -52,12 +53,13 @@ module Hako
     def with_oneshot_signal_handlers(scheduler, &block)
       old_handlers = {}
       trapped = false
+      exit_code = nil
 
       begin
         TRAP_SIGNALS.each do |sig|
           old_handlers[sig] = Signal.trap(sig) { raise SignalTrapped }
         end
-        block.call
+        exit_code = block.call
       rescue SignalTrapped
         trapped = true
       ensure
@@ -67,9 +69,10 @@ module Hako
       end
 
       if trapped
-        scheduler.stop_oneshot
+        exit_code = scheduler.stop_oneshot
       end
-      nil
+
+      exit_code
     end
 
     def load_containers(tag, dry_run:, with: nil)
