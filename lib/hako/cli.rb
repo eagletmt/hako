@@ -101,11 +101,12 @@ module Hako
           Hako.logger.level = Logger::DEBUG
         end
 
-        Commander.new(Application.new(@yaml_path)).oneshot(@argv, tag: @tag, containers: @containers, env: @env)
+        Commander.new(Application.new(@yaml_path)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run)
       end
 
       def parse!(argv)
         @tag = 'latest'
+        @dry_run = false
         @containers = []
         @env = {}
         @verbose = false
@@ -124,6 +125,7 @@ module Hako
           opts.banner = 'hako oneshot [OPTIONS] FILE COMMAND ARG...'
           opts.version = VERSION
           opts.on('-t', '--tag=TAG', 'Specify tag (default: latest)') { |v| @tag = v }
+          opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
           opts.on('-c', '--container=NAME', 'Additional container name to start with the app container') { |v| @containers << v }
           opts.on('-v', '--verbose', 'Enable verbose logging') { @verbose = true }
           opts.on('-e', '--env=NAME=VAL', 'Add environment variable') do |arg|

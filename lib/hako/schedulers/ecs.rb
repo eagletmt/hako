@@ -61,17 +61,29 @@ module Hako
         definitions.each do |definition|
           definition.delete(:essential)
         end
-        task_definition = register_task_definition_for_oneshot(definitions)
-        if task_definition == :noop
-          Hako.logger.info "Task definition isn't changed"
-          task_definition = @ecs.describe_task_definition(task_definition: "#{@app_id}-oneshot").task_definition
+
+        if @dry_run
+          definitions.each do |d|
+            Hako.logger.info "Add container #{d}"
+          end
+          env.each do |k, v|
+            Hako.logger.info "Add environment #{k}=#{v}"
+          end
+          Hako.logger.info "Execute command #{commands}"
+          0
         else
-          Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
+          task_definition = register_task_definition_for_oneshot(definitions)
+          if task_definition == :noop
+            Hako.logger.info "Task definition isn't changed"
+            task_definition = @ecs.describe_task_definition(task_definition: "#{@app_id}-oneshot").task_definition
+          else
+            Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
+          end
+          @task = run_task(task_definition, commands, env)
+          Hako.logger.info "Started task: #{@task.task_arn}"
+          @scripts.each { |script| script.oneshot_started(self) }
+          wait_for_oneshot_finish
         end
-        @task = run_task(task_definition, commands, env)
-        Hako.logger.info "Started task: #{@task.task_arn}"
-        @scripts.each { |script| script.oneshot_started(self) }
-        wait_for_oneshot_finish
       end
 
       def stop_oneshot

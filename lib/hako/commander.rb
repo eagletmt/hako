@@ -27,7 +27,7 @@ module Hako
     def oneshot(commands, tag:, containers:, env: {}, dry_run: false)
       containers = load_containers(tag, dry_run: dry_run, with: containers)
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
-      scheduler = load_scheduler(@app.yaml['scheduler'], scripts)
+      scheduler = load_scheduler(@app.yaml['scheduler'], scripts, dry_run: dry_run)
 
       exit_code = with_oneshot_signal_handlers(scheduler) do
         scheduler.oneshot(containers, commands, env)
