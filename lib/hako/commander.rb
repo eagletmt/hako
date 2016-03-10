@@ -77,7 +77,10 @@ module Hako
 
     def load_containers(tag, dry_run:, with: nil)
       app = AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag), dry_run: dry_run)
-      front = load_front(@app.yaml['front'], dry_run: dry_run)
+      front =
+        if @app.yaml.key?('front')
+          load_front(@app.yaml['front'], dry_run: dry_run)
+        end
 
       containers = { 'app' => app, 'front' => front }
       @app.yaml.fetch('additional_containers', {}).each do |name, container|
