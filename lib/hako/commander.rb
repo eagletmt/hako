@@ -16,8 +16,8 @@ module Hako
 
     def deploy(force: false, tag: 'latest', dry_run: false)
       containers = load_containers(tag, dry_run: dry_run)
-      scheduler = load_scheduler(@app.yaml['scheduler'], force: force, dry_run: dry_run)
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
+      scheduler = load_scheduler(@app.yaml['scheduler'], scripts, force: force, dry_run: dry_run)
 
       scripts.each { |script| script.before_deploy(containers) }
       scheduler.deploy(containers)
