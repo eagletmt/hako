@@ -344,6 +344,12 @@ module Hako
         task_arn = task.task_arn
         loop do
           task = @ecs.describe_tasks(cluster: @cluster, tasks: [task_arn]).tasks[0]
+          if task.nil?
+            Hako.logger.debug "Task #{task_arn} could not be described"
+            sleep 1
+            next
+          end
+
           if @container_instance_arn != task.container_instance_arn
             @container_instance_arn = task.container_instance_arn
             report_container_instance(@container_instance_arn)
