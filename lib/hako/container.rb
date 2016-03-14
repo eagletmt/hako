@@ -3,6 +3,8 @@ require 'hako/version'
 
 module Hako
   class Container
+    attr_reader :definition
+
     def initialize(app, definition, dry_run:)
       @app = app
       @definition = default_config.merge(definition)

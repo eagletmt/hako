@@ -7,6 +7,7 @@ require 'hako/fronts'
 require 'hako/loader'
 require 'hako/schedulers'
 require 'hako/scripts'
+require 'set'
 
 module Hako
   class Commander
@@ -76,21 +77,41 @@ module Hako
     end
 
     def load_containers(tag, dry_run:, with: nil)
-      app = AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag), dry_run: dry_run)
-      front =
-        if @app.yaml.key?('front')
-          load_front(@app.yaml['front'], dry_run: dry_run)
-        end
-
-      containers = { 'app' => app, 'front' => front }
-      @app.yaml.fetch('additional_containers', {}).each do |name, container|
-        containers[name] = Container.new(@app, container, dry_run: dry_run)
-      end
+      additional_containers = @app.yaml.fetch('additional_containers', {})
+      container_names = ['app']
       if with
-        keys = ['app'] + with
-        containers.keys.each do |key|
-          unless keys.include?(key)
-            containers.delete(key)
+        container_names.concat(with)
+      else
+        if @app.yaml.key?('front')
+          container_names << 'front'
+        end
+        container_names.concat(additional_containers.keys)
+      end
+
+      load_containers_from_name(tag, container_names, additional_containers, dry_run: dry_run)
+    end
+
+    def load_containers_from_name(tag, container_names, additional_containers, dry_run:)
+      names = Set.new(container_names)
+      containers = {}
+      while containers.size < names.size
+        names.difference(containers.keys).each do |name|
+          containers[name] =
+            case name
+            when 'app'
+              AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag), dry_run: dry_run)
+            when 'front'
+              load_front(@app.yaml['front'], dry_run: dry_run)
+            else
+              Container.new(@app, additional_containers.fetch(name), dry_run: dry_run)
+            end
+          containers[name].links.each do |link|
+            m = link.match(/\A([^:]+):([^:]+)\z/)
+            if m
+              names << m[1]
+            else
+              names << link
+            end
           end
         end
       end
