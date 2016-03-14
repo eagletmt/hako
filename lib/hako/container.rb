@@ -18,6 +18,7 @@ module Hako
       cpu
       memory
       links
+      mount_points
     ].each do |name|
       define_method(name) do
         @definition[name]
@@ -57,6 +58,7 @@ module Hako
       {
         'docker_labels' => {},
         'links' => [],
+        'mount_points' => [],
       }
     end
 

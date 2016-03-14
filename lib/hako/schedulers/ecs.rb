@@ -226,6 +226,10 @@ module Hako
         task_definition.container_definitions.each do |c|
           container_definitions[c.name] = c
         end
+
+        if different_volumes?(task_definition.volumes)
+          return true
+        end
         if definitions.any? { |definition| different_definition?(definition, container_definitions.delete(definition[:name])) }
           return true
         end
@@ -233,6 +237,23 @@ module Hako
       rescue Aws::ECS::Errors::ClientException
         # Task definition does not exist
         true
+      end
+
+      def different_volumes?(actual_volumes)
+        if @volumes.size != actual_volumes.size
+          return true
+        end
+        actual_volumes.each do |actual_volume|
+          expected_volume = @volumes[actual_volume.name]
+          if expected_volume.nil?
+            return true
+          end
+          if expected_volume['source_path'] != actual_volume.host.source_path
+            return true
+          end
+        end
+
+        false
       end
 
       def different_definition?(expected_container, actual_container)
@@ -244,6 +265,7 @@ module Hako
           @ecs.register_task_definition(
             family: @app_id,
             container_definitions: definitions,
+            volumes: volumes_definition,
           ).task_definition
         else
           :noop
@@ -267,9 +289,19 @@ module Hako
           @ecs.register_task_definition(
             family: "#{@app_id}-oneshot",
             container_definitions: definitions,
+            volumes: volumes_definition,
           ).task_definition
         else
           :noop
+        end
+      end
+
+      def volumes_definition
+        @volumes.map do |name, volume|
+          {
+            name: name,
+            host: { source_path: volume['source_path'] },
+          }
         end
       end
 
@@ -285,6 +317,7 @@ module Hako
           essential: true,
           environment: environment,
           docker_labels: front.docker_labels,
+          mount_points: front.mount_points,
         }
       end
 
@@ -300,6 +333,7 @@ module Hako
           essential: true,
           environment: environment,
           docker_labels: app.docker_labels,
+          mount_points: app.mount_points,
         }
       end
 
