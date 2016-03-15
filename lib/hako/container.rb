@@ -18,7 +18,6 @@ module Hako
       cpu
       memory
       links
-      mount_points
     ].each do |name|
       define_method(name) do
         @definition[name]
@@ -31,6 +30,16 @@ module Hako
 
     def env
       @expanded_env ||= expand_env(@definition.fetch('env', {}))
+    end
+
+    def mount_points
+      @definition['mount_points'].map do |mount_point|
+        {
+          source_volume: mount_point.fetch('source_volume'),
+          container_path: mount_point.fetch('container_path'),
+          read_only: mount_point.fetch('read_only', false),
+        }
+      end
     end
 
     private

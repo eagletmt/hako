@@ -6,9 +6,10 @@ module Hako
         @expected_container = expected_container
       end
 
-      CONTAINER_KEYS = %i[image cpu memory links docker_labels mount_points].freeze
+      CONTAINER_KEYS = %i[image cpu memory links docker_labels].freeze
       PORT_MAPPING_KEYS = %i[container_port host_port protocol].freeze
       ENVIRONMENT_KEYS = %i[name value].freeze
+      MOUNT_POINT_KEYS = %i[source_volume container_path read_only].freeze
 
       def different?(actual_container)
         unless actual_container
@@ -30,6 +31,15 @@ module Hako
         end
         @expected_container[:environment].zip(actual_container.environment) do |e, a|
           if different_members?(e, a, ENVIRONMENT_KEYS)
+            return true
+          end
+        end
+
+        if @expected_container[:mount_points].size != actual_container.mount_points.size
+          return true
+        end
+        @expected_container[:mount_points].zip(actual_container.mount_points) do |e, a|
+          if different_members?(e, a, MOUNT_POINT_KEYS)
             return true
           end
         end
