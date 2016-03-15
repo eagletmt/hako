@@ -5,7 +5,7 @@
 Deploy Docker container.
 
 ## Status
-Under development
+Under development. Any incompatible change will happen without notice.
 
 ## Installation
 
