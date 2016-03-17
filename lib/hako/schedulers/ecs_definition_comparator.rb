@@ -18,30 +18,14 @@ module Hako
         if different_members?(@expected_container, actual_container, CONTAINER_KEYS)
           return true
         end
-        if @expected_container[:port_mappings].size != actual_container.port_mappings.size
+        if different_array?(@expected_container, actual_container, :port_mappings, PORT_MAPPING_KEYS)
           return true
         end
-        @expected_container[:port_mappings].zip(actual_container.port_mappings) do |e, a|
-          if different_members?(e, a, PORT_MAPPING_KEYS)
-            return true
-          end
-        end
-        if @expected_container[:environment].size != actual_container.environment.size
+        if different_array?(@expected_container, actual_container, :environment, ENVIRONMENT_KEYS)
           return true
         end
-        @expected_container[:environment].zip(actual_container.environment) do |e, a|
-          if different_members?(e, a, ENVIRONMENT_KEYS)
-            return true
-          end
-        end
-
-        if @expected_container[:mount_points].size != actual_container.mount_points.size
+        if different_array?(@expected_container, actual_container, :mount_points, MOUNT_POINT_KEYS)
           return true
-        end
-        @expected_container[:mount_points].zip(actual_container.mount_points) do |e, a|
-          if different_members?(e, a, MOUNT_POINT_KEYS)
-            return true
-          end
         end
 
         false
@@ -52,6 +36,20 @@ module Hako
       def different_members?(expected, actual, keys)
         keys.each do |key|
           if actual.public_send(key) != expected[key]
+            return true
+          end
+        end
+        false
+      end
+
+      def different_array?(expected, actual, key, keys)
+        if expected[key].size != actual.public_send(key).size
+          return true
+        end
+        sorted_expected = expected[key].sort_by { |e| keys.map { |k| e[k] }.join('') }
+        sorted_actual = actual.public_send(key).sort_by { |a| keys.map { |k| a.public_send(k) }.join('') }
+        sorted_expected.zip(sorted_actual) do |e, a|
+          if different_members?(e, a, keys)
             return true
           end
         end
