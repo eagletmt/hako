@@ -9,9 +9,6 @@ module Hako
       configure(options)
     end
 
-    def configure(_options)
-    end
-
     def deploy_starting(_containers)
     end
 
@@ -22,6 +19,11 @@ module Hako
     end
 
     def oneshot_started(_scheduler)
+    end
+
+    private
+
+    def configure(_options)
     end
   end
 end
