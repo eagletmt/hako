@@ -12,10 +12,10 @@ module Hako
     def configure(_options)
     end
 
-    def before_deploy(_containers)
+    def deploy_starting(_containers)
     end
 
-    def after_deploy(_containers)
+    def deploy_finished(_containers)
     end
 
     def oneshot_started(_scheduler)
