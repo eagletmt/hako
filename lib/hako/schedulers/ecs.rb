@@ -29,6 +29,7 @@ module Hako
         app = containers.fetch('app')
         front = containers.fetch('front')
         front_port = determine_front_port
+        @scripts.each { |script| script.deploy_started(containers, front_port) }
         definitions = create_definitions(containers, front_port)
 
         if @dry_run

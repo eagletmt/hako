@@ -15,6 +15,9 @@ module Hako
     def deploy_starting(_containers)
     end
 
+    def deploy_started(_containers, _front_port)
+    end
+
     def deploy_finished(_containers)
     end
 
