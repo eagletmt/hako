@@ -29,9 +29,11 @@ module Hako
       volumes = @app.yaml.fetch('volumes', [])
       scheduler = load_scheduler(@app.yaml['scheduler'], scripts, volumes: volumes, dry_run: dry_run)
 
+      scripts.each { |script| script.oneshot_starting(containers) }
       exit_code = with_oneshot_signal_handlers(scheduler) do
         scheduler.oneshot(containers, commands, env)
       end
+      scripts.each { |script| script.oneshot_finished(containers) }
       exit exit_code
     end
 

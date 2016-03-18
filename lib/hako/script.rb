@@ -18,7 +18,13 @@ module Hako
     def deploy_finished(_containers)
     end
 
+    def oneshot_starting(_containers)
+    end
+
     def oneshot_started(_scheduler)
+    end
+
+    def oneshot_finished(_containers)
     end
 
     private
