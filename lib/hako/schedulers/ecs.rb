@@ -26,11 +26,9 @@ module Hako
       end
 
       def deploy(containers)
-        app = containers.fetch('app')
-        front = containers.fetch('front')
         front_port = determine_front_port
         @scripts.each { |script| script.deploy_started(containers, front_port) }
-        definitions = create_definitions(containers, front_port)
+        definitions = create_definitions(containers)
 
         if @dry_run
           definitions.each do |d|
@@ -43,8 +41,6 @@ module Hako
             task_definition = @ecs.describe_task_definition(task_definition: @app_id).task_definition
           else
             Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
-            upload_front_config(@app_id, front, app.port)
-            Hako.logger.debug "Uploaded front configuration to s3://#{front.s3.bucket}/#{front.s3.key(@app_id)}"
           end
           service = create_or_update_service(task_definition.task_definition_arn, front_port)
           if service == :noop
@@ -58,7 +54,7 @@ module Hako
       end
 
       def oneshot(containers, commands, env)
-        definitions = create_definitions(containers, -1)
+        definitions = create_definitions(containers)
         definitions.each do |definition|
           definition.delete(:essential)
         end
@@ -273,14 +269,9 @@ module Hako
         end
       end
 
-      def create_definitions(containers, front_port)
+      def create_definitions(containers)
         containers.map do |name, container|
-          case name
-          when 'front'
-            front_container(container, front_port)
-          else
-            app_container(name, container)
-          end
+          create_definition(name, container)
         end
       end
 
@@ -306,35 +297,19 @@ module Hako
         end
       end
 
-      def front_container(front, front_port)
-        environment = front.env.map { |k, v| { name: k, value: v } }
-        {
-          name: 'front',
-          image: front.image_tag,
-          cpu: front.cpu,
-          memory: front.memory,
-          links: front.links,
-          port_mappings: [{ container_port: 80, host_port: front_port, protocol: 'tcp' }],
-          essential: true,
-          environment: environment,
-          docker_labels: front.docker_labels,
-          mount_points: front.mount_points,
-        }
-      end
-
-      def app_container(name, app)
-        environment = app.env.map { |k, v| { name: k, value: v } }
+      def create_definition(name, container)
+        environment = container.env.map { |k, v| { name: k, value: v } }
         {
           name: name,
-          image: app.image_tag,
-          cpu: app.cpu,
-          memory: app.memory,
-          links: app.links,
-          port_mappings: [],
+          image: container.image_tag,
+          cpu: container.cpu,
+          memory: container.memory,
+          links: container.links,
+          port_mappings: container.port_mappings,
           essential: true,
           environment: environment,
-          docker_labels: app.docker_labels,
-          mount_points: app.mount_points,
+          docker_labels: container.docker_labels,
+          mount_points: container.mount_points,
         }
       end
 

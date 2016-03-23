@@ -18,6 +18,7 @@ module Hako
       cpu
       memory
       links
+      port_mappings
     ].each do |name|
       define_method(name) do
         @definition[name]
@@ -29,7 +30,7 @@ module Hako
     end
 
     def env
-      @expanded_env ||= expand_env(@definition.fetch('env', {}))
+      @expanded_env ||= expand_env(@definition.fetch('env'))
     end
 
     def mount_points
@@ -65,9 +66,11 @@ module Hako
 
     def default_config
       {
+        'env' => {},
         'docker_labels' => {},
         'links' => [],
         'mount_points' => [],
+        'port_mappings' => [],
       }
     end
 
