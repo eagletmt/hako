@@ -62,11 +62,15 @@ module Hako
       end
 
       def upload_config(front_conf)
-        s3_client.put_object(
-          body: front_conf,
-          bucket: @s3.bucket,
-          key: @s3.key(@app.id),
-        )
+        if @dry_run
+          Hako.logger.info "Generated configuration:\n#{front_conf}"
+        else
+          s3_client.put_object(
+            body: front_conf,
+            bucket: @s3.bucket,
+            key: @s3.key(@app.id),
+          )
+        end
       end
 
       def s3_client
