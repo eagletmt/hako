@@ -17,9 +17,13 @@ app:
     PORT: 3000
     MESSAGE: '#{username}-san'
 front:
-  !include front.yml
+  image_tag: hako-nginx
+  memory: 32
+  cpu: 32
 additional_containers:
   redis:
     image_tag: redis:3.0
     cpu: 64
     memory: 512
+scripts:
+  - !include front.yml

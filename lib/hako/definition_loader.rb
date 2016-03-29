@@ -2,7 +2,6 @@
 require 'set'
 require 'hako/app_container'
 require 'hako/container'
-require 'hako/fronts'
 require 'hako/loader'
 
 module Hako
@@ -39,7 +38,7 @@ module Hako
             when 'app'
               AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag), dry_run: @dry_run)
             when 'front'
-              load_front(@app.yaml['front'], dry_run: @dry_run)
+              Container.new(@app, @app.yaml.fetch('front'), dry_run: @dry_run)
             else
               Container.new(@app, additional_containers.fetch(name), dry_run: @dry_run)
             end
@@ -51,10 +50,6 @@ module Hako
         end
       end
       containers
-    end
-
-    def load_front(yaml, dry_run:)
-      Loader.new(Hako::Fronts, 'hako/fronts').load(yaml.fetch('type')).new(@app, yaml, dry_run: dry_run)
     end
   end
 end

@@ -17,7 +17,7 @@ RSpec.describe Hako::DefinitionLoader do
       expect(containers['app'].image_tag).to eq('app-image:latest')
       expect(containers['app'].links).to eq([])
       expect(containers['front'].image_tag).to eq('front-image')
-      expect(containers['front'].links).to eq(['app:app'])
+      expect(containers['front'].links).to eq([])
     end
 
     context 'with `with`' do

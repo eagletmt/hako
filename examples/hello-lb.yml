@@ -25,8 +25,11 @@ app:
     PORT: 3000
     MESSAGE: '#{username}-san'
 front:
-  <<: !include front.yml
-  extra:
+  image_tag: hako-nginx
+  memory: 32
+  cpu: 32
+scripts:
+  - <<: !include front.yml
     locations:
       /:
         allow_only_from:
