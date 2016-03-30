@@ -46,6 +46,7 @@ module Hako
       def configure(options)
         super
         @options = options
+        @options['locations'] ||= { '/' => {} }
         @s3 = S3Config.new(@options.fetch('s3'))
       end
 
@@ -106,8 +107,7 @@ module Hako
         end
 
         def locations
-          locs = @options.fetch('locations', {}).dup
-          locs['/'] ||= {}
+          locs = @options.fetch('locations').dup
           locs.keys.each do |k|
             locs[k] = Location.new(locs[k])
           end
