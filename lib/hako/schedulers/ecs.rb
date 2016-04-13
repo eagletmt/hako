@@ -328,7 +328,7 @@ module Hako
             ],
           },
           count: 1,
-          started_by: "hako oneshot #{@app_id}",
+          started_by: 'hako oneshot',
         ).tasks[0]
       end
 
