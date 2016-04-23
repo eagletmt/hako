@@ -15,7 +15,7 @@ module Hako
 
       def configure(options)
         @cluster = options.fetch('cluster', DEFAULT_CLUSTER)
-        @desired_count = options.fetch('desired_count') { validation_error!('desired_count must be set') }
+        @desired_count = options.fetch('desired_count', nil)
         region = options.fetch('region') { validation_error!('region must be set') }
         @role = options.fetch('role', nil)
         @ecs = Aws::ECS::Client.new(region: region)
@@ -26,6 +26,9 @@ module Hako
       end
 
       def deploy(containers)
+        unless @desired_count
+          validation_error!('desired_count must be set')
+        end
         front_port = determine_front_port
         @scripts.each { |script| script.deploy_started(containers, front_port) }
         definitions = create_definitions(containers)
