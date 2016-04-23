@@ -1,8 +1,6 @@
 app:
   image: app-image
-front:
-  type: nginx
-  image_tag: front-image
-  s3:
-    region: ap-northeast-1
-    bucket: nanika
+additional_containers:
+  front:
+    type: nginx
+    image_tag: front-image

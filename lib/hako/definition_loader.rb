@@ -17,9 +17,6 @@ module Hako
       if with
         container_names.concat(with)
       else
-        if @app.yaml.key?('front')
-          container_names << 'front'
-        end
         container_names.concat(additional_containers.keys)
       end
 
@@ -37,8 +34,6 @@ module Hako
             case name
             when 'app'
               AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag), dry_run: @dry_run)
-            when 'front'
-              Container.new(@app, @app.yaml.fetch('front'), dry_run: @dry_run)
             else
               Container.new(@app, additional_containers.fetch(name), dry_run: @dry_run)
             end

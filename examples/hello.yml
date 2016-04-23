@@ -16,11 +16,11 @@ app:
         path: hello.env
     PORT: 3000
     MESSAGE: '#{username}-san'
-front:
-  image_tag: hako-nginx
-  memory: 32
-  cpu: 32
 additional_containers:
+  front:
+    image_tag: hako-nginx
+    memory: 32
+    cpu: 32
   redis:
     image_tag: redis:3.0
     cpu: 64
