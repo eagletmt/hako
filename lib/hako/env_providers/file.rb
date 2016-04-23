@@ -4,6 +4,8 @@ require 'hako/env_provider'
 module Hako
   module EnvProviders
     class File < EnvProvider
+      # @param [Pathname] root_path
+      # @param [Hash<String, Object>] options
       def initialize(root_path, options)
         unless options['path']
           validation_error!('path must be set')
@@ -11,6 +13,8 @@ module Hako
         @path = root_path.join(options['path'])
       end
 
+      # @param [Array<String>] variables
+      # @return [Hash<String, String>]
       def ask(variables)
         env = {}
         read_from_file do |key, val|
@@ -23,6 +27,9 @@ module Hako
 
       private
 
+      # @yieldparam [String] key
+      # @yieldparam [String] val
+      # @return [nil]
       def read_from_file(&block)
         ::File.open(@path) do |f|
           f.each_line do |line|

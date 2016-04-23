@@ -3,8 +3,13 @@ require 'hako/version'
 
 module Hako
   class Container
+    # @!attribute [r] definition
+    #   @return [Hash]
     attr_reader :definition
 
+    # @param [Application] app
+    # @param [Hash] definition
+    # @param [Boolean] dry_run
     def initialize(app, definition, dry_run:)
       @app = app
       @definition = default_config.merge(definition)
@@ -29,10 +34,12 @@ module Hako
       end
     end
 
+    # @return [Hash<String, String>]
     def env
       @expanded_env ||= expand_env(@definition.fetch('env'))
     end
 
+    # @return [Array<Hash>]
     def mount_points
       @definition['mount_points'].map do |mount_point|
         {
@@ -47,6 +54,8 @@ module Hako
 
     PROVIDERS_KEY = '$providers'
 
+    # @param [Hash<String, String>] env
+    # @return [Hash<String, String>]
     def expand_env(env)
       env = env.dup
       provider_types = env.delete(PROVIDERS_KEY) || []
@@ -58,12 +67,15 @@ module Hako
       end
     end
 
+    # @param [Array<Hash>] provider_configs
+    # @return [Array<EnvProvider>]
     def load_providers(provider_configs)
       provider_configs.map do |yaml|
         Loader.new(Hako::EnvProviders, 'hako/env_providers').load(yaml.fetch('type')).new(@app.root_path, yaml)
       end
     end
 
+    # @return [Hash]
     def default_config
       {
         'env' => {},
@@ -74,6 +86,7 @@ module Hako
       }
     end
 
+    # @return [Hash<String, String>]
     def default_labels
       {
         'cc.wanko.hako.version' => VERSION,

@@ -13,6 +13,7 @@ module Hako
 
       attr_reader :task
 
+      # @param [Hash<String, Object>] options
       def configure(options)
         @cluster = options.fetch('cluster', DEFAULT_CLUSTER)
         @desired_count = options.fetch('desired_count', nil)
@@ -25,6 +26,8 @@ module Hako
         @container_instance_arn = nil
       end
 
+      # @param [Hash<String, Container>] containers
+      # @return [nil]
       def deploy(containers)
         unless @desired_count
           validation_error!('desired_count must be set')
@@ -56,6 +59,10 @@ module Hako
         end
       end
 
+      # @param [Hash<String, Container>] containers
+      # @param [Array<String>] commands
+      # @param [Hash<String, String>] env
+      # @return [nil]
       def oneshot(containers, commands, env)
         definitions = create_definitions(containers)
         definitions.each do |definition|
@@ -86,6 +93,7 @@ module Hako
         end
       end
 
+      # @return [nil]
       def stop_oneshot
         if @task
           Hako.logger.warn "Stopping #{@task.task_arn}"
@@ -94,6 +102,7 @@ module Hako
         end
       end
 
+      # @return [nil]
       def status
         service = describe_service
         unless service
@@ -152,6 +161,7 @@ module Hako
         end
       end
 
+      # @return [nil]
       def remove
         service = describe_service
         if service
@@ -166,6 +176,7 @@ module Hako
 
       private
 
+      # @return [Aws::ECS::Types::Service, nil]
       def describe_service
         service = @ecs.describe_services(cluster: @cluster, services: [@app_id]).services[0]
         if service && service.status != 'INACTIVE'
@@ -173,6 +184,7 @@ module Hako
         end
       end
 
+      # @return [Fixnum]
       def determine_front_port
         if @dry_run
           return DEFAULT_FRONT_PORT
@@ -185,6 +197,7 @@ module Hako
         end
       end
 
+      # @return [Fixnum]
       def new_front_port
         max_port = -1
         @ecs.list_services(cluster: @cluster).each do |page|
@@ -206,6 +219,8 @@ module Hako
         end
       end
 
+      # @param [Aws::ECS::Types::Service] service
+      # @return [Fixnum, nil]
       def find_front_port(service)
         task_definition = @ecs.describe_task_definition(task_definition: service.task_definition).task_definition
         container_definitions = {}
@@ -217,6 +232,9 @@ module Hako
         end
       end
 
+      # @param [String] family
+      # @param [Array<Hash>] definitions
+      # @return [Boolean]
       def task_definition_changed?(family, definitions)
         if @force
           return true
@@ -239,6 +257,8 @@ module Hako
         true
       end
 
+      # @param [Hash<String, Hash<String, String>>] actual_volumes
+      # @return [Boolean]
       def different_volumes?(actual_volumes)
         if @volumes.size != actual_volumes.size
           return true
@@ -256,10 +276,15 @@ module Hako
         false
       end
 
+      # @param [Hash] expected_container
+      # @param [Aws::ECS::Types::ContainerDefinition] actual_container
+      # @return [Boolean]
       def different_definition?(expected_container, actual_container)
         EcsDefinitionComparator.new(expected_container).different?(actual_container)
       end
 
+      # @param [Array<Hash>] definitions
+      # @return [Aws::ECS::Types::TaskDefinition, Symbol]
       def register_task_definition(definitions)
         if task_definition_changed?(@app_id, definitions)
           @ecs.register_task_definition(
@@ -272,12 +297,16 @@ module Hako
         end
       end
 
+      # @param [Hash<String, Container>] containers
+      # @return [nil]
       def create_definitions(containers)
         containers.map do |name, container|
           create_definition(name, container)
         end
       end
 
+      # @param [Array<Hash>] definitions
+      # @return [Aws::ECS::Types::TaskDefinition, Symbol]
       def register_task_definition_for_oneshot(definitions)
         family = "#{@app_id}-oneshot"
         if task_definition_changed?(family, definitions)
@@ -291,6 +320,7 @@ module Hako
         end
       end
 
+      # @return [Hash]
       def volumes_definition
         @volumes.map do |name, volume|
           {
@@ -300,6 +330,9 @@ module Hako
         end
       end
 
+      # @param [String] name
+      # @param [Container] container
+      # @return [Hash]
       def create_definition(name, container)
         environment = container.env.map { |k, v| { name: k, value: v } }
         {
@@ -316,6 +349,10 @@ module Hako
         }
       end
 
+      # @param [Aws::ECS::Types::TaskDefinition] task_definition
+      # @param [Array<String>] commands
+      # @param [Hash<String, String>] env
+      # @return [Aws::ECS::Types::Task]
       def run_task(task_definition, commands, env)
         environment = env.map { |k, v| { name: k, value: v } }
         @ecs.run_task(
@@ -335,6 +372,7 @@ module Hako
         ).tasks[0]
       end
 
+      # @return [Fixnum]
       def wait_for_oneshot_finish
         containers = wait_for_task(@task)
         @task = nil
@@ -353,6 +391,8 @@ module Hako
         exit_code
       end
 
+      # @param [Aws::ECS::Types::Task] task
+      # @return [nil]
       def wait_for_task(task)
         task_arn = task.task_arn
         loop do
@@ -388,6 +428,8 @@ module Hako
         end
       end
 
+      # @param [String] container_instance_arn
+      # @return [nil]
       def report_container_instance(container_instance_arn)
         container_instance = @ecs.describe_container_instances(cluster: @cluster, container_instances: [container_instance_arn]).container_instances[0]
         @ec2.describe_tags(filters: [{ name: 'resource-id', values: [container_instance.ec2_instance_id] }]).each do |page|
@@ -400,6 +442,9 @@ module Hako
         end
       end
 
+      # @param [String] task_definition_arn
+      # @param [Fixnum] front_port
+      # @return [Aws::ECS::Types::Service, Symbol]
       def create_or_update_service(task_definition_arn, front_port)
         service = describe_service
         if service.nil?
@@ -438,6 +483,9 @@ module Hako
 
       SERVICE_KEYS = %i[desired_count task_definition].freeze
 
+      # @param [Aws::ECS::Types::Service] service
+      # @param [Hash] params
+      # @return [Boolean]
       def service_changed?(service, params)
         SERVICE_KEYS.each do |key|
           if service.public_send(key) != params[key]
@@ -447,6 +495,8 @@ module Hako
         false
       end
 
+      # @param [Aws::ECS::Types::Service] service
+      # @return [nil]
       def wait_for_ready(service)
         latest_event_id = find_latest_event_id(service.events)
         Hako.logger.debug "  latest_event_id=#{latest_event_id}"
@@ -469,6 +519,8 @@ module Hako
         end
       end
 
+      # @param [Array<Aws::ECS::Types::ServiceEvent>] events
+      # @return [String, nil]
       def find_latest_event_id(events)
         if events.empty?
           nil

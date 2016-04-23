@@ -12,10 +12,13 @@ module Hako
     Literal = Struct.new(:literal)
     Variable = Struct.new(:name)
 
+    # @param [Array<EnvProvider>] providers
     def initialize(providers)
       @providers = providers
     end
 
+    # @param [Hash<String, String>] env
+    # @return [Hash<String, String>]
     def expand(env)
       parsed_env = {}
       variables = Set.new
@@ -52,6 +55,8 @@ module Hako
 
     private
 
+    # @param [String] value
+    # @return [Array]
     def parse(value)
       s = StringScanner.new(value)
       tokens = []

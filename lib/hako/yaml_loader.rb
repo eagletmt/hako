@@ -7,6 +7,8 @@ module Hako
       @current_path = nil
     end
 
+    # @param [String] path
+    # @return [Hash]
     def load(path)
       class_loader = Psych::ClassLoader.new
       scanner = Psych::ScalarScanner.new(class_loader)

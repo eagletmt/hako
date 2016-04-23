@@ -2,6 +2,7 @@
 module Hako
   module Schedulers
     class EcsDefinitionComparator
+      # @param [Hash] expected_container
       def initialize(expected_container)
         @expected_container = expected_container
       end
@@ -11,6 +12,8 @@ module Hako
       ENVIRONMENT_KEYS = %i[name value].freeze
       MOUNT_POINT_KEYS = %i[source_volume container_path read_only].freeze
 
+      # @param [Aws::ECS::Types::ContainerDefinition] actual_container
+      # @return [Boolean]
       def different?(actual_container)
         unless actual_container
           return true
@@ -33,6 +36,10 @@ module Hako
 
       private
 
+      # @param [Hash<String, Object>] expected
+      # @param [Hash<String, Object>] actual
+      # @param [Array<String>] keys
+      # @return [Boolean]
       def different_members?(expected, actual, keys)
         keys.each do |key|
           if actual.public_send(key) != expected[key]
@@ -42,6 +49,10 @@ module Hako
         false
       end
 
+      # @param [Hash<String, Array<Object>>] expected
+      # @param [Hash<String, Array<Object>>] actual
+      # @param [Array<String>] keys
+      # @return [Boolean]
       def different_array?(expected, actual, key, keys)
         if expected[key].size != actual.public_send(key).size
           return true

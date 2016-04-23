@@ -8,6 +8,7 @@ module Hako
   module Scripts
     class NginxFront < Script
       S3Config = Struct.new(:region, :bucket, :prefix) do
+        # @param [Hash] options
         def initialize(options)
           self.region = options.fetch('region')
           self.bucket = options.fetch('bucket')
@@ -23,6 +24,8 @@ module Hako
         end
       end
 
+      # @param [Hash<String, Container>] containers
+      # @return [nil]
       def deploy_starting(containers)
         front = containers.fetch('front')
         front.definition['env'].merge!(
@@ -33,6 +36,9 @@ module Hako
         front.links << link_app
       end
 
+      # @param [Hash<String, Container>] containers
+      # @param [Fixnum] front_port
+      # @return [nil]
       def deploy_started(containers, front_port)
         app = containers.fetch('app')
         front = containers.fetch('front')
@@ -43,6 +49,8 @@ module Hako
 
       private
 
+      # @param [Hash] options
+      # @return [nil]
       def configure(options)
         super
         @options = options
@@ -50,18 +58,24 @@ module Hako
         @s3 = S3Config.new(@options.fetch('s3'))
       end
 
+      # @return [String]
       def link_app
         'app:app'
       end
 
+      # @param [Fixnum] front_port
+      # @return [Hash]
       def port_mapping(front_port)
         { container_port: 80, host_port: front_port, protocol: 'tcp' }
       end
 
+      # @param [Fixnum] app_port
+      # @return [String]
       def generate_config(app_port)
         Generator.new(@options, app_port).render
       end
 
+      # @return [Hash]
       def upload_config(front_conf)
         if @dry_run
           Hako.logger.info "Generated configuration:\n#{front_conf}"
@@ -74,38 +88,47 @@ module Hako
         end
       end
 
+      # @return [Aws::S3::Client]
       def s3_client
         @s3_client ||= Aws::S3::Client.new(region: @s3.region)
       end
 
       class Generator
+        # @param [Hash] options
+        # @param [Fixnum] app_port
         def initialize(options, app_port)
           @options = options
           @app_port = app_port
         end
 
+        # @return [String]
         def render
           ERB.new(File.read(nginx_conf_erb), nil, '-').result(binding)
         end
 
         private
 
+        # @return [String]
         def listen_spec
           "app:#{@app_port}"
         end
 
+        # @return [String]
         def templates_directory
           File.expand_path('../../templates', __FILE__)
         end
 
+        # @return [String]
         def nginx_conf_erb
           File.join(templates_directory, 'nginx.conf.erb')
         end
 
+        # @return [String]
         def nginx_location_conf_erb
           File.join(templates_directory, 'nginx.location.conf.erb')
         end
 
+        # @return [Hash<String, Location>]
         def locations
           locs = @options.fetch('locations').dup
           locs.keys.each do |k|
@@ -114,10 +137,14 @@ module Hako
           locs
         end
 
+        # @return [String, nil]
         def client_max_body_size
           @options.fetch('client_max_body_size', nil)
         end
 
+        # @param [String] listen_spec
+        # @param [Location] location
+        # @return [String]
         def render_location(listen_spec, location)
           ERB.new(File.read(nginx_location_conf_erb), nil, '-').result(binding).each_line.map do |line|
             "    #{line}"
@@ -125,10 +152,12 @@ module Hako
         end
 
         class Location
+          # @param [Hash] config
           def initialize(config)
             @config = config
           end
 
+          # @return [Array<String>, nil]
           def allow_only_from
             allow = @config.fetch('allow_only_from', nil)
             if allow

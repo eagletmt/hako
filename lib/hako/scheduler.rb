@@ -6,6 +6,12 @@ module Hako
     class ValidationError < Error
     end
 
+    # @param [String] app_id
+    # @param [Hash] options
+    # @param [Hash] volumes
+    # @param [Array<Script>] scripts
+    # @param [Boolean] dry_run
+    # @param [Boolean] force
     def initialize(app_id, options, volumes:, scripts:, dry_run:, force:)
       @app_id = app_id
       @volumes = volumes
@@ -15,10 +21,12 @@ module Hako
       configure(options)
     end
 
+    # @param [Hash] _options
     def configure(_options)
     end
 
-    def deploy(_containers, _options)
+    # @param [Hash<String, Container>] _containers
+    def deploy(_containers)
       raise NotImplementedError
     end
 
@@ -32,6 +40,7 @@ module Hako
 
     private
 
+    # @param [String] message
     def validation_error!(message)
       raise ValidationError.new(message)
     end

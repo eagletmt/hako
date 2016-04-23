@@ -8,10 +8,15 @@ require 'hako/scripts'
 
 module Hako
   class Commander
+    # @param [Application] app
     def initialize(app)
       @app = app
     end
 
+    # @param [Boolean] force
+    # @param [String] tag
+    # @param [Boolean] dry_run
+    # @return [nil]
     def deploy(force: false, tag: 'latest', dry_run: false)
       containers = load_containers(tag, dry_run: dry_run)
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
@@ -21,8 +26,14 @@ module Hako
       scripts.each { |script| script.deploy_starting(containers) }
       scheduler.deploy(containers)
       scripts.each { |script| script.deploy_finished(containers) }
+      nil
     end
 
+    # @param [Array<String>] commands
+    # @param [String] tag
+    # @param [Hash<String, String>] env
+    # @param [Boolean] dry_run
+    # @return [nil]
     def oneshot(commands, tag:, containers:, env: {}, dry_run: false)
       containers = load_containers(tag, dry_run: dry_run, with: containers)
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
@@ -37,10 +48,12 @@ module Hako
       exit exit_code
     end
 
+    # @return [nil]
     def status
       load_scheduler(@app.yaml['scheduler'], []).status
     end
 
+    # @return [nil]
     def remove
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
       load_scheduler(@app.yaml['scheduler'], scripts).remove
@@ -52,6 +65,8 @@ module Hako
     TRAP_SIGNALS = %i[INT TERM].freeze
     class SignalTrapped < StandardError; end
 
+    # @param [Scheduler] scheduler
+    # @yieldreturn [Fixnum]
     def with_oneshot_signal_handlers(scheduler, &block)
       old_handlers = {}
       trapped = false
@@ -77,14 +92,26 @@ module Hako
       exit_code
     end
 
+    # @param [String] tag
+    # @param [Boolean] dry_run
+    # @param [Array<String>, nil] with
+    # @return [Hash<String, Container>]
     def load_containers(tag, dry_run:, with: nil)
       DefinitionLoader.new(@app, dry_run: dry_run).load(tag, with: with)
     end
 
+    # @param [Hash] yaml
+    # @param [Hash] volumes
+    # @param [Boolean] force
+    # @param [Boolean] dry_run
+    # @return [Scheduler]
     def load_scheduler(yaml, scripts, volumes: [], force: false, dry_run: false)
       Loader.new(Hako::Schedulers, 'hako/schedulers').load(yaml.fetch('type')).new(@app.id, yaml, volumes: volumes, scripts: scripts, force: force, dry_run: dry_run)
     end
 
+    # @param [Hash] yaml
+    # @param [Boolean] dry_run
+    # @return [Script]
     def load_script(yaml, dry_run:)
       Loader.new(Hako::Scripts, 'hako/scripts').load(yaml.fetch('type')).new(@app, yaml, dry_run: dry_run)
     end

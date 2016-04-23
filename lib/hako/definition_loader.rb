@@ -6,11 +6,16 @@ require 'hako/loader'
 
 module Hako
   class DefinitionLoader
+    # @param [Application] app
+    # @param [Boolean] dry_run
     def initialize(app, dry_run:)
       @app = app
       @dry_run = dry_run
     end
 
+    # @param [String] tag
+    # @param [Array<String>, nil] with
+    # @return [Hash<String, Container>]
     def load(tag, with: nil)
       additional_containers = @app.yaml.fetch('additional_containers', {})
       container_names = ['app']
@@ -25,6 +30,10 @@ module Hako
 
     private
 
+    # @param [String] tag
+    # @param [Array<String>] container_names
+    # @param [Hash<String, Hash>] additional_containers
+    # @return [Hash<String, Container>]
     def load_containers_from_name(tag, container_names, additional_containers)
       names = Set.new(container_names)
       containers = {}

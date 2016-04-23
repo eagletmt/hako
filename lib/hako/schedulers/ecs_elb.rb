@@ -5,16 +5,22 @@ require 'hako'
 module Hako
   module Schedulers
     class EcsElb
+      # @param [String] app_id
+      # @param [Aws::ElasticLoadBalancing::Client] elb
+      # @param [Hash] elb_config
       def initialize(app_id, elb, elb_config)
         @app_id = app_id
         @elb = elb
         @elb_config = elb_config
       end
 
+      # @return [Aws::ElasticLoadBalancing::Types::LoadBalancerDescription]
       def describe_load_balancer
         @elb.describe_load_balancers(load_balancer_names: [name]).load_balancer_descriptions[0]
       end
 
+      # @param [Fixnum] front_port
+      # @return [nil]
       def find_or_create_load_balancer(front_port)
         if @elb_config
           unless exist?
@@ -40,6 +46,7 @@ module Hako
         end
       end
 
+      # @return [nil]
       def destroy
         if exist?
           @elb.delete_load_balancer(load_balancer_name: name)
@@ -49,6 +56,7 @@ module Hako
         end
       end
 
+      # @return [Boolean]
       def exist?
         describe_load_balancer
         true
@@ -56,6 +64,7 @@ module Hako
         false
       end
 
+      # @return [String]
       def name
         "hako-#{@app_id}"
       end
