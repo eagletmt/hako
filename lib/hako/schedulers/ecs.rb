@@ -522,9 +522,11 @@ module Hako
             Hako.logger.info "#{e.created_at}: #{e.message}"
           end
           latest_event_id = find_latest_event_id(s.events)
-          finished = s.deployments.all? { |d| d.status != 'ACTIVE' }
-          Hako.logger.debug "  latest_event_id=#{latest_event_id}, deployment statuses=#{s.deployments.map(&:status)}"
-          if finished
+          Hako.logger.debug "  latest_event_id=#{latest_event_id}, deployments=#{s.deployments}"
+          no_active = s.deployments.all? { |d| d.status != 'ACTIVE' }
+          primary = s.deployments.find { |d| d.status == 'PRIMARY' }
+          primary_ready = primary && primary.running_count == primary.desired_count
+          if no_active && primary_ready
             return
           else
             sleep 1
