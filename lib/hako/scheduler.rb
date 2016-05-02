@@ -30,6 +30,10 @@ module Hako
       raise NotImplementedError
     end
 
+    def rollback
+      raise NotImplementedError
+    end
+
     def status
       raise NotImplementedError
     end

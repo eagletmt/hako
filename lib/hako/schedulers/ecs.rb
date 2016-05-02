@@ -57,6 +57,32 @@ module Hako
         end
       end
 
+      def rollback
+        current_service = describe_service
+        unless current_service
+          Hako.logger.error 'Unable to find service'
+          exit 1
+        end
+
+        task_definition = ecs_client.describe_task_definition(task_definition: current_service.task_definition).task_definition
+        current_definition = "#{task_definition.family}:#{task_definition.revision}"
+        target_definition = find_rollback_target(task_definition)
+        Hako.logger.info "Current task defintion is #{current_definition}. Rolling back to #{target_definition}"
+
+        if @dry_run
+          Hako.logger.info 'Deployment completed (dry-run)'
+        else
+          service = ecs_client.update_service(cluster: current_service.cluster_arn, service: current_service.service_arn, task_definition: target_definition).service
+          Hako.logger.info "Updated service: #{service.service_arn}"
+
+          deregistered_definition = ecs_client.deregister_task_definition(task_definition: current_definition).task_definition
+          Hako.logger.debug "Deregistered #{deregistered_definition.task_definition_arn}"
+
+          wait_for_ready(service)
+          Hako.logger.info 'Deployment completed'
+        end
+      end
+
       # @param [Hash<String, Container>] containers
       # @param [Array<String>] commands
       # @param [Hash<String, String>] env
@@ -542,6 +568,27 @@ module Hako
         else
           events[0].id
         end
+      end
+
+      # @param [Aws::ECS::Types::TaskDefinition]
+      # @return [String]
+      def find_rollback_target(task_definition)
+        if task_definition.status != 'ACTIVE'
+          raise 'Cannot find rollback target from INACTIVE task_definition!'
+        end
+
+        arn_found = false
+        ecs_client.list_task_definitions(family_prefix: task_definition.family, status: 'ACTIVE', sort: 'DESC').each do |page|
+          page.task_definition_arns.each do |arn|
+            if arn_found
+              return arn
+            elsif arn == task_definition.task_definition_arn
+              arn_found = true
+            end
+          end
+        end
+
+        raise "Unable to find rollback target. #{task_definition.task_definition_arn} is INACTIVE?"
       end
     end
   end

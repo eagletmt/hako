@@ -6,6 +6,7 @@ module Hako
   class CLI
     SUB_COMMANDS = %w[
       deploy
+      rollback
       oneshot
       show-yaml
       status
@@ -85,6 +86,41 @@ module Hako
           opts.version = VERSION
           opts.on('-f', '--force', 'Run deployment even if nothing is changed') { @force = true }
           opts.on('-t', '--tag=TAG', 'Specify tag (default: latest)') { |v| @tag = v }
+          opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
+          opts.on('-v', '--verbose', 'Enable verbose logging') { @verbose = true }
+        end
+      end
+    end
+
+    class Rollback
+      def run(argv)
+        parse!(argv)
+        require 'hako/application'
+        require 'hako/commander'
+
+        if @verbose
+          Hako.logger.level = Logger::DEBUG
+        end
+
+        Commander.new(Application.new(@yaml_path)).rollback(dry_run: @dry_run)
+      end
+
+      def parse!(argv)
+        @dry_run = false
+        @verbose = false
+        parser.parse!(argv)
+        @yaml_path = argv.first
+
+        if @yaml_path.nil?
+          puts parser.help
+          exit 1
+        end
+      end
+
+      def parser
+        @parser ||= OptionParser.new do |opts|
+          opts.banner = 'hako rollback [OPTIONS] FILE'
+          opts.version = VERSION
           opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
           opts.on('-v', '--verbose', 'Enable verbose logging') { @verbose = true }
         end

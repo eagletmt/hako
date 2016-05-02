@@ -29,6 +29,15 @@ module Hako
       nil
     end
 
+    # @param [Boolean] dry_run
+    # @return [nil]
+    def rollback(dry_run: false)
+      scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
+      scheduler = load_scheduler(@app.yaml['scheduler'], scripts, dry_run: dry_run)
+
+      scheduler.rollback
+    end
+
     # @param [Array<String>] commands
     # @param [String] tag
     # @param [Hash<String, String>] env
