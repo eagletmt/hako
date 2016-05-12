@@ -24,6 +24,7 @@ module Hako
       memory
       links
       port_mappings
+      command
     ].each do |name|
       define_method(name) do
         @definition[name]
