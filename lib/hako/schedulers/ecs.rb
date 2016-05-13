@@ -542,6 +542,11 @@ module Hako
         Hako.logger.debug "  latest_event_id=#{latest_event_id}"
         loop do
           s = ecs_client.describe_services(cluster: service.cluster_arn, services: [service.service_arn]).services[0]
+          if s.nil?
+            Hako.logger.debug "Service #{service.service_arn} could not be described"
+            sleep 1
+            next
+          end
           s.events.each do |e|
             if e.id == latest_event_id
               break
