@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 require 'hako'
 require 'optparse'
+require 'pathname'
 
 module Hako
   class CLI
