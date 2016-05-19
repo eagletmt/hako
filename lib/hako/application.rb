@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 require 'hako/yaml_loader'
+require 'pathname'
 
 module Hako
   class Application
