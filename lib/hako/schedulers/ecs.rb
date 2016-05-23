@@ -395,7 +395,7 @@ module Hako
       # @return [Aws::ECS::Types::Task]
       def run_task(task_definition, commands, env)
         environment = env.map { |k, v| { name: k, value: v } }
-        ecs_client.run_task(
+        result = ecs_client.run_task(
           cluster: @cluster,
           task_definition: task_definition.task_definition_arn,
           overrides: {
@@ -409,7 +409,14 @@ module Hako
           },
           count: 1,
           started_by: 'hako oneshot',
-        ).tasks[0]
+        )
+        result.failures.each do |failure|
+          Hako.logger.error("#{failure.arn} #{failure.reason}")
+        end
+        if result.tasks.empty?
+          raise 'No tasks started'
+        end
+        result.tasks[0]
       end
 
       # @return [Fixnum]
