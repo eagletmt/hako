@@ -37,6 +37,9 @@ module Hako
     def oneshot_finished(_containers)
     end
 
+    def after_remove
+    end
+
     private
 
     # @param [Hash] _options

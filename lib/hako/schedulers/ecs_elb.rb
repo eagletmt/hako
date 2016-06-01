@@ -8,10 +8,12 @@ module Hako
       # @param [String] app_id
       # @param [Aws::ElasticLoadBalancing::Client] elb
       # @param [Hash] elb_config
-      def initialize(app_id, elb, elb_config)
+      # @param [Boolean] dry_run
+      def initialize(app_id, elb, elb_config, dry_run:)
         @app_id = app_id
         @elb = elb
         @elb_config = elb_config
+        @dry_run = dry_run
       end
 
       # @return [Aws::ElasticLoadBalancing::Types::LoadBalancerDescription]
@@ -49,8 +51,12 @@ module Hako
       # @return [nil]
       def destroy
         if exist?
-          @elb.delete_load_balancer(load_balancer_name: name)
-          Hako.logger.info "Deleted ELB #{name}"
+          if @dry_run
+            Hako.logger.info("@elb.delete_load_balancer(load_balancer_name: #{name})")
+          else
+            @elb.delete_load_balancer(load_balancer_name: name)
+            Hako.logger.info "Deleted ELB #{name}"
+          end
         else
           Hako.logger.info "ELB #{name} doesn't exist"
         end

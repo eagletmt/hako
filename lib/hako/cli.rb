@@ -224,14 +224,15 @@ module Hako
     end
 
     class Remove
-      def run
+      def run(argv)
         parse!(argv)
         require 'hako/application'
         require 'hako/commander'
-        Commander.new(Application.new(@yaml_path)).remove
+        Commander.new(Application.new(@yaml_path)).remove(dry_run: @dry_run)
       end
 
       def parse!(argv)
+        @dry_run = false
         parser.parse!(argv)
         @yaml_path = argv.first
 
@@ -245,6 +246,7 @@ module Hako
         @parser ||= OptionParser.new do |opts|
           opts.banner = 'hako remove FILE'
           opts.version = VERSION
+          opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
         end
       end
     end

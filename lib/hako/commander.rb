@@ -59,13 +59,14 @@ module Hako
 
     # @return [nil]
     def status
-      load_scheduler(@app.yaml['scheduler'], []).status
+      load_scheduler(@app.yaml['scheduler'], [], dry_run: false).status
     end
 
+    # @param [Boolean] dry_run
     # @return [nil]
-    def remove
+    def remove(dry_run:)
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
-      load_scheduler(@app.yaml['scheduler'], scripts).remove
+      load_scheduler(@app.yaml['scheduler'], scripts, dry_run: dry_run).remove
       scripts.each(&:after_remove)
     end
 
@@ -114,7 +115,7 @@ module Hako
     # @param [Boolean] force
     # @param [Boolean] dry_run
     # @return [Scheduler]
-    def load_scheduler(yaml, scripts, volumes: [], force: false, dry_run: false)
+    def load_scheduler(yaml, scripts, volumes: [], force: false, dry_run:)
       Loader.new(Hako::Schedulers, 'hako/schedulers').load(yaml.fetch('type')).new(@app.id, yaml, volumes: volumes, scripts: scripts, force: force, dry_run: dry_run)
     end
 

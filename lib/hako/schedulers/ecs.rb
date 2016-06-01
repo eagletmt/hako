@@ -189,8 +189,14 @@ module Hako
       def remove
         service = describe_service
         if service
-          ecs_client.delete_service(cluster: @cluster, service: @app_id)
-          Hako.logger.info "#{service.service_arn} is deleted"
+          if @dry_run
+            Hako.logger.info "ecs_client.update_service(cluster: #{@cluster}, service: #{@app_id}, desired_count: 0)"
+            Hako.logger.info "ecs_client.delete_service(cluster: #{@cluster}, service: #{@app_id})"
+          else
+            ecs_client.update_service(cluster: @cluster, service: @app_id, desired_count: 0)
+            ecs_client.delete_service(cluster: @cluster, service: @app_id)
+            Hako.logger.info "#{service.service_arn} is deleted"
+          end
         else
           puts "Service #{@app_id} doesn't exist"
         end
@@ -212,7 +218,7 @@ module Hako
 
       # @return [EcsElb]
       def ecs_elb_client
-        @ecs_elb_client ||= EcsElb.new(@app_id, Aws::ElasticLoadBalancing::Client.new(region: @region), @ecs_elb_options)
+        @ecs_elb_client ||= EcsElb.new(@app_id, Aws::ElasticLoadBalancing::Client.new(region: @region), @ecs_elb_options, dry_run: @dry_run)
       end
 
       # @return [Aws::ECS::Types::Service, nil]
