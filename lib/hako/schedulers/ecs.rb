@@ -19,6 +19,7 @@ module Hako
         @desired_count = options.fetch('desired_count', nil)
         @region = options.fetch('region') { validation_error!('region must be set') }
         @role = options.fetch('role', nil)
+        @task_role_arn = options.fetch('task_role_arn', nil)
         @ecs_elb_options = options.fetch('elb', nil)
         @started_at = nil
         @container_instance_arn = nil
@@ -290,6 +291,9 @@ module Hako
           container_definitions[c.name] = c
         end
 
+        if task_definition.task_role_arn != @task_role_arn
+          return true
+        end
         if different_volumes?(task_definition.volumes)
           return true
         end
@@ -334,6 +338,7 @@ module Hako
         if task_definition_changed?(@app_id, definitions)
           ecs_client.register_task_definition(
             family: @app_id,
+            task_role_arn: @task_role_arn,
             container_definitions: definitions,
             volumes: volumes_definition,
           ).task_definition
@@ -357,6 +362,7 @@ module Hako
         if task_definition_changed?(family, definitions)
           ecs_client.register_task_definition(
             family: "#{@app_id}-oneshot",
+            task_role_arn: @task_role_arn,
             container_definitions: definitions,
             volumes: volumes_definition,
           ).task_definition
