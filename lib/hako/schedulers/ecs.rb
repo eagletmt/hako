@@ -20,7 +20,7 @@ module Hako
         @region = options.fetch('region') { validation_error!('region must be set') }
         @role = options.fetch('role', nil)
         @task_role_arn = options.fetch('task_role_arn', nil)
-        @ecs_elb_options = options.fetch('elb', nil)
+        @ecs_elb_options = options.fetch('elb', [])
         @started_at = nil
         @container_instance_arn = nil
       end
@@ -136,12 +136,15 @@ module Hako
         end
 
         unless service.load_balancers.empty?
-          lb = service.load_balancers[0]
-          lb_detail = ecs_elb_client.describe_load_balancer
-          puts 'Load balancer:'
-          lb_detail.listener_descriptions.each do |ld|
-            l = ld.listener
-            puts "  #{lb_detail.dns_name}:#{l.load_balancer_port} -> #{lb.container_name}:#{lb.container_port}"
+          lb_details = ecs_elb_client.describe_load_balancers.map { |detail| [detail.load_balancer_name, detail] }.to_h
+          puts 'Load balancers:'
+          service.load_balancers.each do |lb|
+            puts "  #{lb.load_balancer_name}:"
+            detail = lb_details.fetch(lb.load_balancer_name)
+            detail.listener_descriptions.each do |ld|
+              l = ld.listener
+              puts "    #{detail.dns_name}:#{l.load_balancer_port} -> #{lb.container_name}:#{lb.container_port}"
+            end
           end
         end
 
@@ -514,15 +517,15 @@ module Hako
             desired_count: @desired_count,
             role: @role,
           }
-          name = ecs_elb_client.find_or_create_load_balancer(front_port)
-          if name
-            params[:load_balancers] = [
+          names = ecs_elb_client.find_or_create_load_balancers(front_port)
+          unless names.empty?
+            params[:load_balancers] = names.map do |name|
               {
                 load_balancer_name: name,
                 container_name: 'front',
                 container_port: 80,
-              },
-            ]
+              }
+            end
           end
           ecs_client.create_service(params).service
         else

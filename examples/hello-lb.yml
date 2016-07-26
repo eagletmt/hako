@@ -5,14 +5,14 @@ scheduler:
   desired_count: 2
   role: ecsServiceRole
   elb:
-    listeners:
-      - load_balancer_port: 80
-        protocol: HTTP
-    subnets:
-      - subnet-XXXXXXXX
-      - subnet-YYYYYYYY
-    security_groups:
-      - sg-ZZZZZZZZ
+    - listeners:
+        - load_balancer_port: 80
+          protocol: HTTP
+      subnets:
+        - subnet-XXXXXXXX
+        - subnet-YYYYYYYY
+      security_groups:
+        - sg-ZZZZZZZZ
 app:
   image: ryotarai/hello-sinatra
   memory: 128
