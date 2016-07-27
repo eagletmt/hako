@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'hako'
 require 'hako/error'
 
@@ -16,7 +17,7 @@ module Hako
         alarm_name alarm_description actions_enabled ok_actions alarm_actions
         insufficient_data_actions metric_name namespace statistic dimensions
         period unit evaluation_periods threshold comparison_operator
-      ]
+      ].freeze
 
       # @param [Aws::ECS::Types::Service] service
       # @return [nil]
