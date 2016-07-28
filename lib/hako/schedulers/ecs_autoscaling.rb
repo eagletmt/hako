@@ -67,10 +67,9 @@ module Hako
             alarms = cw_client.describe_alarms(alarm_names: policy.alarms).flat_map(&:metric_alarms).map { |a| [a.alarm_name, a] }.to_h
             policy.alarms.each do |alarm_name|
               alarm = alarms.fetch(alarm_name) { raise Error.new("Alarm #{alarm_name} does not exist") }
-              Hako.logger.info("Configuring #{alarm_name}'s alarm_action for #{policy_arn}")
+              Hako.logger.info("Updating #{alarm_name}'s alarm_actions from #{alarm.alarm_actions} to #{[policy_arn]}")
               params = PUT_METRIC_ALARM_OPTIONS.map { |key| [key, alarm.public_send(key)] }.to_h
-              params[:alarm_actions] << policy_arn
-              params[:alarm_actions].uniq!
+              params[:alarm_actions] = [policy_arn]
               cw_client.put_metric_alarm(params)
             end
           end
