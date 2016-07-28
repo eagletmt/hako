@@ -211,6 +211,9 @@ module Hako
             ecs_client.delete_service(cluster: @cluster, service: @app_id)
             Hako.logger.info "#{service.service_arn} is deleted"
           end
+          if @autoscaling
+            @autoscaling.remove(service)
+          end
         else
           puts "Service #{@app_id} doesn't exist"
         end
