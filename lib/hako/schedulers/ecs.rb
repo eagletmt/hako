@@ -414,6 +414,7 @@ module Hako
           docker_labels: container.docker_labels,
           mount_points: container.mount_points,
           command: container.command,
+          volumes_from: container.volumes_from,
         }
       end
 

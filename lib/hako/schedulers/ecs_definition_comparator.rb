@@ -11,6 +11,7 @@ module Hako
       PORT_MAPPING_KEYS = %i[container_port host_port protocol].freeze
       ENVIRONMENT_KEYS = %i[name value].freeze
       MOUNT_POINT_KEYS = %i[source_volume container_path read_only].freeze
+      VOLUMES_FROM_KEYS = %i[source_container read_only].freeze
 
       # @param [Aws::ECS::Types::ContainerDefinition] actual_container
       # @return [Boolean]
@@ -28,6 +29,9 @@ module Hako
           return true
         end
         if different_array?(@expected_container, actual_container, :mount_points, MOUNT_POINT_KEYS)
+          return true
+        end
+        if different_array?(@expected_container, actual_container, :volumes_from, VOLUMES_FROM_KEYS)
           return true
         end
 

@@ -51,6 +51,16 @@ module Hako
       end
     end
 
+    # @return [Array<Hash>]
+    def volumes_from
+      @definition['volumes_from'].map do |volumes_from|
+        {
+          source_container: volumes_from.fetch('source_container'),
+          read_only: volumes_from.fetch('read_only', false),
+        }
+      end
+    end
+
     private
 
     PROVIDERS_KEY = '$providers'
@@ -84,6 +94,7 @@ module Hako
         'links' => [],
         'mount_points' => [],
         'port_mappings' => [],
+        'volumes_from' => [],
       }
     end
 
