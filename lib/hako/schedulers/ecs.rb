@@ -4,6 +4,7 @@ require 'hako'
 require 'hako/scheduler'
 require 'hako/schedulers/ecs_definition_comparator'
 require 'hako/schedulers/ecs_elb'
+require 'hako/schedulers/ecs_autoscaling'
 
 module Hako
   module Schedulers
@@ -21,6 +22,9 @@ module Hako
         @role = options.fetch('role', nil)
         @task_role_arn = options.fetch('task_role_arn', nil)
         @ecs_elb_options = options.fetch('elb', nil)
+        if options.key?('autoscaling')
+          @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), dry_run: @dry_run)
+        end
         @started_at = nil
         @container_instance_arn = nil
       end
@@ -39,6 +43,9 @@ module Hako
           definitions.each do |d|
             Hako.logger.info "Add container #{d}"
           end
+          if @autoscaling
+            @autoscaling.apply(Aws::ECS::Types::Service.new(cluster_arn: @cluster, service_name: @app_id))
+          end
         else
           task_definition = register_task_definition(definitions)
           if task_definition == :noop
@@ -50,8 +57,14 @@ module Hako
           service = create_or_update_service(task_definition.task_definition_arn, front_port)
           if service == :noop
             Hako.logger.info "Service isn't changed"
+            if @autoscaling
+              @autoscaling.apply(describe_service)
+            end
           else
             Hako.logger.info "Updated service: #{service.service_arn}"
+            if @autoscaling
+              @autoscaling.apply(service)
+            end
             wait_for_ready(service)
           end
           Hako.logger.info 'Deployment completed'
@@ -532,6 +545,10 @@ module Hako
             desired_count: @desired_count,
             task_definition: task_definition_arn,
           }
+          if @autoscaling
+            # Keep current desired_count if autoscaling is enabled
+            params[:desired_count] = service.desired_count
+          end
           if service_changed?(service, params)
             ecs_client.update_service(params).service
           else
