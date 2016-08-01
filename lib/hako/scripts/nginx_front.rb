@@ -40,11 +40,10 @@ module Hako
       # @param [Fixnum] front_port
       # @return [nil]
       def deploy_started(containers, front_port)
-        app = containers.fetch('app')
         front = containers.fetch('front')
         front.definition['port_mappings'] << port_mapping(front_port)
-        upload_config(generate_config(app.port))
-        Hako.logger.debug "Uploaded front configuration to s3://#{@s3.bucket}/#{@s3.key(@app.id)}"
+        upload_config(generate_config)
+        Hako.logger.info "Uploaded front configuration to s3://#{@s3.bucket}/#{@s3.key(@app.id)}"
       end
 
       private
@@ -55,12 +54,13 @@ module Hako
         super
         @options = options
         @options['locations'] ||= { '/' => {} }
-        @s3 = S3Config.new(@options.fetch('s3'))
+        @backend = options.fetch('backend', 'app')
+        @s3 = S3Config.new(options.fetch('s3'))
       end
 
       # @return [String]
       def link_app
-        'app:app'
+        "#{@backend}:backend"
       end
 
       # @param [Fixnum] front_port
@@ -69,10 +69,9 @@ module Hako
         { container_port: 80, host_port: front_port, protocol: 'tcp' }
       end
 
-      # @param [Fixnum] app_port
       # @return [String]
-      def generate_config(app_port)
-        Generator.new(@options, app_port).render
+      def generate_config
+        Generator.new(@options).render
       end
 
       # @return [Hash]
@@ -95,10 +94,9 @@ module Hako
 
       class Generator
         # @param [Hash] options
-        # @param [Fixnum] app_port
-        def initialize(options, app_port)
+        def initialize(options)
           @options = options
-          @app_port = app_port
+          @backend_port = options.fetch('backend_port')
         end
 
         # @return [String]
@@ -110,7 +108,7 @@ module Hako
 
         # @return [String]
         def listen_spec
-          "app:#{@app_port}"
+          "backend:#{@backend_port}"
         end
 
         # @return [String]

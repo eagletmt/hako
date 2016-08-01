@@ -17,7 +17,6 @@ app:
   image: ryotarai/hello-sinatra
   memory: 128
   cpu: 256
-  port: 3000
   env:
     $providers:
       - type: file
@@ -31,6 +30,7 @@ additional_containers:
     cpu: 32
 scripts:
   - <<: !include front.yml
+    backend_port: 3000
     locations:
       /:
         allow_only_from:

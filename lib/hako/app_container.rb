@@ -7,10 +7,5 @@ module Hako
     def image_tag
       "#{@definition['image']}:#{@definition['tag']}"
     end
-
-    # @return [Fixnum]
-    def port
-      @definition['port']
-    end
   end
 end

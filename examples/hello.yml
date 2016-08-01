@@ -8,7 +8,6 @@ app:
   image: ryotarai/hello-sinatra
   memory: 128
   cpu: 256
-  port: 3000
   links:
     - redis:redis
   env:
@@ -27,4 +26,5 @@ additional_containers:
     cpu: 64
     memory: 512
 scripts:
-  - !include front.yml
+  - <<: !include front.yml
+    backend_port: 3000
