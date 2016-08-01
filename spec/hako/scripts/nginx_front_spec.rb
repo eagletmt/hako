@@ -6,8 +6,8 @@ require 'hako/scripts/nginx_front'
 RSpec.describe Hako::Scripts::NginxFront do
   let(:script) { described_class.new(app, options, dry_run: false) }
   let(:app) { double('Hako::Application', id: 'nanika') }
-  let(:app_container) { Hako::AppContainer.new(app, { 'port' => app_port }, dry_run: false) }
-  let(:app_port) { 3000 }
+  let(:app_container) { Hako::AppContainer.new(app, {}, dry_run: false) }
+  let(:backend_port) { 3000 }
   let(:front_container) { Hako::Container.new(app, {}, dry_run: false) }
   let(:s3_region) { 'ap-northeast-1' }
   let(:s3_bucket) { 'nanika' }
@@ -20,6 +20,7 @@ RSpec.describe Hako::Scripts::NginxFront do
         'bucket' => s3_bucket,
         'prefix' => s3_prefix,
       },
+      'backend_port' => backend_port,
     }
   end
   let(:containers) { { 'app' => app_container, 'front' => front_container } }
@@ -35,7 +36,7 @@ RSpec.describe Hako::Scripts::NginxFront do
     it 'configures links' do
       expect { script.deploy_starting(containers) }.to change {
         containers['front'].links
-      }.from([]).to(['app:app'])
+      }.from([]).to(['app:backend'])
     end
 
     it 'configures environment variables' do
@@ -55,7 +56,7 @@ RSpec.describe Hako::Scripts::NginxFront do
 
     it 'generates nginx config' do
       expect(script.deploy_started(containers, front_port)).to eq(true)
-      expect(uploaded_config.string).to include("proxy_pass http://app:#{app_port};")
+      expect(uploaded_config.string).to include("proxy_pass http://backend:#{backend_port};")
     end
 
     it 'configures port mappings' do
