@@ -197,6 +197,13 @@ module Hako
         service.events.first(10).each do |e|
           puts "  #{e.created_at}: #{e.message}"
         end
+
+        if @autoscaling
+          puts 'Autoscaling:'
+          @autoscaling.status(service)
+        else
+          puts 'Autoscaling: No'
+        end
       end
 
       # @return [nil]

@@ -95,6 +95,21 @@ module Hako
         nil
       end
 
+      # @param [Aws::ECS::Types::Service] service
+      # @return [nil]
+      def status(service)
+        resource_id = service_resource_id(service)
+        service_namespace = 'ecs'
+        scalable_dimension = 'ecs:service:DesiredCount'
+
+        autoscaling_client.describe_scaling_activities(service_namespace: service_namespace, resource_id: resource_id, scalable_dimension: scalable_dimension, max_results: 50).scaling_activities.each do |activity|
+          puts "  [#{activity.start_time} - #{activity.end_time}] #{activity.status_message}"
+          puts "    description: #{activity.description}"
+          puts "    cause: #{activity.cause}"
+          puts "    details: #{activity.details}"
+        end
+      end
+
       private
 
       # @param [Hash] options
