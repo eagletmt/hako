@@ -34,13 +34,14 @@ module Hako
                 ssl_certificate_id: l.fetch('ssl_certificate_id', nil),
               }
             end
+            tags = @elb_config.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } }
             lb = @elb.create_load_balancer(
               load_balancer_name: name,
               listeners: listeners,
               subnets: @elb_config.fetch('subnets'),
               security_groups: @elb_config.fetch('security_groups'),
               scheme: @elb_config.fetch('scheme', nil),
-              tags: @elb_config.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } },
+              tags: tags.empty? ? nil : tags,
             )
             Hako.logger.info "Created ELB #{lb.dns_name} with instance_port=#{front_port}"
           end
