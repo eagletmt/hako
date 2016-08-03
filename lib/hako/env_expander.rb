@@ -43,7 +43,7 @@ module Hako
         end
       end
       unless variables.empty?
-        raise ExpansionError.new("Unresolvable variables: #{variables.to_a}")
+        raise ExpansionError.new("Could not resolve embedded variables from $providers=#{@providers}: #{variables.to_a}")
       end
 
       expanded_env = {}
