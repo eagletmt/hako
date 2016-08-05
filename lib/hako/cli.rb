@@ -72,7 +72,7 @@ module Hako
         @tag = 'latest'
         @dry_run = false
         @verbose = false
-        parser.parse!(argv)
+        parser.order!(argv)
         @yaml_path = argv.first
 
         if @yaml_path.nil?
@@ -147,7 +147,7 @@ module Hako
         @containers = []
         @env = {}
         @verbose = false
-        parser.parse!(argv)
+        parser.order!(argv)
         @yaml_path = argv.shift
         @argv = argv
 
