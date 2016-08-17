@@ -37,5 +37,8 @@ Style/TrailingCommaInArguments:
 Style/TrailingCommaInLiteral:
   Enabled: false
 
+Style/PredicateName:
+  Enabled: false
+
 Performance/RedundantBlockCall:
   Enabled: false
