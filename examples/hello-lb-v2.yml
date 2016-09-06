@@ -4,6 +4,8 @@ scheduler:
   cluster: eagletmt
   desired_count: 2
   role: ecsServiceRole
+  # dynamic_port_mapping is enabled by default with elb_v2
+  # dynamic_port_mapping: false
   elb_v2:
     vpc_id: vpc-WWWWWWWW
     listeners:

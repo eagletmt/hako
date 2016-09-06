@@ -4,6 +4,8 @@ scheduler:
   cluster: eagletmt
   desired_count: 2
   task_role_arn: arn:aws:iam::012345678901:role/HelloRole
+  # dynamic_port_mapping is enabled by default with no ELB option
+  # dynamic_port_mapping: false
 app:
   image: ryotarai/hello-sinatra
   memory: 128

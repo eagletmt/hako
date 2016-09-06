@@ -4,6 +4,7 @@ scheduler:
   cluster: eagletmt
   desired_count: 2
   role: ecsServiceRole
+  # dynamic_port_mapping cannot be enabled with elb
   elb:
     listeners:
       - load_balancer_port: 80

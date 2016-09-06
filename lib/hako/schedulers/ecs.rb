@@ -31,6 +31,7 @@ module Hako
         if @ecs_elb_options && @ecs_elb_v2_options
           validation_error!('Cannot specify both elb and elb_v2')
         end
+        @dynamic_port_mapping = options.fetch('dynamic_port_mapping', @ecs_elb_options.nil?)
         if options.key?('autoscaling')
           @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), dry_run: @dry_run)
         end
@@ -265,6 +266,9 @@ module Hako
 
       # @return [Fixnum]
       def determine_front_port
+        if @dynamic_port_mapping
+          return 0
+        end
         if @dry_run
           return DEFAULT_FRONT_PORT
         end
