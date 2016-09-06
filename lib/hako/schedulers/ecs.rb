@@ -5,6 +5,7 @@ require 'hako/error'
 require 'hako/scheduler'
 require 'hako/schedulers/ecs_definition_comparator'
 require 'hako/schedulers/ecs_elb'
+require 'hako/schedulers/ecs_elb_v2'
 require 'hako/schedulers/ecs_autoscaling'
 
 module Hako
@@ -26,6 +27,10 @@ module Hako
         @role = options.fetch('role', nil)
         @task_role_arn = options.fetch('task_role_arn', nil)
         @ecs_elb_options = options.fetch('elb', nil)
+        @ecs_elb_v2_options = options.fetch('elb_v2', nil)
+        if @ecs_elb_options && @ecs_elb_v2_options
+          validation_error!('Cannot specify both elb and elb_v2')
+        end
         if options.key?('autoscaling')
           @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), dry_run: @dry_run)
         end
@@ -154,13 +159,8 @@ module Hako
         end
 
         unless service.load_balancers.empty?
-          lb = service.load_balancers[0]
-          lb_detail = ecs_elb_client.describe_load_balancer
           puts 'Load balancer:'
-          lb_detail.listener_descriptions.each do |ld|
-            l = ld.listener
-            puts "  #{lb_detail.dns_name}:#{l.load_balancer_port} -> #{lb.container_name}:#{lb.container_port}"
-          end
+          ecs_elb_client.show_status(service.load_balancers[0])
         end
 
         puts 'Deployments:'
@@ -245,9 +245,14 @@ module Hako
         @ec2_client ||= Aws::EC2::Client.new(region: @region)
       end
 
-      # @return [EcsElb]
+      # @return [EcsElb, EcsElbV2]
       def ecs_elb_client
-        @ecs_elb_client ||= EcsElb.new(@app_id, Aws::ElasticLoadBalancing::Client.new(region: @region), @ecs_elb_options, dry_run: @dry_run)
+        @ecs_elb_client ||=
+          if @ecs_elb_options
+            EcsElb.new(@app_id, @region, @ecs_elb_options, dry_run: @dry_run)
+          else
+            EcsElbV2.new(@app_id, @region, @ecs_elb_v2_options, dry_run: @dry_run)
+          end
       end
 
       # @return [Aws::ECS::Types::Service, nil]
@@ -555,14 +560,9 @@ module Hako
             desired_count: @desired_count,
             role: @role,
           }
-          name = ecs_elb_client.find_or_create_load_balancer(front_port)
-          if name
+          if ecs_elb_client.find_or_create_load_balancer(front_port)
             params[:load_balancers] = [
-              {
-                load_balancer_name: name,
-                container_name: 'front',
-                container_port: 80,
-              },
+              @ecs_elb_client.load_balancer_params_for_service.merge(container_name: 'front', container_port: 80),
             ]
           end
           ecs_client.create_service(params).service
