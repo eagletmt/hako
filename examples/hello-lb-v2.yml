@@ -7,7 +7,10 @@ scheduler:
   # dynamic_port_mapping is enabled by default with elb_v2
   # dynamic_port_mapping: false
   elb_v2:
+    # VPC id where the target group is located
     vpc_id: vpc-WWWWWWWW
+    # Health check path of the target group
+    health_check_path: /site/sha
     listeners:
       - port: 80
         protocol: HTTP
