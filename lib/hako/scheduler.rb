@@ -42,6 +42,10 @@ module Hako
       raise NotImplementedError
     end
 
+    def stop
+      raise NotImplementedError
+    end
+
     private
 
     # @param [String] message

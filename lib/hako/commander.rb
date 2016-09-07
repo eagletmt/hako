@@ -70,6 +70,10 @@ module Hako
       scripts.each(&:after_remove)
     end
 
+    def stop(dry_run:)
+      load_scheduler(@app.yaml['scheduler'], [], dry_run: dry_run).stop
+    end
+
     private
 
     TRAP_SIGNALS = %i[INT TERM].freeze

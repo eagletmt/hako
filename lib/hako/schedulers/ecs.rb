@@ -234,6 +234,21 @@ module Hako
         ecs_elb_client.destroy
       end
 
+      # @return [nil]
+      def stop
+        service = describe_service
+        if service
+          if @dry_run
+            Hako.logger.info("ecs_client.update_service(cluster: #{@cluster}, service: #{@app_id}, desired_count: 0)")
+          else
+            ecs_client.update_service(cluster: @cluster, service: @app_id, desired_count: 0)
+            Hako.logger.info("#{service.service_arn} is stopped")
+          end
+        else
+          puts "Service #{@app_id} doesn't exist"
+        end
+      end
+
       private
 
       # @return [Aws::ECS::Client]

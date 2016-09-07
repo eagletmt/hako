@@ -12,6 +12,7 @@ module Hako
       show-yaml
       status
       remove
+      stop
     ].freeze
 
     def self.start(argv)
@@ -245,6 +246,34 @@ module Hako
       def parser
         @parser ||= OptionParser.new do |opts|
           opts.banner = 'hako remove FILE'
+          opts.version = VERSION
+          opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
+        end
+      end
+    end
+
+    class Stop
+      def run(argv)
+        parse!(argv)
+        require 'hako/application'
+        require 'hako/commander'
+        Commander.new(Application.new(@yaml_path)).stop(dry_run: @dry_run)
+      end
+
+      def parse!(argv)
+        @dry_run = false
+        parser.parse!(argv)
+        @yaml_path = argv.first
+
+        if @yaml_path.nil?
+          puts parser.help
+          exit 1
+        end
+      end
+
+      def parser
+        @parser ||= OptionParser.new do |opts|
+          opts.banner = 'hako stop FILE'
           opts.version = VERSION
           opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
         end
