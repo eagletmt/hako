@@ -451,6 +451,7 @@ module Hako
           mount_points: container.mount_points,
           command: container.command,
           volumes_from: container.volumes_from,
+          user: container.user,
         }
       end
 
