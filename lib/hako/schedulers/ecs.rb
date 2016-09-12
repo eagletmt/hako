@@ -443,6 +443,7 @@ module Hako
           image: container.image_tag,
           cpu: container.cpu,
           memory: container.memory,
+          memory_reservation: container.memory_reservation,
           links: container.links,
           port_mappings: container.port_mappings,
           essential: true,

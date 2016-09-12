@@ -22,6 +22,7 @@ module Hako
       docker_labels
       cpu
       memory
+      memory_reservation
       links
       port_mappings
       command
