@@ -440,7 +440,7 @@ module Hako
         environment = container.env.map { |k, v| { name: k, value: v } }
         log_configuration = container.log_configuration
         %w[log_driver options].each do |key|
-          log_configuration[key.to_sym] = log_configuration[key] if log_configuration.has_key?(key)
+          log_configuration[key.to_sym] = log_configuration[key] if log_configuration.key?(key)
         end
         {
           name: name,
