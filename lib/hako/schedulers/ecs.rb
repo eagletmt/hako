@@ -438,6 +438,7 @@ module Hako
       # @return [Hash]
       def create_definition(name, container)
         environment = container.env.map { |k, v| { name: k, value: v } }
+        log_configuration = Hash[container.log_configuration.map { |k, v| [k.to_sym, v] }]
         {
           name: name,
           image: container.image_tag,
@@ -453,6 +454,7 @@ module Hako
           command: container.command,
           volumes_from: container.volumes_from,
           user: container.user,
+          log_configuration: log_configuration,
         }
       end
 
