@@ -438,7 +438,10 @@ module Hako
       # @return [Hash]
       def create_definition(name, container)
         environment = container.env.map { |k, v| { name: k, value: v } }
-        log_configuration = Hash[container.log_configuration.map { |k, v| [k.to_sym, v] }]
+        log_configuration = container.log_configuration
+        %w[log_driver options].each do |key|
+          log_configuration[key.to_sym] = log_configuration[key] if log_configuration.has_key?(key)
+        end
         {
           name: name,
           image: container.image_tag,
