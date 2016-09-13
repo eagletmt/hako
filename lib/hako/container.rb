@@ -27,6 +27,7 @@ module Hako
       port_mappings
       command
       user
+      log_configuration
     ].each do |name|
       define_method(name) do
         @definition[name]
@@ -97,6 +98,7 @@ module Hako
         'mount_points' => [],
         'port_mappings' => [],
         'volumes_from' => [],
+        'log_configuration' => {},
       }
     end
 
