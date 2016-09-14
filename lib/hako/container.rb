@@ -27,7 +27,6 @@ module Hako
       port_mappings
       command
       user
-      log_configuration
     ].each do |name|
       define_method(name) do
         @definition[name]
@@ -60,6 +59,17 @@ module Hako
         {
           source_container: volumes_from.fetch('source_container'),
           read_only: volumes_from.fetch('read_only', false),
+        }
+      end
+    end
+
+    # @return [Hash, nil]
+    def log_configuration
+      if @definition.key?('log_configuration')
+        conf = @definition['log_configuration']
+        {
+          log_driver: conf.fetch('log_driver'),
+          options: conf.fetch('options'),
         }
       end
     end
@@ -98,7 +108,6 @@ module Hako
         'mount_points' => [],
         'port_mappings' => [],
         'volumes_from' => [],
-        'log_configuration' => {},
       }
     end
 
