@@ -6,6 +6,9 @@ scheduler:
   task_role_arn: arn:aws:iam::012345678901:role/HelloRole
   # dynamic_port_mapping is enabled by default with no ELB option
   # dynamic_port_mapping: false
+  deployment_configuration:
+    maximum_percent: 200
+    minimum_healthy_percent: 50
 app:
   image: ryotarai/hello-sinatra
   memory: 128

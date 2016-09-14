@@ -35,9 +35,14 @@ module Hako
         if options.key?('autoscaling')
           @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), dry_run: @dry_run)
         end
+        @autoscaling_group_for_oneshot = options.fetch('autoscaling_group_for_oneshot', nil)
+        @deployment_configuration = {}
+        %i[maximum_percent minimum_healthy_percent].each do |key|
+          @deployment_configuration[key] = options.dig('deployment_configuration', key.to_s)
+        end
+
         @started_at = nil
         @container_instance_arn = nil
-        @autoscaling_group_for_oneshot = options.fetch('autoscaling_group_for_oneshot', nil)
       end
 
       # @param [Hash<String, Container>] containers
@@ -581,6 +586,7 @@ module Hako
             task_definition: task_definition_arn,
             desired_count: @desired_count,
             role: @role,
+            deployment_configuration: @deployment_configuration,
           }
           if ecs_elb_client.find_or_create_load_balancer(front_port)
             params[:load_balancers] = [
@@ -594,6 +600,7 @@ module Hako
             service: @app_id,
             desired_count: @desired_count,
             task_definition: task_definition_arn,
+            deployment_configuration: @deployment_configuration,
           }
           if @autoscaling
             # Keep current desired_count if autoscaling is enabled
@@ -615,6 +622,11 @@ module Hako
       def service_changed?(service, params)
         SERVICE_KEYS.each do |key|
           if service.public_send(key) != params[key]
+            return true
+          end
+        end
+        params[:deployment_configuration].each do |key, val|
+          if val && val != service.deployment_configuration.public_send(key)
             return true
           end
         end
