@@ -97,6 +97,10 @@ module Hako
 
       # @return [nil]
       def destroy
+        unless @elb_v2_config
+          return false
+        end
+
         load_balancer = describe_load_balancer
         if load_balancer
           if @dry_run
