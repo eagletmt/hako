@@ -29,7 +29,7 @@ scheduler:
       - alarms: [ecs-scaling-in-hello-autoscaling-service]
         cooldown: 300
         adjustment_type: ChangeInCapacity
-        scaling_adjustment: 1
+        scaling_adjustment: -1
         metric_interval_upper_bound: 0
         metric_aggregation_type: Average
 app:
