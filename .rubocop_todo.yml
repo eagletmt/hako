@@ -24,3 +24,10 @@ Metrics/BlockNesting:
 
 Style/Documentation:
   Enabled: false
+
+Style/SafeNavigation:
+  # extremely buggy in v0.43.0
+  Enabled: false
+Style/VariableNumber:
+  # extremely buggy in v0.43.0
+  Enabled: false
