@@ -102,6 +102,7 @@ module Hako
     # @return [Hash]
     def default_config
       {
+        'cpu' => 0,
         'env' => {},
         'docker_labels' => {},
         'links' => [],
