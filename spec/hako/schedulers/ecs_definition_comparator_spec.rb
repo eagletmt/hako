@@ -47,7 +47,7 @@ RSpec.describe Hako::Schedulers::EcsDefinitionComparator do
       end
 
       it 'returns valid value' do
-        expect(ecs_definition_comparator.different?(actual_container)).to be_falsy
+        expect(ecs_definition_comparator).to_not be_different(actual_container)
       end
     end
   end
