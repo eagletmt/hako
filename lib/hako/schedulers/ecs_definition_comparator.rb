@@ -1,75 +1,76 @@
 # frozen_string_literal: true
+require 'hako/schema'
+
 module Hako
   module Schedulers
     class EcsDefinitionComparator
       # @param [Hash] expected_container
       def initialize(expected_container)
         @expected_container = expected_container
+        @schema = definition_schema
       end
-
-      CONTAINER_KEYS = %i[image cpu memory memory_reservation links docker_labels user log_configuration].freeze
-      PORT_MAPPING_KEYS = %i[container_port host_port protocol].freeze
-      ENVIRONMENT_KEYS = %i[name value].freeze
-      MOUNT_POINT_KEYS = %i[source_volume container_path read_only].freeze
-      VOLUMES_FROM_KEYS = %i[source_container read_only].freeze
 
       # @param [Aws::ECS::Types::ContainerDefinition] actual_container
       # @return [Boolean]
       def different?(actual_container)
-        unless actual_container
-          return true
-        end
-        actual_container = actual_container.to_h
-        if different_members?(@expected_container, actual_container, CONTAINER_KEYS)
-          return true
-        end
-        if different_array?(@expected_container, actual_container, :port_mappings, PORT_MAPPING_KEYS)
-          return true
-        end
-        if different_array?(@expected_container, actual_container, :environment, ENVIRONMENT_KEYS)
-          return true
-        end
-        if different_array?(@expected_container, actual_container, :mount_points, MOUNT_POINT_KEYS)
-          return true
-        end
-        if different_array?(@expected_container, actual_container, :volumes_from, VOLUMES_FROM_KEYS)
-          return true
-        end
-
-        false
+        !@schema.same?(actual_container.to_h, @expected_container)
       end
 
       private
 
-      # @param [Hash<String, Object>] expected
-      # @param [Hash<String, Object>] actual
-      # @param [Array<String>] keys
-      # @return [Boolean]
-      def different_members?(expected, actual, keys)
-        keys.each do |key|
-          if actual[key] != expected[key]
-            return true
-          end
+      def definition_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:image, Schema::String.new)
+          struct.member(:cpu, Schema::Integer.new)
+          struct.member(:memory, Schema::Integer.new)
+          struct.member(:memory_reservation, Schema::Nullable.new(Schema::Integer.new))
+          struct.member(:links, Schema::UnorderedArray.new(Schema::String.new))
+          struct.member(:port_mappings, Schema::UnorderedArray.new(port_mapping_schema))
+          struct.member(:environment, Schema::UnorderedArray.new(environment_schema))
+          struct.member(:docker_labels, Schema::Table.new(Schema::String.new, Schema::String.new))
+          struct.member(:mount_points, Schema::UnorderedArray.new(mount_point_schema))
+          struct.member(:command, Schema::Nullable.new(Schema::OrderedArray.new(Schema::String.new)))
+          struct.member(:volumes_from, Schema::UnorderedArray.new(volumes_from_schema))
+          struct.member(:user, Schema::Nullable.new(Schema::String.new))
+          struct.member(:log_configuration, Schema::Nullable.new(log_configuration_schema))
         end
-        false
       end
 
-      # @param [Hash<String, Array<Object>>] expected
-      # @param [Hash<String, Array<Object>>] actual
-      # @param [Array<String>] keys
-      # @return [Boolean]
-      def different_array?(expected, actual, key, keys)
-        if expected[key].size != actual[key].size
-          return true
+      def port_mapping_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:container_port, Schema::Integer.new)
+          struct.member(:host_port, Schema::Integer.new)
+          struct.member(:protocol, Schema::String.new)
         end
-        sorted_expected = expected[key].sort_by { |e| keys.map { |k| e[k] }.join('') }
-        sorted_actual = actual[key].sort_by { |a| keys.map { |k| a[k] }.join('') }
-        sorted_expected.zip(sorted_actual) do |e, a|
-          if different_members?(e, a, keys)
-            return true
-          end
+      end
+
+      def environment_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:name, Schema::String.new)
+          struct.member(:value, Schema::String.new)
         end
-        false
+      end
+
+      def mount_point_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:source_volume, Schema::String.new)
+          struct.member(:container_path, Schema::String.new)
+          struct.member(:read_only, Schema::Boolean.new)
+        end
+      end
+
+      def volumes_from_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:source_container, Schema::String.new)
+          struct.member(:read_only, Schema::Boolean.new)
+        end
+      end
+
+      def log_configuration_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:log_driver, Schema::String.new)
+          struct.member(:options, Schema::Table.new(Schema::String.new, Schema::String.new))
+        end
       end
     end
   end
