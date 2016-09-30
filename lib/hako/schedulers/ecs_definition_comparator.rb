@@ -19,6 +19,7 @@ module Hako
         unless actual_container
           return true
         end
+        actual_container = actual_container.to_h
         if different_members?(@expected_container, actual_container, CONTAINER_KEYS)
           return true
         end
@@ -46,7 +47,7 @@ module Hako
       # @return [Boolean]
       def different_members?(expected, actual, keys)
         keys.each do |key|
-          if actual.public_send(key) != expected[key]
+          if actual[key] != expected[key]
             return true
           end
         end
@@ -58,11 +59,11 @@ module Hako
       # @param [Array<String>] keys
       # @return [Boolean]
       def different_array?(expected, actual, key, keys)
-        if expected[key].size != actual.public_send(key).size
+        if expected[key].size != actual[key].size
           return true
         end
         sorted_expected = expected[key].sort_by { |e| keys.map { |k| e[k] }.join('') }
-        sorted_actual = actual.public_send(key).sort_by { |a| keys.map { |k| a.public_send(k) }.join('') }
+        sorted_actual = actual[key].sort_by { |a| keys.map { |k| a[k] }.join('') }
         sorted_expected.zip(sorted_actual) do |e, a|
           if different_members?(e, a, keys)
             return true
