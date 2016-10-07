@@ -27,6 +27,7 @@ module Hako
       port_mappings
       command
       user
+      privileged
     ].each do |name|
       define_method(name) do
         @definition[name]

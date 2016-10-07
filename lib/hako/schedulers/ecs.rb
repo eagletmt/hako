@@ -456,6 +456,7 @@ module Hako
           docker_labels: container.docker_labels,
           mount_points: container.mount_points,
           command: container.command,
+          privileged: container.privileged,
           volumes_from: container.volumes_from,
           user: container.user,
           log_configuration: container.log_configuration,
