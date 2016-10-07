@@ -27,6 +27,7 @@ module Hako
       port_mappings
       command
       user
+      privileged
     ].each do |name|
       define_method(name) do
         @definition[name]
@@ -109,6 +110,7 @@ module Hako
         'mount_points' => [],
         'port_mappings' => [],
         'volumes_from' => [],
+        'privileged' => false,
       }
     end
 
