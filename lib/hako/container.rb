@@ -110,6 +110,7 @@ module Hako
         'mount_points' => [],
         'port_mappings' => [],
         'volumes_from' => [],
+        'privileged' => false,
       }
     end
 

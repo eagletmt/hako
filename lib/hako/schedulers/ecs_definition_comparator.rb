@@ -32,7 +32,7 @@ module Hako
           struct.member(:command, Schema::Nullable.new(Schema::OrderedArray.new(Schema::String.new)))
           struct.member(:volumes_from, Schema::UnorderedArray.new(volumes_from_schema))
           struct.member(:user, Schema::Nullable.new(Schema::String.new))
-          struct.member(:privileged, Schema::Nullable.new(Schema::Boolean.new))
+          struct.member(:privileged, Schema::Boolean.new)
           struct.member(:log_configuration, Schema::Nullable.new(log_configuration_schema))
         end
       end
