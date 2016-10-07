@@ -14,3 +14,5 @@ app:
       awslogs-group: my-logs
       awslogs-region: ap-northeast-1
       awslogs-stream-prefix: example
+scripts:
+  - <<: !include create_log_group.yml
