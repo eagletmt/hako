@@ -1,4 +1,4 @@
 # frozen_string_literal: true
 module Hako
-  VERSION = '0.20.3'
+  VERSION = '0.21.0'
 end
