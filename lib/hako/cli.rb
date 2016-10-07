@@ -65,7 +65,12 @@ module Hako
           Hako.logger.level = Logger::DEBUG
         end
 
-        Commander.new(Application.new(@yaml_path)).deploy(force: @force, tag: @tag, dry_run: @dry_run)
+        Commander.new(Application.new(@yaml_path)).deploy(
+          force: @force,
+          tag: @tag,
+          dry_run: @dry_run,
+          non_graceful: @non_graceful,
+        )
       end
 
       def parse!(argv)
@@ -73,6 +78,7 @@ module Hako
         @tag = 'latest'
         @dry_run = false
         @verbose = false
+        @non_graceful = false
         parser.parse!(argv)
         @yaml_path = argv.first
 
@@ -90,6 +96,7 @@ module Hako
           opts.on('-t', '--tag=TAG', 'Specify tag (default: latest)') { |v| @tag = v }
           opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
           opts.on('-v', '--verbose', 'Enable verbose logging') { @verbose = true }
+          opts.on('--non-graceful', 'Run deployment after stop target task') { @non_graceful = true }
         end
       end
     end
