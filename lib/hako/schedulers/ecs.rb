@@ -3,10 +3,11 @@ require 'aws-sdk'
 require 'hako'
 require 'hako/error'
 require 'hako/scheduler'
+require 'hako/schedulers/ecs_autoscaling'
 require 'hako/schedulers/ecs_definition_comparator'
 require 'hako/schedulers/ecs_elb'
 require 'hako/schedulers/ecs_elb_v2'
-require 'hako/schedulers/ecs_autoscaling'
+require 'hako/schedulers/ecs_service_comparator'
 
 module Hako
   module Schedulers
@@ -615,23 +616,11 @@ module Hako
         end
       end
 
-      SERVICE_KEYS = %i[desired_count task_definition].freeze
-
       # @param [Aws::ECS::Types::Service] service
       # @param [Hash] params
       # @return [Boolean]
       def service_changed?(service, params)
-        SERVICE_KEYS.each do |key|
-          if service.public_send(key) != params[key]
-            return true
-          end
-        end
-        params[:deployment_configuration].each do |key, val|
-          if val && val != service.deployment_configuration.public_send(key)
-            return true
-          end
-        end
-        false
+        EcsServiceComparator.new(params).different?(service)
       end
 
       # @param [Aws::ECS::Types::Service] service
