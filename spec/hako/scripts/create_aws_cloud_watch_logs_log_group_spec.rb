@@ -43,7 +43,7 @@ RSpec.describe Hako::Scripts::CreateAwsCloudWatchLogsLogGroup do
         [
           double(
             'Aws::CloudWatchLogs::Types::DescribeLogGroupsResponse',
-            log_groups: [ double('Aws::CloudWatchLogs::Types::LogGroup', log_group_name: 'group')]
+            log_groups: [double('Aws::CloudWatchLogs::Types::LogGroup', log_group_name: 'group')]
           )
         ]
       end
