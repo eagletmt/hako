@@ -28,30 +28,56 @@ RSpec.describe Hako::Scripts::CreateAwsCloudWatchLogsLogGroup do
     allow(cloudwatch_logs).to receive(:describe_log_groups).and_return(describe_response)
   end
 
+  shared_context 'no log group' do
+    let(:describe_response) { [] }
+  end
+
+  shared_context 'log group exist' do
+    let(:describe_response) do
+      [
+        double(
+          'Aws::CloudWatchLogs::Types::DescribeLogGroupsResponse',
+          log_groups: [double('Aws::CloudWatchLogs::Types::LogGroup', log_group_name: 'group')]
+        )
+      ]
+    end
+  end
+
+  shared_examples_for 'creates log group' do |method|
+    it 'creates log group' do
+      expect(cloudwatch_logs).to receive(:create_log_group).with(log_group_name: 'group')
+      script.send(method, containers)
+    end
+  end
+
+  shared_examples_for 'skips create log group' do |method|
+    it 'does not create log group' do
+      expect(cloudwatch_logs).to_not receive(:create_log_group)
+      script.send(method, containers)
+    end
+  end
+
   describe '#deploy_starting' do
     context 'log group does not exist' do
-      let(:describe_response) { [] }
-
-      it 'creates log group' do
-        expect(cloudwatch_logs).to receive(:create_log_group).with(log_group_name: 'group')
-        script.deploy_starting(containers)
-      end
+      include_context 'no log group'
+      it_behaves_like 'creates log group', :deploy_starting
     end
 
     context 'log group exist' do
-      let(:describe_response) do
-        [
-          double(
-            'Aws::CloudWatchLogs::Types::DescribeLogGroupsResponse',
-            log_groups: [double('Aws::CloudWatchLogs::Types::LogGroup', log_group_name: 'group')]
-          )
-        ]
-      end
+      include_context 'log group exist'
+      it_behaves_like 'skips create log group', :deploy_starting
+    end
+  end
 
-      it 'does not create log group' do
-        expect(cloudwatch_logs).to_not receive(:create_log_group)
-        script.deploy_starting(containers)
-      end
+  describe '#oneshot_starting' do
+    context 'log group does not exist' do
+      include_context 'no log group'
+      it_behaves_like 'creates log group', :oneshot_starting
+    end
+
+    context 'log group exist' do
+      include_context 'log group exist'
+      it_behaves_like 'skips create log group', :oneshot_starting
     end
   end
 end

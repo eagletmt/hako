@@ -21,6 +21,8 @@ module Hako
         end
       end
 
+      alias_method :oneshot_starting, :deploy_starting
+
       private
 
       # @param [Hash] options
