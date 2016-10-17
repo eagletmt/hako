@@ -21,7 +21,7 @@ module Hako
         end
       end
 
-      alias_method :oneshot_starting, :deploy_starting
+      alias oneshot_starting deploy_starting
 
       private
 
