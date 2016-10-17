@@ -4,6 +4,9 @@ AllCops:
   DisplayCopNames: true
   TargetRubyVersion: 2.3
 
+Style/Alias:
+  EnforcedStyle: prefer_alias_method
+
 Style/GuardClause:
   Enabled: false
 
