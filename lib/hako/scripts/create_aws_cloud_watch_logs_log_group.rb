@@ -37,6 +37,7 @@ module Hako
         end
       end
 
+      # @param [String] region
       # @return [Aws::CloudWatchLogs::Client]
       def cloudwatch_logs(region)
         @cloudwatch_logs ||= {}
