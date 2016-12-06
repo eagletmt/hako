@@ -22,8 +22,7 @@ module Hako
     end
 
     # @param [Hash] _options
-    def configure(_options)
-    end
+    def configure(_options); end
 
     # @param [Hash<String, Container>] _containers
     def deploy(_containers)
