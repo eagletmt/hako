@@ -566,14 +566,7 @@ module Hako
       # @return [nil]
       def report_container_instance(container_instance_arn)
         container_instance = ecs_client.describe_container_instances(cluster: @cluster, container_instances: [container_instance_arn]).container_instances[0]
-        ec2_client.describe_tags(filters: [{ name: 'resource-id', values: [container_instance.ec2_instance_id] }]).each do |page|
-          tag = page.tags.find { |t| t.key == 'Name' }
-          if tag
-            Hako.logger.info "Container instance is #{container_instance_arn} (#{tag.value} #{container_instance.ec2_instance_id})"
-          else
-            Hako.logger.info "Container instance is #{container_instance_arn} (#{container_instance.ec2_instance_id})"
-          end
-        end
+        Hako.logger.info "Container instance is #{container_instance_arn} (#{container_instance.ec2_instance_id})"
       end
 
       # @param [String] task_definition_arn
