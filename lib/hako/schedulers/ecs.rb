@@ -64,6 +64,11 @@ module Hako
             @autoscaling.apply(Aws::ECS::Types::Service.new(cluster_arn: @cluster, service_name: @app_id))
           end
         else
+          if @non_graceful
+            stop
+            wait_for_stop(describe_service)
+          end
+
           task_definition = register_task_definition(definitions)
           if task_definition == :noop
             Hako.logger.info "Task definition isn't changed"
@@ -640,6 +645,26 @@ module Hako
           primary = s.deployments.find { |d| d.status == 'PRIMARY' }
           primary_ready = primary && primary.running_count == primary.desired_count
           if no_active && primary_ready
+            return
+          else
+            sleep 1
+          end
+        end
+      end
+
+      # @param [Aws::ECS::Types::Service] service
+      # @return [nil]
+      def wait_for_stop(service)
+        loop do
+          s = ecs_client.describe_services(cluster: service.cluster_arn, services: [service.service_arn]).services[0]
+
+          if s.nil?
+            Hako.logger.debug "Service #{service.service_arn} could not be described"
+            sleep 1
+            next
+          end
+
+          if s.running_count.zero?
             return
           else
             sleep 1
