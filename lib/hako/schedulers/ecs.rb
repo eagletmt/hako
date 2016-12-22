@@ -64,6 +64,7 @@ module Hako
             @autoscaling.apply(Aws::ECS::Types::Service.new(cluster_arn: @cluster, service_name: @app_id))
           end
         else
+          current_service = describe_service
           task_definition = register_task_definition(definitions)
           if task_definition == :noop
             Hako.logger.info "Task definition isn't changed"
@@ -71,11 +72,14 @@ module Hako
           else
             Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
           end
-          service = create_or_update_service(task_definition.task_definition_arn, front_port)
+          unless current_service
+            current_service = create_initial_service(task_definition.task_definition_arn, front_port)
+          end
+          service = update_service(current_service, task_definition.task_definition_arn)
           if service == :noop
             Hako.logger.info "Service isn't changed"
             if @autoscaling
-              @autoscaling.apply(describe_service)
+              @autoscaling.apply(current_service)
             end
           else
             Hako.logger.info "Updated service: #{service.service_arn}"
@@ -569,44 +573,46 @@ module Hako
         Hako.logger.info "Container instance is #{container_instance_arn} (#{container_instance.ec2_instance_id})"
       end
 
+      # @param [Aws::ECS::Types::Service] task_definition_arn
+      # @param [String] task_definition_arn
+      # @return [Aws::ECS::Types::Service, Symbol]
+      def update_service(current_service, task_definition_arn)
+        params = {
+          cluster: @cluster,
+          service: @app_id,
+          desired_count: @desired_count,
+          task_definition: task_definition_arn,
+          deployment_configuration: @deployment_configuration,
+        }
+        if @autoscaling
+          # Keep current desired_count if autoscaling is enabled
+          params[:desired_count] = current_service.desired_count
+        end
+        if service_changed?(current_service, params)
+          ecs_client.update_service(params).service
+        else
+          :noop
+        end
+      end
+
       # @param [String] task_definition_arn
       # @param [Fixnum] front_port
-      # @return [Aws::ECS::Types::Service, Symbol]
-      def create_or_update_service(task_definition_arn, front_port)
-        service = describe_service
-        if service.nil?
-          params = {
-            cluster: @cluster,
-            service_name: @app_id,
-            task_definition: task_definition_arn,
-            desired_count: @desired_count,
-            role: @role,
-            deployment_configuration: @deployment_configuration,
-          }
-          if ecs_elb_client.find_or_create_load_balancer(front_port)
-            params[:load_balancers] = [
-              @ecs_elb_client.load_balancer_params_for_service.merge(container_name: 'front', container_port: 80),
-            ]
-          end
-          ecs_client.create_service(params).service
-        else
-          params = {
-            cluster: @cluster,
-            service: @app_id,
-            desired_count: @desired_count,
-            task_definition: task_definition_arn,
-            deployment_configuration: @deployment_configuration,
-          }
-          if @autoscaling
-            # Keep current desired_count if autoscaling is enabled
-            params[:desired_count] = service.desired_count
-          end
-          if service_changed?(service, params)
-            ecs_client.update_service(params).service
-          else
-            :noop
-          end
+      # @return [Aws::ECS::Types::Service]
+      def create_initial_service(task_definition_arn, front_port)
+        params = {
+          cluster: @cluster,
+          service_name: @app_id,
+          task_definition: task_definition_arn,
+          desired_count: 0,
+          role: @role,
+          deployment_configuration: @deployment_configuration,
+        }
+        if ecs_elb_client.find_or_create_load_balancer(front_port)
+          params[:load_balancers] = [
+            @ecs_elb_client.load_balancer_params_for_service.merge(container_name: 'front', container_port: 80),
+          ]
         end
+        ecs_client.create_service(params).service
       end
 
       # @param [Aws::ECS::Types::Service] service
