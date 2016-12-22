@@ -66,11 +66,12 @@ module Hako
         else
           current_service = describe_service
           task_definition = register_task_definition(definitions)
-          if task_definition == :noop
+          task_definition_changed = task_definition != :noop
+          if task_definition_changed
+            Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
+          else
             Hako.logger.info "Task definition isn't changed"
             task_definition = ecs_client.describe_task_definition(task_definition: @app_id).task_definition
-          else
-            Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
           end
           unless current_service
             current_service = create_initial_service(task_definition.task_definition_arn, front_port)
@@ -86,7 +87,15 @@ module Hako
             if @autoscaling
               @autoscaling.apply(service)
             end
-            wait_for_ready(service)
+            unless wait_for_ready(service)
+              if task_definition_changed
+                Hako.logger.error("Rolling back to #{current_service.task_definition}")
+                update_service(service, current_service.task_definition)
+                ecs_client.deregister_task_definition(task_definition: service.task_definition)
+                Hako.logger.debug "Deregistered #{service.task_definition}"
+              end
+              raise Error.new('Deployment cancelled')
+            end
           end
           Hako.logger.info 'Deployment completed'
         end
@@ -623,11 +632,23 @@ module Hako
       end
 
       # @param [Aws::ECS::Types::Service] service
-      # @return [nil]
+      # @return [Boolean]
       def wait_for_ready(service)
         latest_event_id = find_latest_event_id(service.events)
         Hako.logger.debug "  latest_event_id=#{latest_event_id}"
+        started_at =
+          if @timeout
+            Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          end
+
         loop do
+          if started_at
+            if Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at > @timeout
+              Hako.logger.error('Timed out')
+              return false
+            end
+          end
+
           s = ecs_client.describe_services(cluster: service.cluster_arn, services: [service.service_arn]).services[0]
           if s.nil?
             Hako.logger.debug "Service #{service.service_arn} could not be described"
@@ -646,7 +667,7 @@ module Hako
           primary = s.deployments.find { |d| d.status == 'PRIMARY' }
           primary_ready = primary && primary.running_count == primary.desired_count
           if no_active && primary_ready
-            return
+            return true
           else
             sleep 1
           end
