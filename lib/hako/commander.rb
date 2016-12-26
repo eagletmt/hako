@@ -17,11 +17,11 @@ module Hako
     # @param [String] tag
     # @param [Boolean] dry_run
     # @return [nil]
-    def deploy(force: false, tag: 'latest', dry_run: false)
+    def deploy(force: false, tag: 'latest', dry_run: false, timeout:)
       containers = load_containers(tag, dry_run: dry_run)
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
       volumes = @app.yaml.fetch('volumes', [])
-      scheduler = load_scheduler(@app.yaml['scheduler'], scripts, volumes: volumes, force: force, dry_run: dry_run)
+      scheduler = load_scheduler(@app.yaml['scheduler'], scripts, volumes: volumes, force: force, dry_run: dry_run, timeout: timeout)
 
       scripts.each { |script| script.deploy_starting(containers) }
       scheduler.deploy(containers)
@@ -118,9 +118,10 @@ module Hako
     # @param [Hash] volumes
     # @param [Boolean] force
     # @param [Boolean] dry_run
+    # @param [Integer] timeout
     # @return [Scheduler]
-    def load_scheduler(yaml, scripts, volumes: [], force: false, dry_run:)
-      Loader.new(Hako::Schedulers, 'hako/schedulers').load(yaml.fetch('type')).new(@app.id, yaml, volumes: volumes, scripts: scripts, force: force, dry_run: dry_run)
+    def load_scheduler(yaml, scripts, volumes: [], force: false, dry_run:, timeout: nil)
+      Loader.new(Hako::Schedulers, 'hako/schedulers').load(yaml.fetch('type')).new(@app.id, yaml, volumes: volumes, scripts: scripts, force: force, dry_run: dry_run, timeout: timeout)
     end
 
     # @param [Hash] yaml

@@ -64,25 +64,38 @@ module Hako
             @autoscaling.apply(Aws::ECS::Types::Service.new(cluster_arn: @cluster, service_name: @app_id))
           end
         else
+          current_service = describe_service
           task_definition = register_task_definition(definitions)
-          if task_definition == :noop
+          task_definition_changed = task_definition != :noop
+          if task_definition_changed
+            Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
+          else
             Hako.logger.info "Task definition isn't changed"
             task_definition = ecs_client.describe_task_definition(task_definition: @app_id).task_definition
-          else
-            Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
           end
-          service = create_or_update_service(task_definition.task_definition_arn, front_port)
+          unless current_service
+            current_service = create_initial_service(task_definition.task_definition_arn, front_port)
+          end
+          service = update_service(current_service, task_definition.task_definition_arn)
           if service == :noop
             Hako.logger.info "Service isn't changed"
             if @autoscaling
-              @autoscaling.apply(describe_service)
+              @autoscaling.apply(current_service)
             end
           else
             Hako.logger.info "Updated service: #{service.service_arn}"
             if @autoscaling
               @autoscaling.apply(service)
             end
-            wait_for_ready(service)
+            unless wait_for_ready(service)
+              if task_definition_changed
+                Hako.logger.error("Rolling back to #{current_service.task_definition}")
+                update_service(service, current_service.task_definition)
+                ecs_client.deregister_task_definition(task_definition: service.task_definition)
+                Hako.logger.debug "Deregistered #{service.task_definition}"
+              end
+              raise Error.new('Deployment cancelled')
+            end
           end
           Hako.logger.info 'Deployment completed'
         end
@@ -569,44 +582,46 @@ module Hako
         Hako.logger.info "Container instance is #{container_instance_arn} (#{container_instance.ec2_instance_id})"
       end
 
+      # @param [Aws::ECS::Types::Service] task_definition_arn
+      # @param [String] task_definition_arn
+      # @return [Aws::ECS::Types::Service, Symbol]
+      def update_service(current_service, task_definition_arn)
+        params = {
+          cluster: @cluster,
+          service: @app_id,
+          desired_count: @desired_count,
+          task_definition: task_definition_arn,
+          deployment_configuration: @deployment_configuration,
+        }
+        if @autoscaling
+          # Keep current desired_count if autoscaling is enabled
+          params[:desired_count] = current_service.desired_count
+        end
+        if service_changed?(current_service, params)
+          ecs_client.update_service(params).service
+        else
+          :noop
+        end
+      end
+
       # @param [String] task_definition_arn
       # @param [Fixnum] front_port
-      # @return [Aws::ECS::Types::Service, Symbol]
-      def create_or_update_service(task_definition_arn, front_port)
-        service = describe_service
-        if service.nil?
-          params = {
-            cluster: @cluster,
-            service_name: @app_id,
-            task_definition: task_definition_arn,
-            desired_count: @desired_count,
-            role: @role,
-            deployment_configuration: @deployment_configuration,
-          }
-          if ecs_elb_client.find_or_create_load_balancer(front_port)
-            params[:load_balancers] = [
-              @ecs_elb_client.load_balancer_params_for_service.merge(container_name: 'front', container_port: 80),
-            ]
-          end
-          ecs_client.create_service(params).service
-        else
-          params = {
-            cluster: @cluster,
-            service: @app_id,
-            desired_count: @desired_count,
-            task_definition: task_definition_arn,
-            deployment_configuration: @deployment_configuration,
-          }
-          if @autoscaling
-            # Keep current desired_count if autoscaling is enabled
-            params[:desired_count] = service.desired_count
-          end
-          if service_changed?(service, params)
-            ecs_client.update_service(params).service
-          else
-            :noop
-          end
+      # @return [Aws::ECS::Types::Service]
+      def create_initial_service(task_definition_arn, front_port)
+        params = {
+          cluster: @cluster,
+          service_name: @app_id,
+          task_definition: task_definition_arn,
+          desired_count: 0,
+          role: @role,
+          deployment_configuration: @deployment_configuration,
+        }
+        if ecs_elb_client.find_or_create_load_balancer(front_port)
+          params[:load_balancers] = [
+            @ecs_elb_client.load_balancer_params_for_service.merge(container_name: 'front', container_port: 80),
+          ]
         end
+        ecs_client.create_service(params).service
       end
 
       # @param [Aws::ECS::Types::Service] service
@@ -617,11 +632,23 @@ module Hako
       end
 
       # @param [Aws::ECS::Types::Service] service
-      # @return [nil]
+      # @return [Boolean]
       def wait_for_ready(service)
         latest_event_id = find_latest_event_id(service.events)
         Hako.logger.debug "  latest_event_id=#{latest_event_id}"
+        started_at =
+          if @timeout
+            Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          end
+
         loop do
+          if started_at
+            if Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at > @timeout
+              Hako.logger.error('Timed out')
+              return false
+            end
+          end
+
           s = ecs_client.describe_services(cluster: service.cluster_arn, services: [service.service_arn]).services[0]
           if s.nil?
             Hako.logger.debug "Service #{service.service_arn} could not be described"
@@ -640,7 +667,7 @@ module Hako
           primary = s.deployments.find { |d| d.status == 'PRIMARY' }
           primary_ready = primary && primary.running_count == primary.desired_count
           if no_active && primary_ready
-            return
+            return true
           else
             sleep 1
           end

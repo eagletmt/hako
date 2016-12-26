@@ -12,12 +12,14 @@ module Hako
     # @param [Array<Script>] scripts
     # @param [Boolean] dry_run
     # @param [Boolean] force
-    def initialize(app_id, options, volumes:, scripts:, dry_run:, force:)
+    # @param [Integer] timeout in seconds
+    def initialize(app_id, options, volumes:, scripts:, dry_run:, force:, timeout:)
       @app_id = app_id
       @volumes = volumes
       @scripts = scripts
       @dry_run = dry_run
       @force = force
+      @timeout = timeout
       configure(options)
     end
 
