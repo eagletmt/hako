@@ -61,6 +61,20 @@ module Hako
         true
       end
 
+      # @return [Types::ModifyLoadBalancerAttributesOutput, nil]
+      def modify_attributes
+        if @elb_config.key?('cross_zone_load_balancing')
+          @elb.modify_load_balancer_attributes(
+            load_balancer_name: name,
+            load_balancer_attributes: {
+              cross_zone_load_balancing: {
+                enabled: @elb_config['cross_zone_load_balancing'],
+              }
+            }
+          )
+        end
+      end
+
       # @return [nil]
       def destroy
         if exist?

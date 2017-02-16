@@ -96,6 +96,11 @@ module Hako
       end
 
       # @return [nil]
+      def modify_attributes
+        # Nothing implemented for now
+      end
+
+      # @return [nil]
       def destroy
         unless @elb_v2_config
           return false
