@@ -77,7 +77,7 @@ module Hako
       # @return [Hash]
       def upload_config(front_conf)
         if @dry_run
-          Hako.logger.info "Generated configuration:\n#{front_conf}"
+          puts "#{self.class} will upload this configuration:\n#{front_conf}"
         else
           s3_client.put_object(
             body: front_conf,
