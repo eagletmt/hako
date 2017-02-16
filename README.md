@@ -47,7 +47,7 @@ Events:
   2015-10-05 13:35:53 +0900: (service hello) has reached a steady state.
   2015-10-05 13:35:14 +0900: (service hello) stopped 1 running tasks.
 
-% hako rollback examples/hello.yml  # [EXPERIMENTAL]
+% hako rollback examples/hello.yml
 I, [2016-05-02T13:07:12.679926 #10961]  INFO -- : Current task defintion is hello:29. Rolling back to arn:aws:ecs:ap-northeast-1:XXXXXXXXXXXX:task-definition/hello:28
 I, [2016-05-02T13:07:12.959116 #10961]  INFO -- : Updated service: arn:aws:ecs:ap-northeast-1:XXXXXXXXXXXX:service/hello
 I, [2016-05-02T13:08:27.280686 #10961]  INFO -- : Deployment completed
