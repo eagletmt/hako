@@ -766,7 +766,7 @@ module Hako
       # @param [Hash] definition
       # @return [nil]
       def print_definition_in_cli_format(definition)
-        cmd = ['docker', 'run']
+        cmd = %w[docker run]
         cmd << '--name' << definition.fetch(:name)
         cmd << '--cpu-shares' << definition.fetch(:cpu)
         cmd << '--memory' << definition.fetch(:memory)
