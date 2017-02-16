@@ -58,7 +58,7 @@ module Hako
 
         if @dry_run
           definitions.each do |d|
-            Hako.logger.info "Add container #{d}"
+            print_definition_in_cli_format(d)
           end
           if @autoscaling
             @autoscaling.apply(Aws::ECS::Types::Service.new(cluster_arn: @cluster, service_name: @app_id))
@@ -761,6 +761,58 @@ module Hako
           memory = ci.remaining_resources.find { |r| r.name == 'MEMORY' }.integer_value
           required_cpu < cpu && required_memory < memory
         end
+      end
+
+      # @param [Hash] definition
+      # @return [nil]
+      def print_definition_in_cli_format(definition)
+        cmd = ['docker', 'run']
+        cmd << '--name' << definition.fetch(:name)
+        cmd << '--cpu-shares' << definition.fetch(:cpu)
+        cmd << '--memory' << definition.fetch(:memory)
+        definition.fetch(:links).each do |link|
+          cmd << '--link' << link
+        end
+        definition.fetch(:port_mappings).each do |port_mapping|
+          cmd << '--publish' << "#{port_mapping.fetch(:host_port)}:#{port_mapping.fetch(:container_port)}"
+        end
+        definition.fetch(:docker_labels).each do |key, val|
+          if key != 'cc.wanko.hako.version'
+            cmd << '--label' << "#{key}=#{val}"
+          end
+        end
+        definition.fetch(:mount_points).each do |mount_point|
+          source_volume = mount_point.fetch(:source_volume)
+          v = @volumes[source_volume]
+          if v
+            cmd << '--volume' << "#{v.fetch('source_path')}:#{mount_point.fetch(:container_path)}#{mount_point[:read_only] ? ':ro' : ''}"
+          else
+            raise "Could not find volume #{source_volume}"
+          end
+        end
+        if definition[:privileged]
+          cmd << '--privileged'
+        end
+        definition.fetch(:volumes_from).each do |volumes_from|
+          p volumes_from
+        end
+        if definition[:user]
+          cmd << '--user' << definition[:user]
+        end
+
+        cmd << "\\\n  "
+        definition.fetch(:environment).each do |env|
+          cmd << '--env' << "#{env.fetch(:name)}=#{env.fetch(:value)}"
+          cmd << "\\\n  "
+        end
+
+        cmd << definition.fetch(:image)
+        if definition[:command]
+          cmd << "\\\n  "
+          cmd += definition[:command]
+        end
+        puts cmd.join(' ')
+        nil
       end
     end
   end
