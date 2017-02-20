@@ -832,7 +832,7 @@ module Hako
           h
         end
         if @placement_constraints != placement_constraints
-          Hako.logger.warn 'Though placement constraints are changed in config file, currently updating them is not supported due to API limitation'
+          Hako.logger.warn "Ignoring updated placement_constraints in the configuration, because AWS doesn't allow updating them for now."
         end
 
         placement_strategy = service.placement_strategy.map do |s|
@@ -843,7 +843,7 @@ module Hako
           h
         end
         if @placement_strategy != placement_strategy
-          Hako.logger.warn 'Though placement strategy is changed in config file, currently updating it is not supported due to API limitation'
+          Hako.logger.warn "Ignoring updated placement_strategy in the configuration, because AWS doesn't allow updating them for now."
         end
       end
     end
