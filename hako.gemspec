@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
   spec.required_ruby_version = '>= 2.3.0'
 
-  spec.add_dependency 'aws-sdk', '>= 2.3.22'
+  spec.add_dependency 'aws-sdk', '>= 2.6.43'
 
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'
