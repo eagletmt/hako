@@ -825,7 +825,7 @@ module Hako
       # @return [nil]
       def warn_placement_policy_change(service)
         placement_constraints = service.placement_constraints.map do |c|
-          h = {'type' => c.type}
+          h = { 'type' => c.type }
           unless c.expression.nil?
             h['expression'] = c.expression
           end
@@ -836,7 +836,7 @@ module Hako
         end
 
         placement_strategy = service.placement_strategy.map do |s|
-          h = {'type' => s.type}
+          h = { 'type' => s.type }
           unless s.field.nil?
             h['field'] = s.field.downcase
           end
