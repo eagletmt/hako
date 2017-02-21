@@ -181,8 +181,9 @@ module Hako
     class ShowYaml
       def run(argv)
         parse!(argv)
-        require 'hako/yaml_loader'
-        puts YamlLoader.new.load(Pathname.new(@yaml_path)).to_yaml
+        require 'hako/application'
+        require 'hako/commander'
+        puts Commander.new(Application.new(@yaml_path)).show_yaml(dry_run: @dry_run).to_yaml
       end
 
       def parse!(argv)
@@ -197,6 +198,7 @@ module Hako
       def parser
         @parser ||= OptionParser.new do |opts|
           opts.banner = 'hako show-yaml FILE'
+          opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
           opts.version = VERSION
         end
       end

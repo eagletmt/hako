@@ -13,6 +13,21 @@ module Hako
       @app = app
     end
 
+    def show_yaml(dry_run: false)
+      yaml = @app.yaml.dup
+      if dry_run
+        containers = load_containers('latest', dry_run: dry_run)
+        containers.each do |name, container|
+          if yaml.dig('additional_containers', name, 'env')
+            yaml.dig('additional_containers', name, 'env').merge!(container.env)
+          elsif yaml.dig(name, 'env')
+            yaml.dig(name, 'env').merge!(container.env)
+          end
+        end
+      end
+      yaml
+    end
+
     # @param [Boolean] force
     # @param [String] tag
     # @param [Boolean] dry_run
