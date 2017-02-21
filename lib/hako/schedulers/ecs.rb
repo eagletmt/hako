@@ -41,6 +41,8 @@ module Hako
         %i[maximum_percent minimum_healthy_percent].each do |key|
           @deployment_configuration[key] = options.dig('deployment_configuration', key.to_s)
         end
+        @placement_constraints = options.fetch('placement_constraints', [])
+        @placement_strategy = options.fetch('placement_strategy', [])
 
         @started_at = nil
         @container_instance_arn = nil
@@ -597,6 +599,7 @@ module Hako
           # Keep current desired_count if autoscaling is enabled
           params[:desired_count] = current_service.desired_count
         end
+        warn_placement_policy_change(current_service)
         if service_changed?(current_service, params)
           ecs_client.update_service(params).service
         else
@@ -615,6 +618,8 @@ module Hako
           desired_count: 0,
           role: @role,
           deployment_configuration: @deployment_configuration,
+          placement_constraints: @placement_constraints,
+          placement_strategy: @placement_strategy,
         }
         if ecs_elb_client.find_or_create_load_balancer(front_port)
           ecs_elb_client.modify_attributes
@@ -814,6 +819,32 @@ module Hako
         end
         puts cmd.join(' ')
         nil
+      end
+
+      # @param [Aws::ECS::Types::Service] service
+      # @return [nil]
+      def warn_placement_policy_change(service)
+        placement_constraints = service.placement_constraints.map do |c|
+          h = { 'type' => c.type }
+          unless c.expression.nil?
+            h['expression'] = c.expression
+          end
+          h
+        end
+        if @placement_constraints != placement_constraints
+          Hako.logger.warn "Ignoring updated placement_constraints in the configuration, because AWS doesn't allow updating them for now."
+        end
+
+        placement_strategy = service.placement_strategy.map do |s|
+          h = { 'type' => s.type }
+          unless s.field.nil?
+            h['field'] = s.field.downcase
+          end
+          h
+        end
+        if @placement_strategy != placement_strategy
+          Hako.logger.warn "Ignoring updated placement_strategy in the configuration, because AWS doesn't allow updating them for now."
+        end
       end
     end
   end
