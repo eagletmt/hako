@@ -765,7 +765,7 @@ module Hako
         container_instances.any? do |ci|
           cpu = ci.remaining_resources.find { |r| r.name == 'CPU' }.integer_value
           memory = ci.remaining_resources.find { |r| r.name == 'MEMORY' }.integer_value
-          required_cpu < cpu && required_memory < memory
+          required_cpu <= cpu && required_memory <= memory
         end
       end
 
