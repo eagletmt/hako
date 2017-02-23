@@ -29,6 +29,8 @@ module Hako
       # @return [Aws::ElasticLoadBalancing::Types::LoadBalancerDescription]
       def describe_load_balancer
         @elb.describe_load_balancers(load_balancer_names: [name]).load_balancer_descriptions[0]
+      rescue Aws::ElasticLoadBalancing::Errors::LoadBalancerNotFound
+        nil
       end
 
       # @param [Fixnum] front_port
