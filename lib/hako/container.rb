@@ -85,7 +85,7 @@ module Hako
       env = env.dup
       provider_types = env.delete(PROVIDERS_KEY) || []
       providers = load_providers(provider_types)
-      if @dry_run && providers.any? { |provider| !provider.dry_run_available? }
+      if @dry_run && providers.any? { |provider| !provider.validatable? }
         env
       else
         EnvExpander.new(providers).expand(env)
@@ -97,8 +97,8 @@ module Hako
     def load_providers(provider_configs)
       provider_configs.map do |yaml|
         provider = Loader.new(Hako::EnvProviders, 'hako/env_providers').load(yaml.fetch('type')).new(@app.root_path, yaml)
-        if @dry_run && provider.dry_run_available?
-          provider.dry_run!
+        if @dry_run && provider.validatable?
+          provider.validate!
         end
         provider
       end

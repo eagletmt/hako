@@ -53,19 +53,6 @@ module Hako
       expanded_env
     end
 
-    # override this method if dry-run mode available
-    # @return [Boolean]
-    def dry_run_available?
-      false
-    end
-
-    # This method is called when dry-run mode.
-    # override this method if dry-run mode available
-    # @return [nil]
-    def dry_run!
-      raise NotImplementError.new('Must implement `dry-run!` method by child class')
-    end
-
     private
 
     # @param [String] value

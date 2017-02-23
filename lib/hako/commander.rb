@@ -34,6 +34,9 @@ module Hako
     # @return [nil]
     def deploy(force: false, tag: 'latest', dry_run: false, timeout:)
       containers = load_containers(tag, dry_run: dry_run)
+      if dry_run
+        print_expanded_yaml(containers)
+      end
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
       volumes = @app.yaml.fetch('volumes', [])
       scheduler = load_scheduler(@app.yaml['scheduler'], scripts, volumes: volumes, force: force, dry_run: dry_run, timeout: timeout)
@@ -144,6 +147,20 @@ module Hako
     # @return [Script]
     def load_script(yaml, dry_run:)
       Loader.new(Hako::Scripts, 'hako/scripts').load(yaml.fetch('type')).new(@app, yaml, dry_run: dry_run)
+    end
+
+    # @param [Hash<String, Container>] containers
+    # @return [nil]
+    def print_expanded_yaml(containers)
+      yaml = @app.yaml.dup
+      containers.each do |name, container|
+        if yaml.dig('additional_containers', name, 'env')
+          yaml.dig('additional_containers', name, 'env').merge!(container.env)
+        elsif yaml.dig(name, 'env')
+          yaml.dig(name, 'env').merge!(container.env)
+        end
+      end
+      puts yaml.to_yaml
     end
   end
 end
