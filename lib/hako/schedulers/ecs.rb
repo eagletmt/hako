@@ -141,12 +141,11 @@ module Hako
 
         if @dry_run
           definitions.each do |d|
-            Hako.logger.info "Add container #{d}"
+            if d[:name] == 'app'
+              d[:command] = commands
+            end
+            print_definition_in_cli_format(d, additional_env: env)
           end
-          env.each do |k, v|
-            Hako.logger.info "Add environment #{k}=#{v}"
-          end
-          Hako.logger.info "Execute command #{commands}"
           0
         else
           task_definition = register_task_definition_for_oneshot(definitions)
@@ -770,8 +769,9 @@ module Hako
       end
 
       # @param [Hash] definition
+      # @param [Hash<String, String>] additional_env
       # @return [nil]
-      def print_definition_in_cli_format(definition)
+      def print_definition_in_cli_format(definition, additional_env: {})
         cmd = %w[docker run]
         cmd << '--name' << definition.fetch(:name)
         cmd << '--cpu-shares' << definition.fetch(:cpu)
@@ -808,7 +808,16 @@ module Hako
 
         cmd << "\\\n  "
         definition.fetch(:environment).each do |env|
-          cmd << '--env' << "#{env.fetch(:name)}=#{env.fetch(:value)}"
+          name = env.fetch(:name)
+          value = env.fetch(:value)
+          # additional_env (given in command line) has priority over env (declared in YAML)
+          unless additional_env.key?(name)
+            cmd << '--env' << "#{name}=#{value}"
+            cmd << "\\\n  "
+          end
+        end
+        additional_env.each do |name, value|
+          cmd << '--env' << "#{name}=#{value}"
           cmd << "\\\n  "
         end
 
