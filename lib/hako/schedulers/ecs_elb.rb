@@ -93,10 +93,7 @@ module Hako
 
       # @return [Boolean]
       def exist?
-        describe_load_balancer
-        true
-      rescue Aws::ElasticLoadBalancing::Errors::LoadBalancerNotFound
-        false
+        describe_load_balancer != nil
       end
 
       # @return [String]
