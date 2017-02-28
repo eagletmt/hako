@@ -14,6 +14,14 @@ module Hako
       raise NotImplementedError
     end
 
+    def can_ask_keys?
+      raise NotImplementedError
+    end
+
+    def ask_keys(_variables)
+      raise NotImplementedError
+    end
+
     private
 
     def validation_error!(message)

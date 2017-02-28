@@ -15,4 +15,10 @@ RSpec.describe Hako::EnvProviders::File do
       expect(provider.ask(['undefined'])).to eq({})
     end
   end
+
+  describe '#ask_keys' do
+    it 'returns known variables' do
+      expect(provider.ask_keys(%w[username undefined])).to match_array(['username'])
+    end
+  end
 end

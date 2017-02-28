@@ -33,6 +33,23 @@ module Hako
         env
       end
 
+      # @return [Boolean]
+      def can_ask_keys?
+        true
+      end
+
+      # @param [Array<String>] variables
+      # @return [Array<String>]
+      def ask_keys(variables)
+        keys = []
+        read_from_yaml do |key, _|
+          if variables.include?(key)
+            keys << key
+          end
+        end
+        keys
+      end
+
       private
 
       # @yieldparam [String] key
