@@ -93,7 +93,7 @@ module Hako
 
       # @return [Boolean]
       def exist?
-        describe_load_balancer
+        describe_load_balancer != nil
       end
 
       # @return [String]
