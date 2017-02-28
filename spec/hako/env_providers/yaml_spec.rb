@@ -33,4 +33,10 @@ RSpec.describe Hako::EnvProviders::Yaml do
       end
     end
   end
+
+  describe '#ask_keys' do
+    it 'returns known variables' do
+      expect(provider.ask_keys(['username', 'undefined', 'app.db.host'])).to match_array(['username', 'app.db.host'])
+    end
+  end
 end

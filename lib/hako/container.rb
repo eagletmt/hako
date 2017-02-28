@@ -84,11 +84,13 @@ module Hako
     def expand_env(env)
       env = env.dup
       provider_types = env.delete(PROVIDERS_KEY) || []
+      providers = load_providers(provider_types)
+      expander = EnvExpander.new(providers)
       if @dry_run
+        expander.validate!(env)
         env
       else
-        providers = load_providers(provider_types)
-        EnvExpander.new(providers).expand(env)
+        expander.expand(env)
       end
     end
 

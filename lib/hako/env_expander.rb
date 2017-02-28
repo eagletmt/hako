@@ -20,16 +20,14 @@ module Hako
     # @param [Hash<String, String>] env
     # @return [Hash<String, String>]
     def expand(env)
-      parsed_env = {}
+      parsed_env = parse_env(env)
       variables = Set.new
-      env.each do |key, val|
-        tokens = parse(val.to_s)
+      parsed_env.each_value do |tokens|
         tokens.each do |t|
           if t.is_a?(Variable)
             variables << t.name
           end
         end
-        parsed_env[key] = tokens
       end
 
       values = {}
@@ -53,7 +51,49 @@ module Hako
       expanded_env
     end
 
+    # @param [Hash<String, String>] env
+    # @return [Boolean]
+    def validate!(env)
+      parsed_env = parse_env(env)
+      variables = Set.new
+      parsed_env.each_value do |tokens|
+        tokens.each do |t|
+          if t.is_a?(Variable)
+            variables << t.name
+          end
+        end
+      end
+
+      @providers.each do |provider|
+        if variables.empty?
+          break
+        end
+        if provider.can_ask_keys?
+          provider.ask_keys(variables.to_a).each do |var|
+            variables.delete(var)
+          end
+        else
+          Hako.logger.warn("EnvProvider#validate! is skipped because #{provider.class} doesn't support ask_keys method")
+          return false
+        end
+      end
+      unless variables.empty?
+        raise ExpansionError.new("Could not find embedded variables from $providers=#{@providers}: #{variables.to_a}")
+      end
+      true
+    end
+
     private
+
+    # @param [Hash<String, String>] env
+    # @return [Hash<String, Array<Literal, Variable>>]
+    def parse_env(env)
+      parsed_env = {}
+      env.each do |key, val|
+        parsed_env[key] = parse(val.to_s)
+      end
+      parsed_env
+    end
 
     # @param [String] value
     # @return [Array]
