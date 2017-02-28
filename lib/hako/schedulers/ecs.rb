@@ -780,7 +780,7 @@ module Hako
           cmd << '--link' << link
         end
         definition.fetch(:port_mappings).each do |port_mapping|
-          cmd << '--publish' << "#{port_mapping.fetch(:host_port)}:#{port_mapping.fetch(:container_port)}"
+          cmd << '--publish' << "#{port_mapping.fetch('host_port')}:#{port_mapping.fetch('container_port')}"
         end
         definition.fetch(:docker_labels).each do |key, val|
           if key != 'cc.wanko.hako.version'
