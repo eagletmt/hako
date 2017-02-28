@@ -66,7 +66,7 @@ module Hako
       # @param [Fixnum] front_port
       # @return [Hash]
       def port_mapping(front_port)
-        { container_port: 80, host_port: front_port, protocol: 'tcp' }
+        { 'container_port' => 80, 'host_port' => front_port, 'protocol' => 'tcp' }
       end
 
       # @return [String]
