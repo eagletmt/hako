@@ -4,9 +4,6 @@
 
 Deploy Docker container.
 
-## Status
-Under development. Any incompatible change will happen without notice.
-
 ## Installation
 
 Add this line to your application's Gemfile:
