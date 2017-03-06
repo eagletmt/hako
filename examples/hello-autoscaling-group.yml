@@ -9,6 +9,6 @@ app:
   memory: 128
   cpu: 256
   env:
-    PORT: 3000
+    PORT: '3000'
     MESSAGE: 'hello'
   command: ['echo', 'heavy offline job']

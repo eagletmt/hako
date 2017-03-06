@@ -30,7 +30,7 @@ app:
     $providers:
       - type: file
         path: hello.env
-    PORT: 3000
+    PORT: '3000'
     MESSAGE: '#{username}-san'
 additional_containers:
   front:
