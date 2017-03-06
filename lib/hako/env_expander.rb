@@ -90,7 +90,10 @@ module Hako
     def parse_env(env)
       parsed_env = {}
       env.each do |key, val|
-        parsed_env[key] = parse(val.to_s)
+        unless val.is_a?(String)
+          raise ExpansionError.new("#{key} must be a String but got #{val.class}: #{val.inspect}")
+        end
+        parsed_env[key] = parse(val)
       end
       parsed_env
     end
