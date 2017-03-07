@@ -20,7 +20,7 @@ module Hako
     def deploy(force: false, tag: 'latest', dry_run: false, timeout:)
       containers = load_containers(tag, dry_run: dry_run)
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
-      volumes = @app.yaml.fetch('volumes', [])
+      volumes = @app.yaml.fetch('volumes', {})
       scheduler = load_scheduler(@app.yaml['scheduler'], scripts, volumes: volumes, force: force, dry_run: dry_run, timeout: timeout)
 
       scripts.each { |script| script.deploy_starting(containers) }
@@ -46,7 +46,7 @@ module Hako
     def oneshot(commands, tag:, containers:, env: {}, dry_run: false)
       containers = load_containers(tag, dry_run: dry_run, with: containers)
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
-      volumes = @app.yaml.fetch('volumes', [])
+      volumes = @app.yaml.fetch('volumes', {})
       scheduler = load_scheduler(@app.yaml['scheduler'], scripts, volumes: volumes, dry_run: dry_run)
 
       scripts.each { |script| script.oneshot_starting(containers) }
@@ -120,7 +120,7 @@ module Hako
     # @param [Boolean] dry_run
     # @param [Integer] timeout
     # @return [Scheduler]
-    def load_scheduler(yaml, scripts, volumes: [], force: false, dry_run:, timeout: nil)
+    def load_scheduler(yaml, scripts, volumes: {}, force: false, dry_run:, timeout: nil)
       Loader.new(Hako::Schedulers, 'hako/schedulers').load(yaml.fetch('type')).new(@app.id, yaml, volumes: volumes, scripts: scripts, force: force, dry_run: dry_run, timeout: timeout)
     end
 
