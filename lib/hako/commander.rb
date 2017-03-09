@@ -35,7 +35,9 @@ module Hako
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
       scheduler = load_scheduler(@app.yaml['scheduler'], scripts, dry_run: dry_run)
 
+      scripts.each(&:rollback_starting)
       scheduler.rollback
+      scripts.each(&:rollback_finished)
     end
 
     # @param [Array<String>] commands

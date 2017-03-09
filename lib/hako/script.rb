@@ -22,6 +22,14 @@ module Hako
     # @param [Hash<String, Container>] _containers
     def deploy_finished(_containers); end
 
+    def rollback_starting; end
+
+    # @param [String] _current_image_tag
+    # @param [String] _target_image_tag
+    def rollback_started(_current_image_tag, _target_image_tag); end
+
+    def rollback_finished; end
+
     # @param [Hash<String, Container>] _containers
     def oneshot_starting(_containers); end
 

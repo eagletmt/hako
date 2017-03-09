@@ -114,6 +114,7 @@ module Hako
         current_definition = "#{task_definition.family}:#{task_definition.revision}"
         target_definition = find_rollback_target(task_definition)
         Hako.logger.info "Current task defintion is #{current_definition}. Rolling back to #{target_definition}"
+        call_rollback_started(task_definition, target_definition)
 
         if @dry_run
           Hako.logger.info 'Deployment completed (dry-run)'
@@ -854,6 +855,20 @@ module Hako
         if @placement_strategy != placement_strategy
           Hako.logger.warn "Ignoring updated placement_strategy in the configuration, because AWS doesn't allow updating them for now."
         end
+      end
+
+      # @param [Aws::ECS::Types::TaskDefinition] task_definition
+      # @param [String] target_definition
+      # @return [nil]
+      def call_rollback_started(task_definition, target_definition)
+        current_app = task_definition.container_definitions.find { |c| c.name == 'app' }
+        target_app = ecs_client.describe_task_definition(task_definition: target_definition).task_definition.container_definitions.find { |c| c.name == 'app' }
+        if current_app && target_app
+          @scripts.each { |script| script.rollback_started(current_app.image, target_app.image) }
+        else
+          Hako.logger.warn("Cannot find image_tag. current_app=#{current_app.inspect} target_app=#{target_app.inspect}. Skip calling Script#rollback_started")
+        end
+        nil
       end
     end
   end
