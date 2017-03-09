@@ -1,3 +1,13 @@
+# 1.1.0 (2017-03-09)
+## New features
+- Add script hooks to rollback
+    - `Script#rollback_starting`
+        - Similar to deploy_starting, but without containers
+    - `Script#rollback_started`
+        - Current running image tag and target image tag are passed
+    - `Script#rollback_finished`
+        - Similar to deploy_finished, but without containers
+
 # 1.0.1 (2017-03-07)
 ## Bug fixes
 - Fix default value of `@volumes`
