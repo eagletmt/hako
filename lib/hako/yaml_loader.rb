@@ -36,12 +36,12 @@ module Hako
       def revive_hash(hash, o)
         super(hash, o).tap do |r|
           if r[SHOVEL].is_a?(Hash)
-            h2 = {}
+            h2 = Hash.new {|h, k| h[k] = Hash.new }
             r.each do |k, v|
               if k == SHOVEL
                 h2.merge!(v)
               else
-                h2[k] = v
+                h2[k].merge!(v)
               end
             end
             r.replace(h2)
