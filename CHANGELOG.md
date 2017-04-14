@@ -1,3 +1,8 @@
+# 1.2.0 (2017-04-14)
+## Changes
+- Fail deployment when some tasks are stopped during deployment
+    - It should prevent infinite loop when the new revision always fails to start
+
 # 1.1.0 (2017-03-09)
 ## New features
 - Add script hooks to rollback
