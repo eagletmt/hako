@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'spec_helper'
 require 'hako/schedulers/ecs_definition_comparator'
 

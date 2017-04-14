@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'hako/schema/boolean'
 require 'hako/schema/integer'
 require 'hako/schema/nullable'

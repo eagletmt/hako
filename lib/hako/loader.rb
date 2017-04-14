@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Hako
   class Loader
     # @param [Module] base_module

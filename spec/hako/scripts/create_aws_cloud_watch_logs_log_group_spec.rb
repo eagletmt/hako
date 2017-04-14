@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'spec_helper'
 require 'hako/app_container'
 require 'hako/scripts/create_aws_cloud_watch_logs_log_group'

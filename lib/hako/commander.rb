@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'hako/definition_loader'
 require 'hako/env_expander'
 require 'hako/error'
