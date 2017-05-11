@@ -541,12 +541,23 @@ module Hako
         exit_code
       end
 
+      MIN_WAIT_TASK_INTERVAL = 1
+      MAX_WAIT_TASK_INTERVAL = 120
       # @param [Aws::ECS::Types::Task] task
       # @return [nil]
       def wait_for_task(task)
         task_arn = task.task_arn
+        interval = 1
         loop do
-          task = ecs_client.describe_tasks(cluster: @cluster, tasks: [task_arn]).tasks[0]
+          begin
+            task = ecs_client.describe_tasks(cluster: @cluster, tasks: [task_arn]).tasks[0]
+          rescue Aws::ECS::Errors::ThrottlingException => e
+            Hako.logger.error(e)
+            interval = [interval * 2, MAX_WAIT_TASK_INTERVAL].min
+            Hako.logger.info("Retrying after #{interval} seconds...")
+            sleep interval
+            next
+          end
           if task.nil?
             Hako.logger.debug "Task #{task_arn} could not be described"
             sleep 1
@@ -574,7 +585,9 @@ module Hako
             end
             return containers
           end
-          sleep 1
+          interval = [interval / 2, MIN_WAIT_TASK_INTERVAL].max
+          Hako.logger.debug("Waiting task with interval=#{interval}")
+          sleep interval
         end
       end
 
