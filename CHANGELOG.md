@@ -1,3 +1,7 @@
+# 1.2.1 (2017-05-11)
+## Bug fixes
+- Retry DescribeTasks when rate limited
+
 # 1.2.0 (2017-04-14)
 ## Changes
 - Fail deployment when some tasks are stopped during deployment
