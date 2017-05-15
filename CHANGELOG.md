@@ -1,3 +1,9 @@
+# 1.3.0 (2017-05-15)
+## New features
+- Add `oneshot_notification_prefix` option
+    - This is **experimental** , so might be reverted in near version.
+    - This option enables S3 polling instead of ECS polling.
+
 # 1.2.1 (2017-05-11)
 ## Bug fixes
 - Retry DescribeTasks when rate limited
