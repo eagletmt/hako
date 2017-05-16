@@ -815,6 +815,8 @@ module Hako
         raise "Unable to find rollback target. #{task_definition.task_definition_arn} is INACTIVE?"
       end
 
+      MIN_ASG_INTERVAL = 1
+      MAX_ASG_INTERVAL = 120
       # @param [Aws::ECS::Types::TaskDefinition] task_definition
       # @return [Boolean] true if the capacity is reserved
       def on_no_tasks_started(task_definition)
@@ -823,8 +825,17 @@ module Hako
         end
 
         autoscaling = Aws::AutoScaling::Client.new
+        interval = MIN_ASG_INTERVAL
         loop do
-          asg = autoscaling.describe_auto_scaling_groups(auto_scaling_group_names: [@autoscaling_group_for_oneshot]).auto_scaling_groups[0]
+          begin
+            asg = autoscaling.describe_auto_scaling_groups(auto_scaling_group_names: [@autoscaling_group_for_oneshot]).auto_scaling_groups[0]
+          rescue Aws::AutoScaling::Errors::Throttling => e
+            Hako.logger.error(e)
+            interval = [interval * 2, MAX_ASG_INTERVAL].min
+            Hako.logger.info("Retrying after #{interval} seconds...")
+            sleep interval
+            next
+          end
           unless asg
             raise Error.new("AutoScaling Group '#{@autoscaling_group_for_oneshot}' does not exist")
           end
@@ -835,11 +846,12 @@ module Hako
             return true
           end
 
+          interval = [interval / 2, MIN_ASG_INTERVAL].max
           # Check autoscaling group health
           current = asg.instances.count { |i| i.lifecycle_state == 'InService' }
           if asg.desired_capacity != current
-            Hako.logger.debug("#{asg.auto_scaling_group_name} isn't in desired state. desired_capacity=#{asg.desired_capacity} in-service instances=#{current}")
-            sleep 1
+            Hako.logger.debug("#{asg.auto_scaling_group_name} isn't in desired state. desired_capacity=#{asg.desired_capacity} in-service instances=#{current}. Retry after #{interval} seconds")
+            sleep interval
             next
           end
 
@@ -849,8 +861,8 @@ module Hako
             out_instances.delete(ci.ec2_instance_id)
           end
           unless out_instances.empty?
-            Hako.logger.debug("There's instances that is running but not registered as container instances: #{out_instances}")
-            sleep 1
+            Hako.logger.debug("There's instances that is running but not registered as container instances: #{out_instances}. Retry after #{interval} seconds")
+            sleep interval
             next
           end
 
@@ -858,6 +870,7 @@ module Hako
           desired = current + 1
           Hako.logger.info("Increment desired_capacity of #{asg.auto_scaling_group_name} from #{current} to #{desired}")
           autoscaling.set_desired_capacity(auto_scaling_group_name: asg.auto_scaling_group_name, desired_capacity: desired)
+          sleep interval
         end
       end
 
