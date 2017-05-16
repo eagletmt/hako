@@ -1,3 +1,7 @@
+# 1.3.1 (2017-05-16)
+## Bug fixes
+- Retry DescribeAutoScalingGroups when rate limited
+
 # 1.3.0 (2017-05-15)
 ## New features
 - Add `oneshot_notification_prefix` option
