@@ -500,6 +500,7 @@ module Hako
             ],
           },
           count: 1,
+          placement_constraints: @placement_constraints,
           started_by: 'hako oneshot',
         )
         result.failures.each do |failure|
