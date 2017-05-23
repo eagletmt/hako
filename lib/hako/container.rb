@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require 'hako/env_expander'
 require 'hako/version'
 
 module Hako
