@@ -1,6 +1,11 @@
 # frozen_string_literal: true
 
 require 'pathname'
+require 'simplecov'
+
+SimpleCov.start do
+  add_filter __dir__
+end
 
 module SpecHelper
   def fixture_root
