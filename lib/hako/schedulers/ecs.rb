@@ -357,6 +357,10 @@ module Hako
         if @force
           return true
         end
+        if !actual_definition
+          # Initial deployment
+          return true
+        end
         container_definitions = {}
         actual_definition.container_definitions.each do |c|
           container_definitions[c.name] = c
@@ -372,9 +376,6 @@ module Hako
           return true
         end
         !container_definitions.empty?
-      rescue Aws::ECS::Errors::ClientException
-        # Task definition does not exist
-        true
       end
 
       # @param [Hash<String, Hash<String, String>>] actual_volumes
@@ -406,7 +407,7 @@ module Hako
       # @param [Array<Hash>] definitions
       # @return [Array<Boolean, Aws::ECS::Types::TaskDefinition>]
       def register_task_definition(definitions)
-        current_task_definition = ecs_client.describe_task_definition(task_definition: @app_id).task_definition
+        current_task_definition = describe_task_definition(@app_id)
         if task_definition_changed?(definitions, current_task_definition)
           new_task_definition = ecs_client.register_task_definition(
             family: @app_id,
@@ -432,7 +433,7 @@ module Hako
       # @return [Array<Boolean, Aws::ECS::Types::TaskDefinition]
       def register_task_definition_for_oneshot(definitions)
         family = "#{@app_id}-oneshot"
-        current_task_definition = ecs_client.describe_task_definition(task_definition: family).task_definition
+        current_task_definition = describe_task_definition(family)
         if task_definition_changed?(definitions, current_task_definition)
           new_task_definition = ecs_client.register_task_definition(
             family: family,
@@ -454,6 +455,13 @@ module Hako
             host: { source_path: volume['source_path'] },
           }
         end
+      end
+
+      def describe_task_definition(family)
+        ecs_client.describe_task_definition(task_definition: family).task_definition
+      rescue Aws::ECS::Errors::ClientException
+        # Task definition does not exist
+        nil
       end
 
       # @param [String] name
