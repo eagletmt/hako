@@ -328,5 +328,153 @@ RSpec.describe Hako::Schedulers::Ecs do
         scheduler.deploy(containers)
       end
     end
+
+    context 'with ELBv2' do
+      let(:app) { Hako::Application.new(fixture_root.join('yaml', 'ecs-elbv2.yml')) }
+      let(:task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
+      let(:elb_v2_client) { double('Aws::ElasticLoadBalancingV2::Client') }
+      let(:load_balancer_arn) { "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:loadbalancer/app/hako-#{app.id}/0123456789abcdef" }
+      let(:target_group_arn) { "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:targetgroup/hako-#{app.id}/0123456789abcdef" }
+      let(:target_groups) { [] }
+
+      before do
+        allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [])).once
+        allow(ecs_client).to receive(:describe_task_definition).with(task_definition: app.id).and_raise(Aws::ECS::Errors::ClientException.new(nil, 'Unable to describe task definition')).once
+
+        allow(Aws::ElasticLoadBalancingV2::Client).to receive(:new).and_return(elb_v2_client)
+        allow(elb_v2_client).to receive(:describe_load_balancers).with(names: ["hako-#{app.id}"]).and_raise(Aws::ElasticLoadBalancingV2::Errors::LoadBalancerNotFound.new(nil, '')).once
+        allow(elb_v2_client).to receive(:describe_target_groups).with(names: ["hako-#{app.id}"]) {
+          if target_groups.empty?
+            raise Aws::ElasticLoadBalancingV2::Errors::TargetGroupNotFound.new(nil, '')
+          else
+            Aws::ElasticLoadBalancingV2::Types::DescribeTargetGroupsOutput.new(target_groups: target_groups)
+          end
+        }.twice
+        listeners = Aws::ElasticLoadBalancingV2::Types::DescribeListenersOutput.new(listeners: []).extend(Aws::PageableResponse)
+        listeners.pager = double('Aws::Pager', truncated?: false)
+        allow(elb_v2_client).to receive(:describe_listeners).with(load_balancer_arn: load_balancer_arn).and_return(listeners).once
+      end
+
+      it 'creates new ELBv2 and service' do
+        expect(ecs_client).to receive(:register_task_definition).with(
+          family: app.id,
+          task_role_arn: nil,
+          container_definitions: [{
+            name: 'app',
+            image: 'busybox:latest',
+            cpu: 32,
+            memory: 64,
+            memory_reservation: nil,
+            links: [],
+            port_mappings: [],
+            essential: true,
+            environment: [],
+            docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },
+            mount_points: [],
+            command: nil,
+            privileged: false,
+            volumes_from: [],
+            user: nil,
+            log_configuration: nil,
+          }],
+          volumes: [],
+        ).and_return(Aws::ECS::Types::RegisterTaskDefinitionResponse.new(
+          task_definition: Aws::ECS::Types::TaskDefinition.new(
+            task_definition_arn: task_definition_arn,
+          ),
+        )).once
+        expect(elb_v2_client).to receive(:create_load_balancer).with(
+          name: "hako-#{app.id}",
+          subnets: ['subnet-11111111', 'subnet-22222222'],
+          security_groups: ['sg-11111111'],
+          scheme: nil,
+          tags: nil,
+        ).and_return(Aws::ElasticLoadBalancingV2::Types::CreateLoadBalancerOutput.new(
+          load_balancers: [Aws::ElasticLoadBalancingV2::Types::LoadBalancer.new(
+            load_balancer_arn: load_balancer_arn,
+            dns_name: "hako-#{app.id}-012345678.ap-northeast-1.elb.amazonaws.com",
+          )],
+        )).once
+        expect(elb_v2_client).to receive(:create_target_group).with(
+          name: "hako-#{app.id}",
+          port: 80,
+          protocol: 'HTTP',
+          vpc_id: 'vpc-11111111',
+          health_check_path: '/site/sha',
+        ) {
+          target_group = Aws::ElasticLoadBalancingV2::Types::TargetGroup.new(target_group_arn: target_group_arn)
+          target_groups << target_group
+          Aws::ElasticLoadBalancingV2::Types::CreateTargetGroupOutput.new(target_groups: [target_group])
+        }.once
+        expect(elb_v2_client).to receive(:create_listener).with(
+          load_balancer_arn: load_balancer_arn,
+          protocol: 'HTTP',
+          port: 80,
+          default_actions: [{ type: 'forward', target_group_arn: target_group_arn }],
+        ).and_return(Aws::ElasticLoadBalancingV2::Types::CreateListenerOutput.new(
+          listeners: [Aws::ElasticLoadBalancingV2::Types::Listener.new(listener_arn: "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:listener/app/#{app.id}/0123456789abcdef/0123456789abcdef")],
+        )).once
+        expect(elb_v2_client).to receive(:create_listener).with(
+          load_balancer_arn: load_balancer_arn,
+          protocol: 'HTTPS',
+          port: 443,
+          default_actions: [{ type: 'forward', target_group_arn: target_group_arn }],
+          certificates: [{ certificate_arn: 'arn:aws:acm:ap-northeast-1:012345678901:certificate/01234567-89ab-cdef-0123-456789abcdef' }],
+        ).and_return(Aws::ElasticLoadBalancingV2::Types::CreateListenerOutput.new(
+          listeners: [Aws::ElasticLoadBalancingV2::Types::Listener.new(listener_arn: "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:listener/app/#{app.id}/0123456789abcdef/abcdef0123456789")],
+        )).once
+        expect(ecs_client).to receive(:create_service).with(
+          cluster: 'eagletmt',
+          service_name: app.id,
+          task_definition: task_definition_arn,
+          desired_count: 0,
+          role: 'ECSServiceRole',
+          deployment_configuration: {
+            maximum_percent: nil,
+            minimum_healthy_percent: nil,
+          },
+          placement_constraints: [],
+          placement_strategy: [],
+          load_balancers: [{
+            target_group_arn: target_group_arn,
+            container_name: 'front',
+            container_port: 80,
+          }],
+        ).and_return(Aws::ECS::Types::CreateServiceResponse.new(
+          service: Aws::ECS::Types::Service.new(
+            placement_constraints: [],
+            placement_strategy: [],
+          ),
+        )).once
+        expect(ecs_client).to receive(:update_service).with(
+          cluster: 'eagletmt',
+          service: app.id,
+          task_definition: task_definition_arn,
+          desired_count: 1,
+          deployment_configuration: {
+            maximum_percent: nil,
+            minimum_healthy_percent: nil,
+          },
+        ).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
+          service: Aws::ECS::Types::Service.new(
+            cluster_arn: cluster_arn,
+            service_arn: service_arn,
+            events: [],
+          ),
+        )).once
+        expect(ecs_client).to receive(:describe_services).with(cluster: cluster_arn, services: [service_arn]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(
+          failures: [],
+          services: [Aws::ECS::Types::Service.new(events: [], deployments: [Aws::ECS::Types::Deployment.new(status: 'PRIMARY', desired_count: 1, running_count: 1)])],
+        )).once
+
+        scheduler.deploy(containers)
+        expect(logger_io.string).to include('Registered task definition')
+        expect(logger_io.string).to include('Created ELBv2')
+        expect(logger_io.string).to include('Created target group')
+        expect(logger_io.string).to include('Created listener')
+        expect(logger_io.string).to include('Updated service')
+        expect(logger_io.string).to include('Deployment completed')
+      end
+    end
   end
 end
