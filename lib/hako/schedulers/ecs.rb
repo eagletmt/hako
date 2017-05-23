@@ -69,13 +69,11 @@ module Hako
           end
         else
           current_service = describe_service
-          task_definition = register_task_definition(definitions)
-          task_definition_changed = task_definition != :noop
+          task_definition_changed, task_definition = register_task_definition(definitions)
           if task_definition_changed
             Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
           else
-            Hako.logger.info "Task definition isn't changed"
-            task_definition = ecs_client.describe_task_definition(task_definition: @app_id).task_definition
+            Hako.logger.info "Task definition isn't changed: #{task_definition.task_definition_arn}"
           end
           unless current_service
             current_service = create_initial_service(task_definition.task_definition_arn, front_port)
@@ -151,12 +149,11 @@ module Hako
           end
           0
         else
-          task_definition = register_task_definition_for_oneshot(definitions)
-          if task_definition == :noop
-            Hako.logger.info "Task definition isn't changed"
-            task_definition = ecs_client.describe_task_definition(task_definition: "#{@app_id}-oneshot").task_definition
-          else
+          updated, task_definition = register_task_definition_for_oneshot(definitions)
+          if updated
             Hako.logger.info "Registered task definition: #{task_definition.task_definition_arn}"
+          else
+            Hako.logger.info "Task definition isn't changed: #{task_definition.task_definition_arn}"
           end
           @task = run_task(task_definition, commands, env)
           Hako.logger.info "Started task: #{@task.task_arn}"
@@ -353,26 +350,25 @@ module Hako
         end
       end
 
-      # @param [String] family
-      # @param [Array<Hash>] definitions
-      # @return [Boolean]
-      def task_definition_changed?(family, definitions)
+      # @param [Array<Hash>] desired_definitions
+      # @param [Aws::ECS::Types::TaskDefinition] actual_definition
+      # @return [Array<Boolean]
+      def task_definition_changed?(desired_definitions, actual_definition)
         if @force
           return true
         end
-        task_definition = ecs_client.describe_task_definition(task_definition: family).task_definition
         container_definitions = {}
-        task_definition.container_definitions.each do |c|
+        actual_definition.container_definitions.each do |c|
           container_definitions[c.name] = c
         end
 
-        if task_definition.task_role_arn != @task_role_arn
+        if actual_definition.task_role_arn != @task_role_arn
           return true
         end
-        if different_volumes?(task_definition.volumes)
+        if different_volumes?(actual_definition.volumes)
           return true
         end
-        if definitions.any? { |definition| different_definition?(definition, container_definitions.delete(definition[:name])) }
+        if desired_definitions.any? { |definition| different_definition?(definition, container_definitions.delete(definition[:name])) }
           return true
         end
         !container_definitions.empty?
@@ -408,17 +404,19 @@ module Hako
       end
 
       # @param [Array<Hash>] definitions
-      # @return [Aws::ECS::Types::TaskDefinition, Symbol]
+      # @return [Array<Boolean, Aws::ECS::Types::TaskDefinition>]
       def register_task_definition(definitions)
-        if task_definition_changed?(@app_id, definitions)
-          ecs_client.register_task_definition(
+        current_task_definition = ecs_client.describe_task_definition(task_definition: @app_id).task_definition
+        if task_definition_changed?(definitions, current_task_definition)
+          new_task_definition = ecs_client.register_task_definition(
             family: @app_id,
             task_role_arn: @task_role_arn,
             container_definitions: definitions,
             volumes: volumes_definition,
           ).task_definition
+          [true, new_task_definition]
         else
-          :noop
+          [false, current_task_definition]
         end
       end
 
@@ -431,18 +429,20 @@ module Hako
       end
 
       # @param [Array<Hash>] definitions
-      # @return [Aws::ECS::Types::TaskDefinition, Symbol]
+      # @return [Array<Boolean, Aws::ECS::Types::TaskDefinition]
       def register_task_definition_for_oneshot(definitions)
         family = "#{@app_id}-oneshot"
-        if task_definition_changed?(family, definitions)
-          ecs_client.register_task_definition(
-            family: "#{@app_id}-oneshot",
+        current_task_definition = ecs_client.describe_task_definition(task_definition: family).task_definition
+        if task_definition_changed?(definitions, current_task_definition)
+          new_task_definition = ecs_client.register_task_definition(
+            family: family,
             task_role_arn: @task_role_arn,
             container_definitions: definitions,
             volumes: volumes_definition,
           ).task_definition
+          [true, new_task_definition]
         else
-          :noop
+          [false, current_task_definition]
         end
       end
 
