@@ -7,6 +7,9 @@ AllCops:
 Style/Alias:
   EnforcedStyle: prefer_alias_method
 
+Style/FirstParameterIndentation:
+  Enabled: false
+
 Style/GuardClause:
   Enabled: false
 
