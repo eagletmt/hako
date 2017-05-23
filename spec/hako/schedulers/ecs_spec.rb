@@ -26,6 +26,86 @@ RSpec.describe Hako::Schedulers::Ecs do
 
   let(:ecs_client) { double('Aws::ECS::Client') }
 
+  let(:create_service_params) do
+    {
+      cluster: 'eagletmt',
+      service_name: app.id,
+      task_definition: task_definition_arn,
+      desired_count: 0,
+      role: 'ECSServiceRole',
+      deployment_configuration: {
+        maximum_percent: nil,
+        minimum_healthy_percent: nil,
+      },
+      placement_constraints: [],
+      placement_strategy: [],
+    }
+  end
+  let(:update_service_params) do
+    {
+      cluster: 'eagletmt',
+      service: app.id,
+      desired_count: 1,
+      deployment_configuration: {
+        maximum_percent: nil,
+        minimum_healthy_percent: nil,
+      },
+    }
+  end
+  let(:register_task_definition_params) do
+    {
+      family: app.id,
+      task_role_arn: nil,
+      container_definitions: [{
+        name: 'app',
+        image: 'busybox:latest',
+        cpu: 32,
+        memory: 64,
+        memory_reservation: nil,
+        links: [],
+        port_mappings: [],
+        essential: true,
+        environment: [],
+        docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },
+        mount_points: [],
+        command: nil,
+        privileged: false,
+        volumes_from: [],
+        user: nil,
+        log_configuration: nil,
+      }],
+      volumes: [],
+    }
+  end
+  let(:dummy_service_response) do
+    Aws::ECS::Types::Service.new(
+      desired_count: 1,
+      events: [],
+      deployment_configuration: {
+        maximum_percent: nil,
+        minimum_healthy_percent: nil,
+      },
+      placement_constraints: [],
+      placement_strategy: [],
+      deployments: [Aws::ECS::Types::Deployment.new(status: 'PRIMARY', desired_count: 1, running_count: 1)],
+    )
+  end
+  let(:dummy_container_definition) do
+    Aws::ECS::Types::ContainerDefinition.new(
+      name: 'app',
+      image: 'busybox:latest',
+      cpu: 32,
+      memory: 64,
+      links: [],
+      port_mappings: [],
+      environment: [],
+      docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },
+      mount_points: [],
+      privileged: false,
+      volumes_from: [],
+    )
+  end
+
   before do
     allow(Hako).to receive(:logger).and_return(logger)
     allow(scheduler).to receive(:ecs_client).and_return(ecs_client)
@@ -37,79 +117,30 @@ RSpec.describe Hako::Schedulers::Ecs do
       let(:task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
 
       before do
-        allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(
-          failures: [],
-          services: [],
-        )).once
+        allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [])).once
         allow(ecs_client).to receive(:describe_task_definition).with(task_definition: app.id).and_raise(Aws::ECS::Errors::ClientException.new(nil, 'Unable to describe task definition')).once
       end
 
       it 'creates new service' do
-        expect(ecs_client).to receive(:register_task_definition).with(
-          family: app.id,
-          task_role_arn: nil,
-          container_definitions: [{
-            name: 'app',
-            image: 'busybox:latest',
-            cpu: 32,
-            memory: 64,
-            memory_reservation: nil,
-            links: [],
-            port_mappings: [],
-            essential: true,
-            environment: [],
-            docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },
-            mount_points: [],
-            command: nil,
-            privileged: false,
-            volumes_from: [],
-            user: nil,
-            log_configuration: nil,
-          }],
-          volumes: [],
-        ).and_return(Aws::ECS::Types::RegisterTaskDefinitionResponse.new(
+        expect(ecs_client).to receive(:register_task_definition).with(register_task_definition_params).and_return(Aws::ECS::Types::RegisterTaskDefinitionResponse.new(
           task_definition: Aws::ECS::Types::TaskDefinition.new(
             task_definition_arn: task_definition_arn,
           ),
         )).once
-        expect(ecs_client).to receive(:create_service).with(
-          cluster: 'eagletmt',
-          service_name: app.id,
-          task_definition: task_definition_arn,
-          desired_count: 0,
-          role: 'ECSServiceRole',
-          deployment_configuration: {
-            maximum_percent: nil,
-            minimum_healthy_percent: nil,
-          },
-          placement_constraints: [],
-          placement_strategy: [],
-        ).and_return(Aws::ECS::Types::CreateServiceResponse.new(
+        expect(ecs_client).to receive(:create_service).with(create_service_params.merge(task_definition: task_definition_arn)).and_return(Aws::ECS::Types::CreateServiceResponse.new(
           service: Aws::ECS::Types::Service.new(
             placement_constraints: [],
             placement_strategy: [],
           ),
         )).once
-        expect(ecs_client).to receive(:update_service).with(
-          cluster: 'eagletmt',
-          service: app.id,
-          task_definition: task_definition_arn,
-          desired_count: 1,
-          deployment_configuration: {
-            maximum_percent: nil,
-            minimum_healthy_percent: nil,
-          },
-        ).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
+        expect(ecs_client).to receive(:update_service).with(update_service_params.merge(task_definition: task_definition_arn)).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
           service: Aws::ECS::Types::Service.new(
             cluster_arn: cluster_arn,
             service_arn: service_arn,
             events: [],
           ),
         )).once
-        expect(ecs_client).to receive(:describe_services).with(cluster: cluster_arn, services: [service_arn]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(
-          failures: [],
-          services: [Aws::ECS::Types::Service.new(events: [], deployments: [Aws::ECS::Types::Deployment.new(status: 'PRIMARY', desired_count: 1, running_count: 1)])],
-        )).once
+        expect(ecs_client).to receive(:describe_services).with(cluster: cluster_arn, services: [service_arn]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [dummy_service_response])).once
 
         scheduler.deploy(containers)
         expect(logger_io.string).to include('Registered task definition')
@@ -123,38 +154,12 @@ RSpec.describe Hako::Schedulers::Ecs do
       let(:task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
 
       before do
-        allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(
-          failures: [],
-          services: [Aws::ECS::Types::Service.new(
-            desired_count: 1,
-            task_definition: task_definition_arn,
-            events: [],
-            deployment_configuration: {
-              maximum_percent: nil,
-              minimum_healthy_percent: nil,
-            },
-            placement_constraints: [],
-            placement_strategy: [],
-          )],
-        )).once
+        dummy_service_response.task_definition = task_definition_arn
+        allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [dummy_service_response])).once
         allow(ecs_client).to receive(:describe_task_definition).with(task_definition: app.id).and_return(Aws::ECS::Types::DescribeTaskDefinitionResponse.new(
           task_definition: Aws::ECS::Types::TaskDefinition.new(
             task_definition_arn: task_definition_arn,
-            container_definitions: [
-              Aws::ECS::Types::ContainerDefinition.new(
-                name: 'app',
-                image: 'busybox:latest',
-                cpu: 32,
-                memory: 64,
-                links: [],
-                port_mappings: [],
-                environment: [],
-                docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },
-                mount_points: [],
-                privileged: false,
-                volumes_from: [],
-              ),
-            ],
+            container_definitions: [dummy_container_definition],
             volumes: [],
           ),
         )).once
@@ -173,64 +178,27 @@ RSpec.describe Hako::Schedulers::Ecs do
       let(:task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
 
       before do
-        allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(
-          failures: [],
-          services: [Aws::ECS::Types::Service.new(
-            desired_count: 0,
-            task_definition: task_definition_arn,
-            events: [],
-            deployment_configuration: {
-              maximum_percent: nil,
-              minimum_healthy_percent: nil,
-            },
-            placement_constraints: [],
-            placement_strategy: [],
-          )],
-        )).once
+        dummy_service_response.desired_count = 0
+        dummy_service_response.task_definition = task_definition_arn
+        allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [dummy_service_response])).once
         allow(ecs_client).to receive(:describe_task_definition).with(task_definition: app.id).and_return(Aws::ECS::Types::DescribeTaskDefinitionResponse.new(
           task_definition: Aws::ECS::Types::TaskDefinition.new(
             task_definition_arn: task_definition_arn,
-            container_definitions: [
-              Aws::ECS::Types::ContainerDefinition.new(
-                name: 'app',
-                image: 'busybox:latest',
-                cpu: 32,
-                memory: 64,
-                links: [],
-                port_mappings: [],
-                environment: [],
-                docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },
-                mount_points: [],
-                privileged: false,
-                volumes_from: [],
-              ),
-            ],
+            container_definitions: [dummy_container_definition],
             volumes: [],
           ),
         )).once
       end
 
       it 'updates service' do
-        expect(ecs_client).to receive(:update_service).with(
-          cluster: 'eagletmt',
-          service: app.id,
-          task_definition: task_definition_arn,
-          desired_count: 1,
-          deployment_configuration: {
-            maximum_percent: nil,
-            minimum_healthy_percent: nil,
-          },
-        ).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
+        expect(ecs_client).to receive(:update_service).with(update_service_params.merge(task_definition: task_definition_arn)).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
           service: Aws::ECS::Types::Service.new(
             cluster_arn: cluster_arn,
             service_arn: service_arn,
             events: [],
           ),
         )).once
-        expect(ecs_client).to receive(:describe_services).with(cluster: cluster_arn, services: [service_arn]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(
-          failures: [],
-          services: [Aws::ECS::Types::Service.new(events: [], deployments: [Aws::ECS::Types::Deployment.new(status: 'PRIMARY', desired_count: 1, running_count: 1)])],
-        )).once
+        expect(ecs_client).to receive(:describe_services).with(cluster: cluster_arn, services: [service_arn]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [dummy_service_response])).once
         scheduler.deploy(containers)
       end
     end
@@ -241,90 +209,31 @@ RSpec.describe Hako::Schedulers::Ecs do
       let(:updated_task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:2" }
 
       before do
-        allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(
-          failures: [],
-          services: [Aws::ECS::Types::Service.new(
-            desired_count: 1,
-            task_definition: running_task_definition_arn,
-            events: [],
-            deployment_configuration: {
-              maximum_percent: nil,
-              minimum_healthy_percent: nil,
-            },
-            placement_constraints: [],
-            placement_strategy: [],
-          )],
-        )).once
+        dummy_service_response.task_definition = running_task_definition_arn
+        allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [dummy_service_response])).once
+        dummy_container_definition.memory = 1024
         allow(ecs_client).to receive(:describe_task_definition).with(task_definition: app.id).and_return(Aws::ECS::Types::DescribeTaskDefinitionResponse.new(
           task_definition: Aws::ECS::Types::TaskDefinition.new(
             task_definition_arn: running_task_definition_arn,
-            container_definitions: [
-              Aws::ECS::Types::ContainerDefinition.new(
-                name: 'app',
-                image: 'busybox:latest',
-                cpu: 32,
-                memory: 1024, # different
-                links: [],
-                port_mappings: [],
-                environment: [],
-                docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },
-                mount_points: [],
-                privileged: false,
-                volumes_from: [],
-              ),
-            ],
+            container_definitions: [dummy_container_definition],
             volumes: [],
           ),
         )).once
       end
       it 'updates task definition and service' do
-        expect(ecs_client).to receive(:register_task_definition).with(
-          family: app.id,
-          task_role_arn: nil,
-          container_definitions: [{
-            name: 'app',
-            image: 'busybox:latest',
-            cpu: 32,
-            memory: 64,
-            memory_reservation: nil,
-            links: [],
-            port_mappings: [],
-            essential: true,
-            environment: [],
-            docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },
-            mount_points: [],
-            command: nil,
-            privileged: false,
-            volumes_from: [],
-            user: nil,
-            log_configuration: nil,
-          }],
-          volumes: [],
-        ).and_return(Aws::ECS::Types::RegisterTaskDefinitionResponse.new(
+        expect(ecs_client).to receive(:register_task_definition).with(register_task_definition_params).and_return(Aws::ECS::Types::RegisterTaskDefinitionResponse.new(
           task_definition: Aws::ECS::Types::TaskDefinition.new(
             task_definition_arn: updated_task_definition_arn,
           ),
         )).once
-        expect(ecs_client).to receive(:update_service).with(
-          cluster: 'eagletmt',
-          service: app.id,
-          task_definition: updated_task_definition_arn,
-          desired_count: 1,
-          deployment_configuration: {
-            maximum_percent: nil,
-            minimum_healthy_percent: nil,
-          },
-        ).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
+        expect(ecs_client).to receive(:update_service).with(update_service_params.merge(task_definition: updated_task_definition_arn)).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
           service: Aws::ECS::Types::Service.new(
             cluster_arn: cluster_arn,
             service_arn: service_arn,
             events: [],
           ),
         )).once
-        expect(ecs_client).to receive(:describe_services).with(cluster: cluster_arn, services: [service_arn]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(
-          failures: [],
-          services: [Aws::ECS::Types::Service.new(events: [], deployments: [Aws::ECS::Types::Deployment.new(status: 'PRIMARY', desired_count: 1, running_count: 1)])],
-        )).once
+        expect(ecs_client).to receive(:describe_services).with(cluster: cluster_arn, services: [service_arn]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [dummy_service_response])).once
         scheduler.deploy(containers)
       end
     end
@@ -356,29 +265,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       end
 
       it 'creates new ELBv2 and service' do
-        expect(ecs_client).to receive(:register_task_definition).with(
-          family: app.id,
-          task_role_arn: nil,
-          container_definitions: [{
-            name: 'app',
-            image: 'busybox:latest',
-            cpu: 32,
-            memory: 64,
-            memory_reservation: nil,
-            links: [],
-            port_mappings: [],
-            essential: true,
-            environment: [],
-            docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },
-            mount_points: [],
-            command: nil,
-            privileged: false,
-            volumes_from: [],
-            user: nil,
-            log_configuration: nil,
-          }],
-          volumes: [],
-        ).and_return(Aws::ECS::Types::RegisterTaskDefinitionResponse.new(
+        expect(ecs_client).to receive(:register_task_definition).with(register_task_definition_params).and_return(Aws::ECS::Types::RegisterTaskDefinitionResponse.new(
           task_definition: Aws::ECS::Types::TaskDefinition.new(
             task_definition_arn: task_definition_arn,
           ),
@@ -423,49 +310,27 @@ RSpec.describe Hako::Schedulers::Ecs do
         ).and_return(Aws::ElasticLoadBalancingV2::Types::CreateListenerOutput.new(
           listeners: [Aws::ElasticLoadBalancingV2::Types::Listener.new(listener_arn: "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:listener/app/#{app.id}/0123456789abcdef/abcdef0123456789")],
         )).once
-        expect(ecs_client).to receive(:create_service).with(
-          cluster: 'eagletmt',
-          service_name: app.id,
+        expect(ecs_client).to receive(:create_service).with(create_service_params.merge(
           task_definition: task_definition_arn,
-          desired_count: 0,
-          role: 'ECSServiceRole',
-          deployment_configuration: {
-            maximum_percent: nil,
-            minimum_healthy_percent: nil,
-          },
-          placement_constraints: [],
-          placement_strategy: [],
           load_balancers: [{
             target_group_arn: target_group_arn,
             container_name: 'front',
             container_port: 80,
           }],
-        ).and_return(Aws::ECS::Types::CreateServiceResponse.new(
+        )).and_return(Aws::ECS::Types::CreateServiceResponse.new(
           service: Aws::ECS::Types::Service.new(
             placement_constraints: [],
             placement_strategy: [],
           ),
         )).once
-        expect(ecs_client).to receive(:update_service).with(
-          cluster: 'eagletmt',
-          service: app.id,
-          task_definition: task_definition_arn,
-          desired_count: 1,
-          deployment_configuration: {
-            maximum_percent: nil,
-            minimum_healthy_percent: nil,
-          },
-        ).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
+        expect(ecs_client).to receive(:update_service).with(update_service_params.merge(task_definition: task_definition_arn)).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
           service: Aws::ECS::Types::Service.new(
             cluster_arn: cluster_arn,
             service_arn: service_arn,
             events: [],
           ),
         )).once
-        expect(ecs_client).to receive(:describe_services).with(cluster: cluster_arn, services: [service_arn]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(
-          failures: [],
-          services: [Aws::ECS::Types::Service.new(events: [], deployments: [Aws::ECS::Types::Deployment.new(status: 'PRIMARY', desired_count: 1, running_count: 1)])],
-        )).once
+        expect(ecs_client).to receive(:describe_services).with(cluster: cluster_arn, services: [service_arn]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [dummy_service_response])).once
 
         scheduler.deploy(containers)
         expect(logger_io.string).to include('Registered task definition')
