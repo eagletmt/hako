@@ -841,8 +841,13 @@ module Hako
             raise Error.new("AutoScaling Group '#{@autoscaling_group_for_oneshot}' does not exist")
           end
 
-          arns = ecs_client.list_container_instances(cluster: @cluster).container_instance_arns
-          container_instances = arns.empty? ? [] : ecs_client.describe_container_instances(cluster: @cluster, container_instances: arns).container_instances
+          container_instances = ecs_client.list_container_instances(cluster: @cluster).flat_map do |c|
+            if c.container_instance_arns.empty?
+              []
+            else
+              ecs_client.describe_container_instances(cluster: @cluster, container_instances: c.container_instance_arns).container_instances
+            end
+          end
           if has_capacity?(task_definition, container_instances)
             Hako.logger.info("There's remaining capacity. Start retrying...")
             return true
