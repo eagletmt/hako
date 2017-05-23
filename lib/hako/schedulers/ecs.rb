@@ -357,7 +357,7 @@ module Hako
         if @force
           return true
         end
-        if !actual_definition
+        unless actual_definition
           # Initial deployment
           return true
         end
