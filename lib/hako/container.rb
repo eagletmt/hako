@@ -25,7 +25,6 @@ module Hako
       memory
       memory_reservation
       links
-      port_mappings
       command
       user
       privileged
@@ -42,6 +41,17 @@ module Hako
     # @return [Hash<String, String>]
     def env
       @expanded_env ||= expand_env(@definition.fetch('env'))
+    end
+
+    # @return [Array<Hash>]
+    def port_mappings
+      @definition['port_mappings'].map do |port_mapping|
+        {
+          container_port: port_mapping.fetch('container_port'),
+          host_port: port_mapping.fetch('host_port'),
+          protocol: port_mapping.fetch('protocol', 'tcp'),
+        }
+      end
     end
 
     # @return [Array<Hash>]

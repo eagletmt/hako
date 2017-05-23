@@ -62,9 +62,9 @@ RSpec.describe Hako::Scripts::NginxFront do
 
     it 'configures port mappings' do
       port_mapping = {
-        'container_port' => 80,
-        'host_port' => front_port,
-        'protocol' => 'tcp',
+        container_port: 80,
+        host_port: front_port,
+        protocol: 'tcp',
       }
       expect { script.deploy_started(containers, front_port) }.to change {
         containers['front'].port_mappings
