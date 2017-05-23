@@ -1,3 +1,9 @@
+# 1.3.3 (2017-05-23)
+## Bug fixes
+- Fix error of autoscaling for oneshot when container instances are empty
+- Fix error when new task definition is registered
+    - Regression in v1.3.2
+
 # 1.3.2 (2017-05-23)
 ## Bug fixes
 - Pass placement_configurations in oneshot mode
