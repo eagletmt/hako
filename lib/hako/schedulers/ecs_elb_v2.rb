@@ -12,7 +12,7 @@ module Hako
       # @param [Boolean] dry_run
       def initialize(app_id, region, elb_v2_config, dry_run:)
         @app_id = app_id
-        @elb_v2 = Aws::ElasticLoadBalancingV2::Client.new(region: region)
+        @region = region
         @elb_v2_config = elb_v2_config
         @dry_run = dry_run
       end
@@ -21,7 +21,7 @@ module Hako
       # @return [nil]
       def show_status(ecs_lb)
         lb = describe_load_balancer
-        @elb_v2.describe_listeners(load_balancer_arn: lb.load_balancer_arn).each do |page|
+        elb_client.describe_listeners(load_balancer_arn: lb.load_balancer_arn).each do |page|
           page.listeners.each do |listener|
             puts "  #{lb.dns_name}:#{listener.port} -> #{ecs_lb.container_name}:#{ecs_lb.container_port}"
           end
@@ -30,14 +30,14 @@ module Hako
 
       # @return [Aws::ElasticLoadBalancingV2::Types::LoadBalancer]
       def describe_load_balancer
-        @elb_v2.describe_load_balancers(names: [name]).load_balancers[0]
+        elb_client.describe_load_balancers(names: [name]).load_balancers[0]
       rescue Aws::ElasticLoadBalancingV2::Errors::LoadBalancerNotFound
         nil
       end
 
       # @return [Aws::ElasticLoadBalancingV2::Types::TargetGroup]
       def describe_target_group
-        @elb_v2.describe_target_groups(names: [name]).target_groups[0]
+        elb_client.describe_target_groups(names: [name]).target_groups[0]
       rescue Aws::ElasticLoadBalancingV2::Errors::TargetGroupNotFound
         nil
       end
@@ -52,7 +52,7 @@ module Hako
         load_balancer = describe_load_balancer
         unless load_balancer
           tags = @elb_v2_config.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } }
-          load_balancer = @elb_v2.create_load_balancer(
+          load_balancer = elb_client.create_load_balancer(
             name: name,
             subnets: @elb_v2_config.fetch('subnets'),
             security_groups: @elb_v2_config.fetch('security_groups'),
@@ -64,7 +64,7 @@ module Hako
 
         target_group = describe_target_group
         unless target_group
-          target_group = @elb_v2.create_target_group(
+          target_group = elb_client.create_target_group(
             name: name,
             port: 80,
             protocol: 'HTTP',
@@ -74,7 +74,7 @@ module Hako
           Hako.logger.info "Created target group #{target_group.target_group_arn}"
         end
 
-        listener_ports = @elb_v2.describe_listeners(load_balancer_arn: load_balancer.load_balancer_arn).flat_map { |page| page.listeners.map(&:port) }
+        listener_ports = elb_client.describe_listeners(load_balancer_arn: load_balancer.load_balancer_arn).flat_map { |page| page.listeners.map(&:port) }
         @elb_v2_config.fetch('listeners').each do |l|
           params = {
             load_balancer_arn: load_balancer.load_balancer_arn,
@@ -88,7 +88,7 @@ module Hako
           end
 
           unless listener_ports.include?(params[:port])
-            listener = @elb_v2.create_listener(params).listeners[0]
+            listener = elb_client.create_listener(params).listeners[0]
             Hako.logger.info("Created listener #{listener.listener_arn}")
           end
         end
@@ -110,9 +110,9 @@ module Hako
         load_balancer = describe_load_balancer
         if load_balancer
           if @dry_run
-            Hako.logger.info("@elb_v2.delete_load_balancer(load_balancer_arn: #{load_balancer.load_balancer_arn})")
+            Hako.logger.info("elb_client.delete_load_balancer(load_balancer_arn: #{load_balancer.load_balancer_arn})")
           else
-            @elb_v2.delete_load_balancer(load_balancer_arn: load_balancer.load_balancer_arn)
+            elb_client.delete_load_balancer(load_balancer_arn: load_balancer.load_balancer_arn)
             Hako.logger.info "Deleted ELBv2 #{load_balancer.load_balancer_arn}"
           end
         else
@@ -122,9 +122,9 @@ module Hako
         target_group = describe_target_group
         if target_group
           if @dry_run
-            Hako.logger.info("@elb_v2.delete_target_group(target_group_arn: #{target_group.target_group_arn})")
+            Hako.logger.info("elb_client.delete_target_group(target_group_arn: #{target_group.target_group_arn})")
           else
-            @elb_v2.delete_target_group(target_group_arn: target_group.target_group_arn)
+            elb_client.delete_target_group(target_group_arn: target_group.target_group_arn)
             Hako.logger.info "Deleted target group #{target_group.target_group_arn}"
           end
         end
@@ -138,6 +138,12 @@ module Hako
       # @return [Hash]
       def load_balancer_params_for_service
         { target_group_arn: describe_target_group.target_group_arn }
+      end
+
+      private
+
+      def elb_client
+        @elb_v2 ||= Aws::ElasticLoadBalancingV2::Client.new(region: @region)
       end
     end
   end
