@@ -1,3 +1,11 @@
+# 1.3.2 (2017-05-23)
+## Bug fixes
+- Pass placement_configurations in oneshot mode
+- Symbolize port_mapping keys to compare definitions correctly
+
+## Improvements
+- Reduce the number of DescribeTaskDefinition calls
+
 # 1.3.1 (2017-05-16)
 ## Bug fixes
 - Retry DescribeAutoScalingGroups when rate limited
