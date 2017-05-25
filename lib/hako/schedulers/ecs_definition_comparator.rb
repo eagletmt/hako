@@ -35,6 +35,7 @@ module Hako
           struct.member(:user, Schema::Nullable.new(Schema::String.new))
           struct.member(:privileged, Schema::Boolean.new)
           struct.member(:log_configuration, Schema::Nullable.new(log_configuration_schema))
+          struct.member(:ulimits, Schema::Nullable.new(ulimits_chema))
         end
       end
 
@@ -72,6 +73,18 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:log_driver, Schema::String.new)
           struct.member(:options, Schema::Table.new(Schema::String.new, Schema::String.new))
+        end
+      end
+
+      def ulimits_chema
+        Schema::UnorderedArray.new(ulimit_schema)
+      end
+
+      def ulimit_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:name, Schema::String.new)
+          struct.member(:hard_limit, Schema::Integer.new)
+          struct.member(:soft_limit, Schema::Integer.new)
         end
       end
     end

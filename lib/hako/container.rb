@@ -87,6 +87,19 @@ module Hako
       end
     end
 
+    # @return [Array<Hash>, nil]
+    def ulimits
+      if @definition.key?('ulimits')
+        @definition['ulimits'].map do |ulimit|
+          {
+            name: ulimit.fetch('name'),
+            soft_limit: ulimit.fetch('soft_limit'),
+            hard_limit: ulimit.fetch('hard_limit'),
+          }
+        end
+      end
+    end
+
     private
 
     PROVIDERS_KEY = '$providers'

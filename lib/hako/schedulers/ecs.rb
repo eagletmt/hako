@@ -486,6 +486,7 @@ module Hako
           volumes_from: container.volumes_from,
           user: container.user,
           log_configuration: container.log_configuration,
+          ulimits: container.ulimits,
         }
       end
 
