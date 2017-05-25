@@ -1,3 +1,7 @@
+# 1.4.0 (2017-05-25)
+## New features
+- Support `ulimits` option
+
 # 1.3.3 (2017-05-23)
 ## Bug fixes
 - Fix error of autoscaling for oneshot when container instances are empty
