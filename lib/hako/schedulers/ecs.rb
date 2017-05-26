@@ -635,6 +635,11 @@ module Hako
               Hako.logger.debug("  s3://#{uri.host}/#{started_key} doesn't exist")
             else
               json = JSON.parse(object.body.read)
+              arn = json['detail']['containerInstanceArn']
+              if @container_instance_arn != arn
+                @container_instance_arn = arn
+                report_container_instance(@container_instance_arn)
+              end
               @started_at = Time.parse(json['detail']['startedAt'])
               if @started_at
                 Hako.logger.info "Started at #{@started_at}"
