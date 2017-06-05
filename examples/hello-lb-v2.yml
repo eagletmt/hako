@@ -22,6 +22,10 @@ scheduler:
       - subnet-YYYYYYYY
     security_groups:
       - sg-ZZZZZZZZ
+    load_balancer_attributes:
+      access_logs.s3.enabled: 'true'
+      access_logs.s3.bucket: hako-access-logs
+      access_logs.s3.prefix: hako-hello-lb-v2
 app:
   image: ryotarai/hello-sinatra
   memory: 128

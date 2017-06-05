@@ -67,6 +67,7 @@ module Hako
           if @autoscaling
             @autoscaling.apply(Aws::ECS::Types::Service.new(cluster_arn: @cluster, service_name: @app_id))
           end
+          ecs_elb_client.modify_attributes
         else
           current_service = describe_service
           task_definition_changed, task_definition = register_task_definition(definitions)
@@ -84,11 +85,13 @@ module Hako
             if @autoscaling
               @autoscaling.apply(current_service)
             end
+            ecs_elb_client.modify_attributes
           else
             Hako.logger.info "Updated service: #{service.service_arn}"
             if @autoscaling
               @autoscaling.apply(service)
             end
+            ecs_elb_client.modify_attributes
             unless wait_for_ready(service)
               if task_definition_changed
                 Hako.logger.error("Rolling back to #{current_service.task_definition}")

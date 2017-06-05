@@ -98,7 +98,21 @@ module Hako
 
       # @return [nil]
       def modify_attributes
-        # Nothing implemented for now
+        unless @elb_v2_config
+          return nil
+        end
+
+        if @elb_v2_config.key?('load_balancer_attributes')
+          load_balancer = describe_load_balancer
+          attributes = @elb_v2_config.fetch('load_balancer_attributes').map { |key, value| { key: key, value: value } }
+          if @dry_run
+            Hako.logger.info("elb_client.modify_load_balancer_attributes(load_balancer_arn: #{load_balancer.load_balancer_arn}, attributes: #{attributes.inspect}) (dry-run)")
+          else
+            Hako.logger.info("Updating ELBv2 attributes to #{attributes.inspect}")
+            elb_client.modify_load_balancer_attributes(load_balancer_arn: load_balancer.load_balancer_arn, attributes: attributes)
+          end
+        end
+        nil
       end
 
       # @return [nil]
