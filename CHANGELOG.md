@@ -1,3 +1,7 @@
+# 1.5.0 (2017-06-05)
+## New features
+- Support `load_balancer_attributes` option in elb_v2
+
 # 1.4.0 (2017-05-25)
 ## New features
 - Support `ulimits` option
