@@ -4,11 +4,11 @@ AllCops:
   DisplayCopNames: true
   TargetRubyVersion: 2.3
 
+Layout/FirstParameterIndentation:
+  Enabled: false
+
 Style/Alias:
   EnforcedStyle: prefer_alias_method
-
-Style/FirstParameterIndentation:
-  Enabled: false
 
 Style/GuardClause:
   Enabled: false
