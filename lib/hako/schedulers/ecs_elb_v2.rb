@@ -106,7 +106,11 @@ module Hako
           load_balancer = describe_load_balancer
           attributes = @elb_v2_config.fetch('load_balancer_attributes').map { |key, value| { key: key, value: value } }
           if @dry_run
-            Hako.logger.info("elb_client.modify_load_balancer_attributes(load_balancer_arn: #{load_balancer.load_balancer_arn}, attributes: #{attributes.inspect}) (dry-run)")
+            if load_balancer
+              Hako.logger.info("elb_client.modify_load_balancer_attributes(load_balancer_arn: #{load_balancer.load_balancer_arn}, attributes: #{attributes.inspect}) (dry-run)")
+            else
+              Hako.logger.info("elb_client.modify_load_balancer_attributes(load_balancer_arn: unknown, attributes: #{attributes.inspect}) (dry-run)")
+            end
           else
             Hako.logger.info("Updating ELBv2 attributes to #{attributes.inspect}")
             elb_client.modify_load_balancer_attributes(load_balancer_arn: load_balancer.load_balancer_arn, attributes: attributes)
