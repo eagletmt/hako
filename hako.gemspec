@@ -13,6 +13,7 @@ Gem::Specification.new do |spec|
   spec.summary       = 'Deploy Docker container'
   spec.description   = 'Deploy Docker container'
   spec.homepage      = 'https://github.com/eagletmt/hako'
+  spec.license       = 'MIT'
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
   spec.bindir        = 'exe'
