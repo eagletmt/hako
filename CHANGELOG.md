@@ -1,3 +1,7 @@
+# 1.5.1 (2017-06-06)
+## Bug fixes
+- Fix error in dry-run mode when ALB isn't created yet
+
 # 1.5.0 (2017-06-05)
 ## New features
 - Support `load_balancer_attributes` option in elb_v2
