@@ -453,7 +453,7 @@ module Hako
           rescue Aws::ECS::Errors::ClientException => e
             if e.message.include?('Too many concurrent attempts to create a new revision of the specified family')
               Hako.logger.error(e.message)
-              interval = 2**i + rand(0.0 .. 10.0)
+              interval = 2**i + rand(0.0..10.0)
               Hako.logger.error("Retrying register_task_definition_for_oneshot after #{interval} seconds")
               sleep(interval)
             else
