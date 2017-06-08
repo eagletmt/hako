@@ -1,3 +1,7 @@
+# 1.5.2 (2017-06-08)
+## Bug fixes
+- Retry RegisterTaskDefinition when "too many concurrent attempts" error occurs
+
 # 1.5.1 (2017-06-06)
 ## Bug fixes
 - Fix error in dry-run mode when ALB isn't created yet
