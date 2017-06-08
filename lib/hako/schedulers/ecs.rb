@@ -435,19 +435,33 @@ module Hako
       # @param [Array<Hash>] definitions
       # @return [Array<Boolean, Aws::ECS::Types::TaskDefinition]
       def register_task_definition_for_oneshot(definitions)
-        family = "#{@app_id}-oneshot"
-        current_task_definition = describe_task_definition(family)
-        if task_definition_changed?(definitions, current_task_definition)
-          new_task_definition = ecs_client.register_task_definition(
-            family: family,
-            task_role_arn: @task_role_arn,
-            container_definitions: definitions,
-            volumes: volumes_definition,
-          ).task_definition
-          [true, new_task_definition]
-        else
-          [false, current_task_definition]
+        10.times do |i|
+          begin
+            family = "#{@app_id}-oneshot"
+            current_task_definition = describe_task_definition(family)
+            if task_definition_changed?(definitions, current_task_definition)
+              new_task_definition = ecs_client.register_task_definition(
+                family: family,
+                task_role_arn: @task_role_arn,
+                container_definitions: definitions,
+                volumes: volumes_definition,
+              ).task_definition
+              return [true, new_task_definition]
+            else
+              return [false, current_task_definition]
+            end
+          rescue Aws::ECS::Errors::ClientException => e
+            if e.message.include?('Too many concurrent attempts to create a new revision of the specified family')
+              Hako.logger.error(e.message)
+              interval = 2**i + rand(0.0 .. 10.0)
+              Hako.logger.error("Retrying register_task_definition_for_oneshot after #{interval} seconds")
+              sleep(interval)
+            else
+              raise e
+            end
+          end
         end
+        raise Error.new('Unable to register task definition for oneshot due to too many client errors')
       end
 
       # @return [Hash]
