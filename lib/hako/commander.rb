@@ -45,8 +45,9 @@ module Hako
     # @param [String] tag
     # @param [Hash<String, String>] env
     # @param [Boolean] dry_run
+    # @param [Boolean] no_wait
     # @return [nil]
-    def oneshot(commands, tag:, containers:, env: {}, dry_run: false)
+    def oneshot(commands, tag:, containers:, env: {}, dry_run: false, no_wait: false)
       containers = load_containers(tag, dry_run: dry_run, with: containers)
       scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
       volumes = @app.yaml.fetch('volumes', {})
@@ -54,7 +55,7 @@ module Hako
 
       scripts.each { |script| script.oneshot_starting(containers) }
       exit_code = with_oneshot_signal_handlers(scheduler) do
-        scheduler.oneshot(containers, commands, env)
+        scheduler.oneshot(containers, commands, env, no_wait: no_wait)
       end
       scripts.each { |script| script.oneshot_finished(containers) }
       exit exit_code

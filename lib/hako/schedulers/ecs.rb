@@ -136,8 +136,9 @@ module Hako
       # @param [Hash<String, Container>] containers
       # @param [Array<String>] commands
       # @param [Hash<String, String>] env
-      # @return [nil]
-      def oneshot(containers, commands, env)
+      # @param [Boolean] no_wait
+      # @return [Integer] Returns exit code
+      def oneshot(containers, commands, env, no_wait: false)
         definitions = create_definitions(containers)
         definitions.each do |definition|
           definition.delete(:essential)
@@ -161,7 +162,12 @@ module Hako
           @task = run_task(task_definition, commands, env)
           Hako.logger.info "Started task: #{@task.task_arn}"
           @scripts.each { |script| script.oneshot_started(self) }
-          wait_for_oneshot_finish
+          if no_wait
+            puts @task.task_arn
+            0
+          else
+            wait_for_oneshot_finish
+          end
         end
       end
 

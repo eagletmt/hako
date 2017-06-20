@@ -144,7 +144,7 @@ module Hako
           Hako.logger.level = Logger::DEBUG
         end
 
-        Commander.new(Application.new(@yaml_path)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run)
+        Commander.new(Application.new(@yaml_path)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run, no_wait: @no_wait)
       end
 
       def parse!(argv)
@@ -153,6 +153,7 @@ module Hako
         @containers = []
         @env = {}
         @verbose = false
+        @no_wait = false
         parser.parse!(argv)
         @yaml_path = argv.shift
         @argv = argv
@@ -171,6 +172,7 @@ module Hako
           opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
           opts.on('-c', '--container=NAME', 'Additional container name to start with the app container') { |v| @containers << v }
           opts.on('-v', '--verbose', 'Enable verbose logging') { @verbose = true }
+          opts.on('--no-wait', 'Run Docker container in background and return an identifier depending on scheduler (experimental)') { @no_wait = true }
           opts.on('-e', '--env=NAME=VAL', 'Add environment variable') do |arg|
             k, v = arg.split('=', 2)
             @env[k] = v
