@@ -1,3 +1,9 @@
+# 1.6.0 (2017-06-23)
+## New features
+- Add experimental option `--no-wait` to oneshot
+    - `hako oneshot --no-wait` runs Docker container in background and return an identifier depending on scheduler.
+    - In ECS scheduler, it will output the task's ARN.
+
 # 1.5.2 (2017-06-08)
 ## Bug fixes
 - Retry RegisterTaskDefinition when "too many concurrent attempts" error occurs
