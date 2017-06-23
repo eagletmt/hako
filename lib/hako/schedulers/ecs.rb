@@ -864,6 +864,7 @@ module Hako
 
         autoscaling = Aws::AutoScaling::Client.new
         interval = MIN_ASG_INTERVAL
+        Hako.logger.info("Unable to start tasks. Start trying scaling out '#{@autoscaling_group_for_oneshot}'")
         loop do
           begin
             asg = autoscaling.describe_auto_scaling_groups(auto_scaling_group_names: [@autoscaling_group_for_oneshot]).auto_scaling_groups[0]
