@@ -1,3 +1,7 @@
+# 1.6.1 (2017-06-26)
+## Changes
+- Output cluster information in `--no-wait` mode
+
 # 1.6.0 (2017-06-23)
 ## New features
 - Add experimental option `--no-wait` to oneshot
