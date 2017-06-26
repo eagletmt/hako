@@ -163,7 +163,8 @@ module Hako
           Hako.logger.info "Started task: #{@task.task_arn}"
           @scripts.each { |script| script.oneshot_started(self) }
           if no_wait
-            puts @task.task_arn
+            info = { cluster: @cluster, task_arn: @task.task_arn }
+            puts JSON.dump(info)
             0
           else
             wait_for_oneshot_finish
