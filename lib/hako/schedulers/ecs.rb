@@ -884,7 +884,9 @@ module Hako
             if c.container_instance_arns.empty?
               []
             else
-              ecs_client.describe_container_instances(cluster: @cluster, container_instances: c.container_instance_arns).container_instances
+              ecs_client.describe_container_instances(cluster: @cluster, container_instances: c.container_instance_arns).container_instances.select do |container_instance|
+                container_instance.agent_connected && container_instance.status == 'ACTIVE'
+              end
             end
           end
           if has_capacity?(task_definition, container_instances)
