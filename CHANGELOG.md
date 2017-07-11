@@ -1,3 +1,7 @@
+# 1.6.1 (2017-07-11)
+## Bug fixes
+- Exclude unusable instances when checking remaining capacity
+
 # 1.6.1 (2017-06-26)
 ## Changes
 - Output cluster information in `--no-wait` mode
