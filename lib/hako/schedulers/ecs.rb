@@ -638,7 +638,7 @@ module Hako
 
       # @param [Aws::ECS::Types::Task] task
       # @return [Hash<String, Aws::ECS::Types::Container>]
-      # Experimental: Get stopped container status from S3.
+      # Get stopped container status from S3.
       # The advantage is scalability; ecs:DescribeTasks is heavily
       # rate-limited, but s3:GetObject is much more scalable.
       # The JSON is supposed to be stored from Amazon ECS Event Stream.

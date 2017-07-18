@@ -50,6 +50,21 @@ I, [2016-05-02T13:07:12.959116 #10961]  INFO -- : Updated service: arn:aws:ecs:a
 I, [2016-05-02T13:08:27.280686 #10961]  INFO -- : Deployment completed
 ```
 
+Run oneshot command.
+
+```
+% hako oneshot examples/hello.yml date
+I, [2017-07-18T18:14:06.099763 #6627]  INFO -- : Task definition isn't changed: arn:aws:ecs:ap-northeast-1:XXXXXXXXXXXX:task-definition/hello-oneshot:32
+I, [2017-07-18T18:14:06.147062 #6627]  INFO -- : Started task: arn:aws:ecs:ap-northeast-1:XXXXXXXXXXXX:task/01234567-89ab-cdef-0123-456789abcdef
+I, [2017-07-18T18:14:06.193860 #6627]  INFO -- : Container instance is arn:aws:ecs:ap-northeast-1:XXXXXXXXXXXX:container-instance/01234567-89ab-cdef-0123-456789abcdef (i-0123456789abcdef0)
+I, [2017-07-18T18:14:37.826389 #6627]  INFO -- : Started at 2017-07-18 18:14:37 +0900
+I, [2017-07-18T18:14:37.826482 #6627]  INFO -- : Stopped at 2017-07-18 18:14:37 +0900 (reason: Essential container in task exited)
+I, [2017-07-18T18:14:37.826520 #6627]  INFO -- : Oneshot task finished
+I, [2017-07-18T18:14:37.826548 #6627]  INFO -- : app has stopped with exit_code=0
+```
+
+See also [docs/ecs-task-notification.md](docs/ecs-task-notification.md).
+
 ## Front image
 The front container receives these environment variables.
 
