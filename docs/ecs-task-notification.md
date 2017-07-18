@@ -11,7 +11,7 @@ http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_cwe_events.html#e
 
 S3 is a good storage for polling, so connecting configuring CloudWatch Events to AWS Lambda and put the payload to S3 is more scalable than ecs:DescribeTasks.
 
-The example implementation of AWS Lambda can be found in ../examples/put-ecs-container-status-to-s3 directory.
+The example implementation of AWS Lambda can be found in [../examples/put-ecs-container-status-to-s3](../examples/put-ecs-container-status-to-s3) directory.
 
 To enable task notification with S3, you have to configure scheduler in YAML.
 
