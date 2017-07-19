@@ -6,7 +6,7 @@ Use [DescribeTasks](http://docs.aws.amazon.com/AmazonECS/latest/APIReference/API
 This method can be used without any preparation or configuration, but the DescribeTasks API can return "Rate exceeded" error when there's several running `hako oneshot` processes.
 
 ## s3:GetObject
-ECS has integration with CloudWatch Events. The integration notifies ECS task state changes to AWS Lambda, Amaxon SNS, Amazon SQS, and so on.
+ECS has integration with CloudWatch Events. The integration notifies ECS task state changes to AWS Lambda, Amazon SNS, Amazon SQS, and so on.
 http://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_cwe_events.html#ecs_task_events
 
 S3 is a good storage for polling, so connecting configuring CloudWatch Events to AWS Lambda and put the payload to S3 is more scalable than ecs:DescribeTasks.
