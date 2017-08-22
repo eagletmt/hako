@@ -1,4 +1,4 @@
-# 1.6.1 (2017-07-11)
+# 1.6.2 (2017-07-11)
 ## Bug fixes
 - Exclude unusable instances when checking remaining capacity
 
