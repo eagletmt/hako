@@ -1,3 +1,9 @@
+# 1.7.0 (2017-08-29)
+## New features
+- Add experimental `autoscaling_topic_for_oneshot` option to ECS scheduler
+    - It publishes scale-out request to SNS topic.
+    - Administrators is expected to receive SNS event and initiate scale-out.
+
 # 1.6.2 (2017-07-11)
 ## Bug fixes
 - Exclude unusable instances when checking remaining capacity
