@@ -44,8 +44,6 @@ module Hako
 
       private
 
-      # @yieldparam [String] key
-      # @yieldparam [String] val
       # @return [Hash<String, Integer>]
       def read_keys_from_credstash()
         @client.list
