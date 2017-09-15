@@ -2,6 +2,7 @@
 
 require 'aws-sdk-elasticloadbalancingv2'
 require 'hako'
+require 'hako/error'
 
 module Hako
   module Schedulers
@@ -142,7 +143,20 @@ module Hako
           if @dry_run
             Hako.logger.info("elb_client.delete_target_group(target_group_arn: #{target_group.target_group_arn})")
           else
-            elb_client.delete_target_group(target_group_arn: target_group.target_group_arn)
+            deleted = false
+            30.times do
+              begin
+                elb_client.delete_target_group(target_group_arn: target_group.target_group_arn)
+                deleted = true
+                break
+              rescue Aws::ElasticLoadBalancingV2::Errors::ResourceInUse => e
+                Hako.logger.warn("#{e.class}: #{e.message}")
+              end
+              sleep 1
+            end
+            unless deleted
+              raise Error.new("Cannot delete target group #{target_group.target_group_arn}")
+            end
             Hako.logger.info "Deleted target group #{target_group.target_group_arn}"
           end
         end
