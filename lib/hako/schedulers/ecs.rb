@@ -742,9 +742,7 @@ module Hako
         }
         if ecs_elb_client.find_or_create_load_balancer(front_port)
           ecs_elb_client.modify_attributes
-          params[:load_balancers] = [
-            @ecs_elb_client.load_balancer_params_for_service.merge(container_name: 'front', container_port: 80),
-          ]
+          params[:load_balancers] = [@ecs_elb_client.load_balancer_params_for_service]
         end
         ecs_client.create_service(params).service
       end

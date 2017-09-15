@@ -104,7 +104,11 @@ module Hako
 
       # @return [Hash]
       def load_balancer_params_for_service
-        { load_balancer_name: name }
+        {
+          load_balancer_name: name,
+          container_name: @elb_config.fetch('container_name', 'front'),
+          container_port: @elb_config.fetch('container_port', 80),
+        }
       end
     end
   end

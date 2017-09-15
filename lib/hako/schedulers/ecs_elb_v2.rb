@@ -155,7 +155,11 @@ module Hako
 
       # @return [Hash]
       def load_balancer_params_for_service
-        { target_group_arn: describe_target_group.target_group_arn }
+        {
+          target_group_arn: describe_target_group.target_group_arn,
+          container_name: @elb_v2_config.fetch('container_name', 'front'),
+          container_port: @elb_v2_config.fetch('container_port', 80),
+        }
       end
 
       private
