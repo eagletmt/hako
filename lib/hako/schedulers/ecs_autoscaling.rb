@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'aws-sdk-applicationautoscaling'
+require 'aws-sdk-cloudwatch'
 require 'hako'
 require 'hako/error'
 

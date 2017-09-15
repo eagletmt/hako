@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 require 'hako/schedulers/ecs_service_comparator'
-require 'aws-sdk-core'
+require 'aws-sdk-ecs'
 
 RSpec.describe Hako::Schedulers::EcsServiceComparator do
   let(:comparator) { described_class.new(expected_service) }

@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 require 'hako/schedulers/ecs_definition_comparator'
-require 'aws-sdk-core'
+require 'aws-sdk-ecs'
 
 RSpec.describe Hako::Schedulers::EcsDefinitionComparator do
   describe '#different?' do
