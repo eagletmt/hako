@@ -129,9 +129,9 @@ module Hako
 
         # @return [Hash<String, Location>]
         def locations
-          locs = @options.fetch('locations').dup
-          locs.keys.each do |k|
-            locs[k] = Location.new(locs[k])
+          locs = {}
+          @options.fetch('locations').each do |k, v|
+            locs[k] = Location.new(v)
           end
           locs
         end

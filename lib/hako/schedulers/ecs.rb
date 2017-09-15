@@ -84,9 +84,7 @@ module Hako
           else
             Hako.logger.info "Task definition isn't changed: #{task_definition.task_definition_arn}"
           end
-          unless current_service
-            current_service = create_initial_service(task_definition.task_definition_arn, front_port)
-          end
+          current_service ||= create_initial_service(task_definition.task_definition_arn, front_port)
           service = update_service(current_service, task_definition.task_definition_arn)
           if service == :noop
             Hako.logger.info "Service isn't changed"

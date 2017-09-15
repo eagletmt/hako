@@ -16,7 +16,7 @@ RSpec.describe Hako::EnvExpander do
 
     context 'with interploation' do
       before do
-        env['MESSAGE'] = 'Hello, #{username}'
+        env['MESSAGE'] = 'Hello, #{username}' # rubocop:disable Lint/InterpolationCheck
         allow(provider).to receive(:ask).with(['username']).and_return('username' => 'eagletmt')
       end
 
@@ -27,7 +27,7 @@ RSpec.describe Hako::EnvExpander do
 
     context 'when undefined variable is interpolated' do
       before do
-        env['MESSAGE'] = 'Hello, #{undefined}'
+        env['MESSAGE'] = 'Hello, #{undefined}' # rubocop:disable Lint/InterpolationCheck
         allow(provider).to receive(:ask).with(['undefined']).and_return({})
       end
 
@@ -43,7 +43,7 @@ RSpec.describe Hako::EnvExpander do
         providers << another_provider
         allow(provider).to receive(:ask).with(%w[foo bar]).and_return('foo' => 'hoge')
         allow(another_provider).to receive(:ask).with(['bar']).and_return('bar' => 'fuga')
-        env['MESSAGE'] = '#{foo}, #{bar}'
+        env['MESSAGE'] = '#{foo}, #{bar}' # rubocop:disable Lint/InterpolationCheck
       end
 
       it 'asks providers in order' do
