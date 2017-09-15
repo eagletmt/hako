@@ -1,3 +1,7 @@
+# 1.8.0 (2017-09-15)
+## Changes
+- Migrate to aws-sdk v3
+
 # 1.7.0 (2017-08-29)
 ## New features
 - Add experimental `autoscaling_topic_for_oneshot` option to ECS scheduler
