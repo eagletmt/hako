@@ -1,3 +1,8 @@
+# 1.8.1 (2017-09-15)
+## Improvements
+- Add container_name and container_port option to elb and elb_v2
+    - See [examples/hello-nofront.yml](examples/hello-nofront.yml)
+
 # 1.8.0 (2017-09-15)
 ## Changes
 - Migrate to aws-sdk v3
