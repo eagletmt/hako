@@ -117,6 +117,20 @@ module Hako
             elb_client.modify_load_balancer_attributes(load_balancer_arn: load_balancer.load_balancer_arn, attributes: attributes)
           end
         end
+        if @elb_v2_config.key?('target_group_attributes')
+          target_group = describe_target_group
+          attributes = @elb_v2_config.fetch('target_group_attributes').map { |key, value| { key: key, value: value } }
+          if @dry_run
+            if target_group
+              Hako.logger.info("elb_client.modify_target_group_attributes(target_group_arn: #{target_group.target_group_arn}, attributes: #{attributes.inspect}) (dry-run)")
+            else
+              Hako.logger.info("elb_client.modify_target_group_attributes(target_group_arn: unknown, attributes: #{attributes.inspect}) (dry-run)")
+            end
+          else
+            Hako.logger.info("Updating target group attributes to #{attributes.inspect}")
+            elb_client.modify_target_group_attributes(target_group_arn: target_group.target_group_arn, attributes: attributes)
+          end
+        end
         nil
       end
 

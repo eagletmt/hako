@@ -26,6 +26,9 @@ scheduler:
       access_logs.s3.enabled: 'true'
       access_logs.s3.bucket: hako-access-logs
       access_logs.s3.prefix: hako-hello-lb-v2
+    target_group_attributes:
+      deregistration_delay.timeout_seconds: '20'
+      # http://docs.aws.amazon.com/en_us/elasticloadbalancing/latest/application/load-balancer-target-groups.html#target-group-attributes
 app:
   image: ryotarai/hello-sinatra
   memory: 128
