@@ -1,3 +1,10 @@
+# 1.8.2 (2017-09-15)
+## Bug fixes
+- Retry DeleteTargetGroup in `hako remove`
+    - Deleting a load balancer may take several seconds
+## Improvements
+- Add target_group_attributes option to elb_v2
+
 # 1.8.1 (2017-09-15)
 ## Improvements
 - Add container_name and container_port option to elb and elb_v2
