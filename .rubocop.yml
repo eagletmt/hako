@@ -7,43 +7,33 @@ AllCops:
 Layout/FirstParameterIndentation:
   Enabled: false
 
-Style/Alias:
-  EnforcedStyle: prefer_alias_method
-
-Style/GuardClause:
+Naming/PredicateName:
   Enabled: false
 
+Style/Alias:
+  EnforcedStyle: prefer_alias_method
+Style/GuardClause:
+  Enabled: false
 Style/HashSyntax:
   Exclude:
     - 'Rakefile'
-
 Style/IfUnlessModifier:
   Enabled: false
-
 Style/Next:
   Enabled: false
-
 Style/NumericLiterals:
   Enabled: false
-
 Style/PercentLiteralDelimiters:
   PreferredDelimiters:
     '%w': '[]'
     '%i': '[]'
-
 Style/RaiseArgs:
   EnforcedStyle: compact
-
 Style/SignalException:
   Enabled: false
-
 Style/TrailingCommaInArguments:
   Enabled: false
-
 Style/TrailingCommaInLiteral:
-  Enabled: false
-
-Style/PredicateName:
   Enabled: false
 
 Performance/RedundantBlockCall:

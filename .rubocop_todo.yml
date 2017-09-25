@@ -1,36 +1,28 @@
 Metrics/AbcSize:
   Enabled: false
-
 Metrics/BlockLength:
   Enabled: false
-
 Metrics/ClassLength:
   Enabled: false
-
 Metrics/CyclomaticComplexity:
   Enabled: false
-
 Metrics/LineLength:
   Enabled: false
-
 Metrics/MethodLength:
   Enabled: false
-
 Metrics/ParameterLists:
   Enabled: false
-
 Metrics/PerceivedComplexity:
   Enabled: false
-
 Metrics/BlockNesting:
   Enabled: false
 
 Style/Documentation:
   Enabled: false
-
 Style/SafeNavigation:
   # extremely buggy in v0.43.0
   Enabled: false
-Style/VariableNumber:
+
+Naming/VariableNumber:
   # extremely buggy in v0.43.0
   Enabled: false
