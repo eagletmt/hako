@@ -74,6 +74,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         user: nil,
         log_configuration: nil,
         ulimits: nil,
+        extra_hosts: nil,
       }],
       volumes: [],
     }
