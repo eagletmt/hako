@@ -100,6 +100,18 @@ module Hako
       end
     end
 
+    # @return [Array<Hash>, nil]
+    def extra_hosts
+      if @definition.key?('extra_hosts')
+        @definition['extra_hosts'].map do |extra_host|
+          {
+            hostname: extra_host.fetch('hostname'),
+            ip_address: extra_host.fetch('ip_address'),
+          }
+        end
+      end
+    end
+
     private
 
     PROVIDERS_KEY = '$providers'

@@ -517,6 +517,7 @@ module Hako
           user: container.user,
           log_configuration: container.log_configuration,
           ulimits: container.ulimits,
+          extra_hosts: container.extra_hosts,
         }
       end
 
