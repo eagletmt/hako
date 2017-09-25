@@ -35,7 +35,7 @@ module Hako
           struct.member(:user, Schema::Nullable.new(Schema::String.new))
           struct.member(:privileged, Schema::Boolean.new)
           struct.member(:log_configuration, Schema::Nullable.new(log_configuration_schema))
-          struct.member(:ulimits, Schema::Nullable.new(ulimits_chema))
+          struct.member(:ulimits, Schema::Nullable.new(ulimits_schema))
           struct.member(:extra_hosts, Schema::Nullable.new(extra_hosts_schema))
         end
       end
@@ -77,7 +77,7 @@ module Hako
         end
       end
 
-      def ulimits_chema
+      def ulimits_schema
         Schema::UnorderedArray.new(ulimit_schema)
       end
 
