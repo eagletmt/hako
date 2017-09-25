@@ -1,3 +1,7 @@
+# 1.8.3 (2017-09-25)
+## Improvements
+- Support `extra_hosts` option
+
 # 1.8.2 (2017-09-15)
 ## Bug fixes
 - Retry DeleteTargetGroup in `hako remove`
