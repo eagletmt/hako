@@ -22,7 +22,3 @@ Style/Documentation:
 Style/SafeNavigation:
   # extremely buggy in v0.43.0
   Enabled: false
-
-Naming/VariableNumber:
-  # extremely buggy in v0.43.0
-  Enabled: false
