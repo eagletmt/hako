@@ -1001,7 +1001,7 @@ module Hako
         if definition[:linux_parameters]
           if definition[:linux_parameters]['capabilities']
             cp = definition[:linux_parameters]['capabilities']
-            %w(add drop).each do |a_or_d|
+            %w[add drop].each do |a_or_d|
               cp[a_or_d]&.each do |c|
                 cmd << "--cap-#{a_or_d}=#{c}"
               end
