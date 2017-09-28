@@ -70,6 +70,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         mount_points: [],
         command: nil,
         privileged: false,
+        linux_parameters: nil,
         volumes_from: [],
         user: nil,
         log_configuration: nil,

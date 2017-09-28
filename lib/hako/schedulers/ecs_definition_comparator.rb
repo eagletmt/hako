@@ -37,6 +37,7 @@ module Hako
           struct.member(:log_configuration, Schema::Nullable.new(log_configuration_schema))
           struct.member(:ulimits, Schema::Nullable.new(ulimits_schema))
           struct.member(:extra_hosts, Schema::Nullable.new(extra_hosts_schema))
+          struct.member(:linux_parameters, Schema::Nullable.new(linux_parameters_schema))
         end
       end
 
@@ -86,6 +87,19 @@ module Hako
           struct.member(:name, Schema::String.new)
           struct.member(:hard_limit, Schema::Integer.new)
           struct.member(:soft_limit, Schema::Integer.new)
+        end
+      end
+
+      def linux_parameters_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:capabilities, capabilities_schema)
+        end
+      end
+
+      def capabilities_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:add, Schema::UnorderedArray.new(Schema::String.new))
+          struct.member(:drop, Schema::UnorderedArray.new(Schema::String.new))
         end
       end
 

@@ -29,6 +29,7 @@ module Hako
       command
       user
       privileged
+      linux_parameters
     ].each do |name|
       define_method(name) do
         @definition[name]

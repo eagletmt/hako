@@ -513,6 +513,7 @@ module Hako
           mount_points: container.mount_points,
           command: container.command,
           privileged: container.privileged,
+          linux_parameters: container.linux_parameters,
           volumes_from: container.volumes_from,
           user: container.user,
           log_configuration: container.log_configuration,
@@ -996,6 +997,16 @@ module Hako
         end
         if definition[:privileged]
           cmd << '--privileged'
+        end
+        if definition[:linux_parameters]
+          if definition[:linux_parameters]['capabilities']
+            cp = definition[:linux_parameters]['capabilities']
+            %w(add drop).each do |a_or_d|
+              cp[a_or_d]&.each do |c|
+                cmd << "--cap-#{a_or_d}=#{c}"
+              end
+            end
+          end
         end
         definition.fetch(:volumes_from).each do |volumes_from|
           p volumes_from
