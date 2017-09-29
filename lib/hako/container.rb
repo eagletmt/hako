@@ -29,7 +29,6 @@ module Hako
       command
       user
       privileged
-      linux_parameters
     ].each do |name|
       define_method(name) do
         @definition[name]
@@ -108,6 +107,22 @@ module Hako
           {
             hostname: extra_host.fetch('hostname'),
             ip_address: extra_host.fetch('ip_address'),
+          }
+        end
+      end
+    end
+
+    # @return [Hash, nil]
+    def linux_parameters
+      if @definition.key?('linux_parameters')
+        conf = @definition['linux_parameters']
+        if conf.key?('capabilities')
+          cap = conf['capabilities']
+          {
+            capabilities: {
+              add: cap.fetch('add', []),
+              drop: cap.fetch('drop', [])
+            }
           }
         end
       end
