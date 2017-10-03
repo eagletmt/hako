@@ -112,6 +112,22 @@ module Hako
       end
     end
 
+    # @return [Hash, nil]
+    def linux_parameters
+      if @definition.key?('linux_parameters')
+        conf = @definition['linux_parameters']
+        if conf.key?('capabilities')
+          cap = conf['capabilities']
+          {
+            capabilities: {
+              add: cap.fetch('add', []),
+              drop: cap.fetch('drop', [])
+            }
+          }
+        end
+      end
+    end
+
     private
 
     PROVIDERS_KEY = '$providers'

@@ -19,6 +19,36 @@ RSpec.describe Hako::Schedulers::EcsDefinitionComparator do
       }
     end
 
+    describe 'compares correctly even if the definition includes LinuxParameters' do
+      let(:expected_container) do
+        {
+          name: 'app',
+          linux_parameters: {
+            capabilities: {
+              add: ['ALL'],
+              drop: ['NET_ADMIN']
+            }
+          }
+        }.merge(default_config)
+      end
+
+      let(:actual_container) do
+        Aws::ECS::Types::ContainerDefinition.new({
+          name: 'app',
+          linux_parameters: Aws::ECS::Types::LinuxParameters.new(
+            capabilities: {
+              add: ['ALL'],
+              drop: ['NET_ADMIN']
+            }
+          )
+        }.merge(default_config))
+      end
+
+      it 'returns valid value' do
+        expect(ecs_definition_comparator).to_not be_different(actual_container)
+      end
+    end
+
     describe 'compares correctly even if the definition includes LogConfiguration' do
       let(:expected_container) do
         {
