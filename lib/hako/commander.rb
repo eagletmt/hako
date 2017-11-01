@@ -20,9 +20,9 @@ module Hako
     # @return [nil]
     def deploy(force: false, tag: 'latest', dry_run: false, timeout:)
       containers = load_containers(tag, dry_run: dry_run)
-      scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
-      volumes = @app.yaml.fetch('volumes', {})
-      scheduler = load_scheduler(@app.yaml['scheduler'], scripts, volumes: volumes, force: force, dry_run: dry_run, timeout: timeout)
+      scripts = @app.definition.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
+      volumes = @app.definition.fetch('volumes', {})
+      scheduler = load_scheduler(@app.definition['scheduler'], scripts, volumes: volumes, force: force, dry_run: dry_run, timeout: timeout)
 
       scripts.each { |script| script.deploy_starting(containers) }
       scheduler.deploy(containers)
@@ -33,8 +33,8 @@ module Hako
     # @param [Boolean] dry_run
     # @return [nil]
     def rollback(dry_run: false)
-      scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
-      scheduler = load_scheduler(@app.yaml['scheduler'], scripts, dry_run: dry_run)
+      scripts = @app.definition.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
+      scheduler = load_scheduler(@app.definition['scheduler'], scripts, dry_run: dry_run)
 
       scripts.each(&:rollback_starting)
       scheduler.rollback
@@ -49,9 +49,9 @@ module Hako
     # @return [nil]
     def oneshot(commands, tag:, containers:, env: {}, dry_run: false, no_wait: false)
       containers = load_containers(tag, dry_run: dry_run, with: containers)
-      scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
-      volumes = @app.yaml.fetch('volumes', {})
-      scheduler = load_scheduler(@app.yaml['scheduler'], scripts, volumes: volumes, dry_run: dry_run)
+      scripts = @app.definition.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
+      volumes = @app.definition.fetch('volumes', {})
+      scheduler = load_scheduler(@app.definition['scheduler'], scripts, volumes: volumes, dry_run: dry_run)
 
       scripts.each { |script| script.oneshot_starting(containers) }
       exit_code = with_oneshot_signal_handlers(scheduler) do
@@ -63,19 +63,19 @@ module Hako
 
     # @return [nil]
     def status
-      load_scheduler(@app.yaml['scheduler'], [], dry_run: false).status
+      load_scheduler(@app.definition['scheduler'], [], dry_run: false).status
     end
 
     # @param [Boolean] dry_run
     # @return [nil]
     def remove(dry_run:)
-      scripts = @app.yaml.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
-      load_scheduler(@app.yaml['scheduler'], scripts, dry_run: dry_run).remove
+      scripts = @app.definition.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
+      load_scheduler(@app.definition['scheduler'], scripts, dry_run: dry_run).remove
       scripts.each(&:after_remove)
     end
 
     def stop(dry_run:)
-      load_scheduler(@app.yaml['scheduler'], [], dry_run: dry_run).stop
+      load_scheduler(@app.definition['scheduler'], [], dry_run: dry_run).stop
     end
 
     private
