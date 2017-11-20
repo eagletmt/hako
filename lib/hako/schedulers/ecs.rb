@@ -652,7 +652,7 @@ module Hako
       # The JSON is supposed to be stored from Amazon ECS Event Stream.
       # http://docs.aws.amazon.com/AmazonECS/latest/developerguide/cloudwatch_event_stream.html
       def poll_task_status_from_s3(task)
-        s3 = Aws::S3::Client.new
+        s3 = Aws::S3::Client.new(region: @region)
         task_arn = task.task_arn
         uri = URI.parse(@oneshot_notification_prefix)
         prefix = uri.path.sub(%r{\A/}, '')
@@ -886,7 +886,7 @@ module Hako
           hako_task_id: @hako_task_id,
         )
         Hako.logger.info("Unable to start tasks. Publish message to #{@autoscaling_topic_for_oneshot}: #{message}")
-        sns_client = Aws::SNS::Client.new
+        sns_client = Aws::SNS::Client.new(region: @region)
         resp = sns_client.publish(topic_arn: @autoscaling_topic_for_oneshot, message: message)
         Hako.logger.info("Sent message_id=#{resp.message_id}")
         sleep(RUN_TASK_INTERVAL)
@@ -896,7 +896,7 @@ module Hako
       MIN_ASG_INTERVAL = 1
       MAX_ASG_INTERVAL = 120
       def try_scale_out_with_as(task_definition)
-        autoscaling = Aws::AutoScaling::Client.new
+        autoscaling = Aws::AutoScaling::Client.new(region: @region)
         interval = MIN_ASG_INTERVAL
         Hako.logger.info("Unable to start tasks. Start trying scaling out '#{@autoscaling_group_for_oneshot}'")
         loop do
