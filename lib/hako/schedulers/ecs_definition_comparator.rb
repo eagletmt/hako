@@ -93,6 +93,7 @@ module Hako
       def linux_parameters_schema
         Schema::Structure.new.tap do |struct|
           struct.member(:capabilities, capabilities_schema)
+          struct.member(:devices, devices_schema)
         end
       end
 
@@ -100,6 +101,18 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:add, Schema::UnorderedArray.new(Schema::String.new))
           struct.member(:drop, Schema::UnorderedArray.new(Schema::String.new))
+        end
+      end
+
+      def devices_schema
+        Schema::UnorderedArray.new(device_schema)
+      end
+
+      def device_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:host_path, Schema::String.new)
+          struct.member(:container_path, Schema::Nullable.new(Schema::String.new))
+          struct.member(:permissions, Schema::UnorderedArray.new(Schema::String.new))
         end
       end
 
