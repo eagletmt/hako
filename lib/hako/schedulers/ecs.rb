@@ -1007,6 +1007,20 @@ module Hako
               end
             end
           end
+
+          if definition[:linux_parameters][:devices]
+            devs = definition[:linux_parameters][:devices]
+            devs.each do |dev|
+              opts = dev[:host_path]
+              opts += ":#{dev[:container_path]}" if dev[:container_path]
+              if dev[:permissions]
+                dev[:permissions].each do |permission|
+                  opts += permission[0] if %w[read write mknod].include?(permission)
+                end
+              end
+              cmd << "--device=#{opts}"
+            end
+          end
         end
         definition.fetch(:volumes_from).each do |volumes_from|
           p volumes_from

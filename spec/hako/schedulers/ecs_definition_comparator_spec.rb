@@ -27,7 +27,14 @@ RSpec.describe Hako::Schedulers::EcsDefinitionComparator do
             capabilities: {
               add: ['ALL'],
               drop: ['NET_ADMIN']
-            }
+            },
+            devices: [
+              {
+                host_path: '/dev/null',
+                container_path: nil,
+                permissions: ['read']
+              }
+            ]
           }
         }.merge(default_config)
       end
@@ -39,7 +46,14 @@ RSpec.describe Hako::Schedulers::EcsDefinitionComparator do
             capabilities: {
               add: ['ALL'],
               drop: ['NET_ADMIN']
-            }
+            },
+            devices: [
+              {
+                host_path: '/dev/null',
+                container_path: nil,
+                permissions: ['read']
+              }
+            ]
           )
         }.merge(default_config))
       end

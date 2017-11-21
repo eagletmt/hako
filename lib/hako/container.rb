@@ -115,16 +115,28 @@ module Hako
     # @return [Hash, nil]
     def linux_parameters
       if @definition.key?('linux_parameters')
+        ret = {}
         conf = @definition['linux_parameters']
+
         if conf.key?('capabilities')
           cap = conf['capabilities']
-          {
-            capabilities: {
-              add: cap.fetch('add', []),
-              drop: cap.fetch('drop', [])
-            }
+          ret[:capabilities] = {
+            add: cap.fetch('add', []),
+            drop: cap.fetch('drop', [])
           }
         end
+
+        if conf.key?('devices')
+          ret[:devices] = conf['devices'].map do |d|
+            {
+              host_path: d.fetch('host_path'),
+              container_path: d.fetch('container_path', nil),
+              permissions: d.fetch('permissions', [])
+            }
+          end
+        end
+
+        ret
       end
     end
 
