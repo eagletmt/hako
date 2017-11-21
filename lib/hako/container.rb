@@ -115,7 +115,7 @@ module Hako
     # @return [Hash, nil]
     def linux_parameters
       if @definition.key?('linux_parameters')
-        ret = nil
+        ret = {}
         conf = @definition['linux_parameters']
 
         if conf.key?('capabilities')

@@ -1012,10 +1012,10 @@ module Hako
             devs = definition[:linux_parameters][:devices]
             devs.each do |dev|
               opts = dev[:host_path]
-              opts += ":#{dev[:host_path]}" if dev[:host_path]
+              opts += ":#{dev[:container_path]}" if dev[:container_path]
               if dev[:permissions]
                 dev[:permissions].each do |permission|
-                  opts += permission[0] if ['read', 'write', 'mknod'].include?(permission)
+                  opts += permission[0] if %w[read write mknod].include?(permission)
                 end
               end
               cmd << "--device=#{opts}"
