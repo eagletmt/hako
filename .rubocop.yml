@@ -31,6 +31,8 @@ Style/RaiseArgs:
   EnforcedStyle: compact
 Style/SignalException:
   Enabled: false
+Style/StderrPuts:
+  Enabled: false
 Style/TrailingCommaInArguments:
   Enabled: false
 Style/TrailingCommaInLiteral:
