@@ -92,8 +92,8 @@ module Hako
 
       def linux_parameters_schema
         Schema::Structure.new.tap do |struct|
-          struct.member(:capabilities, capabilities_schema)
-          struct.member(:devices, devices_schema)
+          struct.member(:capabilities, Schema::Nullable.new(capabilities_schema))
+          struct.member(:devices, Schema::Nullable.new(devices_schema))
         end
       end
 
