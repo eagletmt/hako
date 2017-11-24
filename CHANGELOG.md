@@ -1,3 +1,8 @@
+# 1.8.4 (2017-11-24)
+## Improvements
+- Support `linux_parameters` option
+- S3 and SNS client now uses the same region with ECS
+
 # 1.8.3 (2017-09-25)
 ## Improvements
 - Support `extra_hosts` option
