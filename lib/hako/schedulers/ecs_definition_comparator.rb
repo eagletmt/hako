@@ -94,6 +94,7 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:capabilities, Schema::Nullable.new(capabilities_schema))
           struct.member(:devices, Schema::Nullable.new(devices_schema))
+          struct.member(:init_process_enabled, Schema::Nullable.new(Schema::Boolean.new))
         end
       end
 

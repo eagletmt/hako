@@ -1021,6 +1021,10 @@ module Hako
               cmd << "--device=#{opts}"
             end
           end
+
+          if definition[:init_process_enabled]
+            cmd << '--init'
+          end
         end
         definition.fetch(:volumes_from).each do |volumes_from|
           p volumes_from

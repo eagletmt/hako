@@ -136,6 +136,8 @@ module Hako
           end
         end
 
+        ret[:init_process_enabled] = conf.fetch('init_process_enabled', nil)
+
         ret
       end
     end
