@@ -56,6 +56,8 @@ RSpec.describe Hako::Schedulers::Ecs do
     {
       family: app.id,
       task_role_arn: nil,
+      execution_role_arn: nil,
+      network_mode: nil,
       container_definitions: [{
         name: 'app',
         image: 'busybox:latest',
@@ -78,6 +80,9 @@ RSpec.describe Hako::Schedulers::Ecs do
         extra_hosts: nil,
       }],
       volumes: [],
+      requires_compatibilities: nil,
+      cpu: nil,
+      memory: nil,
     }
   end
   let(:dummy_service_response) do

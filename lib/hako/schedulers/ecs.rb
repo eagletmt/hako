@@ -53,6 +53,21 @@ module Hako
         end
         @placement_constraints = options.fetch('placement_constraints', [])
         @placement_strategy = options.fetch('placement_strategy', [])
+        @execution_role_arn = options.fetch('execution_role_arn', nil)
+        @cpu = options.fetch('cpu', nil)
+        @memory = options.fetch('memory', nil)
+        @network_mode = options.fetch('network_mode', nil)
+        @requires_compatibilities = options.fetch('requires_compatibilities', nil)
+        @launch_type = options.fetch('launch_type', nil)
+        if options.key?('network_configuration')
+          network_configuration = options.fetch('network_configuration')
+          if network_configuration.key?('awsvpc_configuration')
+            awsvpc_configuration = network_configuration.fetch('awsvpc_configuration')
+            @awsvpc_subnets = awsvpc_configuration.fetch('subnets')
+            @awsvpc_security_groups = awsvpc_configuration.fetch('security_groups', nil)
+            @awsvpc_assign_public_ip = awsvpc_configuration.fetch('assign_public_ip', nil)
+          end
+        end
 
         @started_at = nil
         @container_instance_arn = nil
@@ -391,7 +406,26 @@ module Hako
         if desired_definitions.any? { |definition| different_definition?(definition, container_definitions.delete(definition[:name])) }
           return true
         end
-        !container_definitions.empty?
+        unless container_definitions.empty?
+          return true
+        end
+        if actual_definition.cpu != @cpu
+          return true
+        end
+        if actual_definition.memory != @memory
+          return true
+        end
+        if actual_definition.network_mode != @network_mode
+          return true
+        end
+        if actual_definition.execution_role_arn != @execution_role_arn
+          return true
+        end
+        if actual_definition.requires_compatibilities != @requires_compatibilities
+          return true
+        end
+
+        false
       end
 
       # @param [Hash<String, Hash<String, String>>] actual_volumes
@@ -428,8 +462,13 @@ module Hako
           new_task_definition = ecs_client.register_task_definition(
             family: @app_id,
             task_role_arn: @task_role_arn,
+            execution_role_arn: @execution_role_arn,
+            network_mode: @network_mode,
             container_definitions: definitions,
             volumes: volumes_definition,
+            requires_compatibilities: @requires_compatibilities,
+            cpu: @cpu,
+            memory: @memory,
           ).task_definition
           [true, new_task_definition]
         else
@@ -456,8 +495,13 @@ module Hako
               new_task_definition = ecs_client.register_task_definition(
                 family: family,
                 task_role_arn: @task_role_arn,
+                execution_role_arn: @execution_role_arn,
+                network_mode: @network_mode,
                 container_definitions: definitions,
                 volumes: volumes_definition,
+                requires_compatibilities: @requires_compatibilities,
+                cpu: @cpu,
+                memory: @memory,
               ).task_definition
               return [true, new_task_definition]
             else
@@ -543,6 +587,15 @@ module Hako
           count: 1,
           placement_constraints: @placement_constraints,
           started_by: 'hako oneshot',
+          launch_type: @launch_type,
+          platform_version: @platform_version,
+          network_configuration: {
+            awsvpc_configuration: {
+              subnets: @awsvpc_subnets,
+              security_groups: @awsvpc_security_groups,
+              assign_public_ip: @awsvpc_assign_public_ip,
+            },
+          },
         )
         result.failures.each do |failure|
           Hako.logger.error("#{failure.arn} #{failure.reason}")
