@@ -332,7 +332,10 @@ module Hako
 
       # @return [Fixnum]
       def determine_front_port
-        if @dynamic_port_mapping
+        if @network_mode == 'awsvpc'
+          # When networkMode=awsvpc, the host ports and container ports in port mappings must match
+          nil
+        elsif @dynamic_port_mapping
           return 0
         end
         if @dry_run
