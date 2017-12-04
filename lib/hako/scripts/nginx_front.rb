@@ -34,7 +34,6 @@ module Hako
           'S3_CONFIG_BUCKET' => @s3.bucket,
           'S3_CONFIG_KEY' => @s3.key(@app.id),
         )
-        front.links << link_app
       end
 
       # @param [Hash<String, Container>] containers
@@ -42,8 +41,13 @@ module Hako
       # @return [nil]
       def deploy_started(containers, front_port)
         front = containers.fetch('front')
+        if front_port.nil?
+          # Links and extraHosts are not supported when networkMode=awsvpc (i.e., --network=container).
+        else
+          front.links << link_app
+        end
         front.definition['port_mappings'] << port_mapping(front_port)
-        upload_config(generate_config)
+        upload_config(generate_config(backend_host: front_port.nil? ? 'localhost' : 'backend'))
         Hako.logger.info "Uploaded front configuration to s3://#{@s3.bucket}/#{@s3.key(@app.id)}"
       end
 
@@ -71,8 +75,8 @@ module Hako
       end
 
       # @return [String]
-      def generate_config
-        Generator.new(@options).render
+      def generate_config(backend_host:)
+        Generator.new(@options, backend_host: backend_host).render
       end
 
       # @return [Hash]
@@ -95,8 +99,9 @@ module Hako
 
       class Generator
         # @param [Hash] options
-        def initialize(options)
+        def initialize(options, backend_host:)
           @options = options
+          @backend_host = backend_host
           @backend_port = options.fetch('backend_port')
         end
 
@@ -109,7 +114,7 @@ module Hako
 
         # @return [String]
         def listen_spec
-          "backend:#{@backend_port}"
+          "#{@backend_host}:#{@backend_port}"
         end
 
         # @return [String]

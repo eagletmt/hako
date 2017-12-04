@@ -34,12 +34,6 @@ RSpec.describe Hako::Scripts::NginxFront do
   end
 
   describe '#deploy_starting' do
-    it 'configures links' do
-      expect { script.deploy_starting(containers) }.to change {
-        containers['front'].links
-      }.from([]).to(['app:backend'])
-    end
-
     it 'configures environment variables' do
       env = {
         'AWS_DEFAULT_REGION' => s3_region,
@@ -54,6 +48,12 @@ RSpec.describe Hako::Scripts::NginxFront do
 
   describe '#deploy_started' do
     let(:front_port) { 10000 }
+
+    it 'configures links' do
+      expect { script.deploy_started(containers, front_port) }.to change {
+        containers['front'].links
+      }.from([]).to(['app:backend'])
+    end
 
     it 'generates nginx config' do
       expect(script.deploy_started(containers, front_port)).to eq(true)
@@ -74,6 +74,19 @@ RSpec.describe Hako::Scripts::NginxFront do
     it "doesn't add deny all directive" do
       expect(script.deploy_started(containers, front_port)).to eq(true)
       expect(uploaded_config.string).to_not include('deny all;')
+    end
+
+    context 'when front_port is nil because of container networking mode' do
+      it 'skips links' do
+        expect { script.deploy_started(containers, nil) }.to_not change {
+          containers['front'].links
+        }.from([])
+      end
+
+      it 'generates nginx config to proxy to localhost' do
+        expect(script.deploy_started(containers, nil)).to eq(true)
+        expect(uploaded_config.string).to include("proxy_pass http://localhost:#{backend_port};")
+      end
     end
 
     context 'with allow_only_from' do
