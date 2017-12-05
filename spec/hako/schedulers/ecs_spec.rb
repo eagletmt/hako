@@ -39,6 +39,9 @@ RSpec.describe Hako::Schedulers::Ecs do
       },
       placement_constraints: [],
       placement_strategy: [],
+      launch_type: nil,
+      platform_version: nil,
+      network_configuration: nil,
     }
   end
   let(:update_service_params) do
@@ -50,6 +53,8 @@ RSpec.describe Hako::Schedulers::Ecs do
         maximum_percent: nil,
         minimum_healthy_percent: nil,
       },
+      platform_version: nil,
+      network_configuration: nil,
     }
   end
   let(:register_task_definition_params) do

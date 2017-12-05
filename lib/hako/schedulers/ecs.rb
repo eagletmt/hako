@@ -769,6 +769,8 @@ module Hako
           desired_count: @desired_count,
           task_definition: task_definition_arn,
           deployment_configuration: @deployment_configuration,
+          platform_version: @platform_version,
+          network_configuration: @network_configuration,
         }
         if @autoscaling
           # Keep current desired_count if autoscaling is enabled
@@ -795,6 +797,9 @@ module Hako
           deployment_configuration: @deployment_configuration,
           placement_constraints: @placement_constraints,
           placement_strategy: @placement_strategy,
+          launch_type: @launch_type,
+          platform_version: @platform_version,
+          network_configuration: @network_configuration,
         }
         if ecs_elb_client.find_or_create_load_balancer(front_port)
           ecs_elb_client.modify_attributes
