@@ -63,9 +63,13 @@ module Hako
           network_configuration = options.fetch('network_configuration')
           if network_configuration.key?('awsvpc_configuration')
             awsvpc_configuration = network_configuration.fetch('awsvpc_configuration')
-            @awsvpc_subnets = awsvpc_configuration.fetch('subnets')
-            @awsvpc_security_groups = awsvpc_configuration.fetch('security_groups', nil)
-            @awsvpc_assign_public_ip = awsvpc_configuration.fetch('assign_public_ip', nil)
+            @network_configuration = {
+              awsvpc_configuration: {
+                subnets: awsvpc_configuration.fetch('subnets'),
+                security_groups: awsvpc_configuration.fetch('security_groups', nil),
+                assign_public_ip: awsvpc_configuration.fetch('assign_public_ip', nil),
+              },
+            }
           end
         end
 
@@ -592,13 +596,7 @@ module Hako
           started_by: 'hako oneshot',
           launch_type: @launch_type,
           platform_version: @platform_version,
-          network_configuration: {
-            awsvpc_configuration: {
-              subnets: @awsvpc_subnets,
-              security_groups: @awsvpc_security_groups,
-              assign_public_ip: @awsvpc_assign_public_ip,
-            },
-          },
+          network_configuration: @network_configuration,
         )
         result.failures.each do |failure|
           Hako.logger.error("#{failure.arn} #{failure.reason}")
