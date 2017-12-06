@@ -1,3 +1,9 @@
+# 1.9.0 (2017-12-06)
+## New features
+- Add support for awsvpc network mode
+- Add support for Fargate
+    - See [examples/hello-fargate.yml](examples/hello-fargate.yml) and [examples/hello-fargate-batch.yml](examples/hello-fargate-batch.yml)
+
 # 1.8.4 (2017-11-24)
 ## Improvements
 - Support `linux_parameters` option
