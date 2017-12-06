@@ -71,6 +71,7 @@ module Hako
             protocol: 'HTTP',
             vpc_id: @elb_v2_config.fetch('vpc_id'),
             health_check_path: @elb_v2_config.fetch('health_check_path', nil),
+            target_type: @elb_v2_config.fetch('target_type', nil),
           ).target_groups[0]
           Hako.logger.info "Created target group #{target_group.target_group_arn}"
         end

@@ -301,6 +301,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           protocol: 'HTTP',
           vpc_id: 'vpc-11111111',
           health_check_path: '/site/sha',
+          target_type: nil,
         ) {
           target_group = Aws::ElasticLoadBalancingV2::Types::TargetGroup.new(target_group_arn: target_group_arn)
           target_groups << target_group

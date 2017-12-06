@@ -37,6 +37,11 @@ module Hako
         if @ecs_elb_options && @ecs_elb_v2_options
           validation_error!('Cannot specify both elb and elb_v2')
         end
+        @network_mode = options.fetch('network_mode', nil)
+        if @network_mode == 'awsvpc' && @ecs_elb_v2_options
+          # awsvpc network mode requires ELB target group with target_type=ip
+          @ecs_elb_v2_options['target_type'] = 'ip'
+        end
         @dynamic_port_mapping = options.fetch('dynamic_port_mapping', @ecs_elb_options.nil?)
         if options.key?('autoscaling')
           @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), dry_run: @dry_run)
@@ -56,7 +61,6 @@ module Hako
         @execution_role_arn = options.fetch('execution_role_arn', nil)
         @cpu = options.fetch('cpu', nil)
         @memory = options.fetch('memory', nil)
-        @network_mode = options.fetch('network_mode', nil)
         @requires_compatibilities = options.fetch('requires_compatibilities', nil)
         @launch_type = options.fetch('launch_type', nil)
         if options.key?('network_configuration')
