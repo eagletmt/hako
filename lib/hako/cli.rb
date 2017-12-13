@@ -185,11 +185,12 @@ module Hako
       def run(argv)
         parse!(argv)
         require 'hako/application'
-        app = Application.new(@path, expand_variables: false)
+        app = Application.new(@path, expand_variables: @expand_variables)
         puts app.definition.to_yaml
       end
 
       def parse!(argv)
+        @expand_variables = false
         parser.parse!(argv)
         @path = argv.first
         if @path.nil?
@@ -202,6 +203,7 @@ module Hako
         @parser ||= OptionParser.new do |opts|
           opts.banner = 'hako show-definition FILE'
           opts.version = VERSION
+          opts.on('--expand', 'Expand variables (Jsonnet only)') { @expand_variables = true }
         end
       end
     end
