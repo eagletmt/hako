@@ -23,7 +23,7 @@ module Hako
         case path.extname
         when '.yml', '.yaml'
           YamlLoader.new.load(path)
-        when '.jsonnet'
+        when '.jsonnet', '.json'
           JsonnetLoader.new(self, expand_variables).load(path)
         else
           raise Error.new("Unknown extension: #{path}")
