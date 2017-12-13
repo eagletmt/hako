@@ -1,3 +1,9 @@
+# 2.0.0 (2017-12-13)
+## New features
+- Support Jsonnet as the definition file format
+    - See [docs/jsonnet.md](docs/jsonnet.md)
+    - YAML definitions continues to be supported by hako at least v2.x series. Currently I don't have a plan which will be the default format.
+
 # 1.9.0 (2017-12-06)
 ## New features
 - Add support for awsvpc network mode
