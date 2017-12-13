@@ -10,7 +10,7 @@ module Hako
       deploy
       rollback
       oneshot
-      show-yaml
+      show-definition
       status
       remove
       stop
@@ -181,17 +181,18 @@ module Hako
       end
     end
 
-    class ShowYaml
+    class ShowDefinition
       def run(argv)
         parse!(argv)
-        require 'hako/yaml_loader'
-        puts YamlLoader.new.load(Pathname.new(@yaml_path)).to_yaml
+        require 'hako/application'
+        app = Application.new(@path, expand_variables: false)
+        puts app.definition.to_yaml
       end
 
       def parse!(argv)
         parser.parse!(argv)
-        @yaml_path = argv.first
-        if @yaml_path.nil?
+        @path = argv.first
+        if @path.nil?
           puts parser.help
           exit 1
         end
@@ -199,7 +200,7 @@ module Hako
 
       def parser
         @parser ||= OptionParser.new do |opts|
-          opts.banner = 'hako show-yaml FILE'
+          opts.banner = 'hako show-definition FILE'
           opts.version = VERSION
         end
       end

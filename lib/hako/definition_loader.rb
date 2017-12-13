@@ -18,7 +18,7 @@ module Hako
     # @param [Array<String>, nil] with
     # @return [Hash<String, Container>]
     def load(tag, with: nil)
-      additional_containers = @app.yaml.fetch('additional_containers', {})
+      additional_containers = @app.definition.fetch('additional_containers', {})
       container_names = ['app']
       if with
         container_names.concat(with)
@@ -43,7 +43,7 @@ module Hako
           containers[name] =
             case name
             when 'app'
-              AppContainer.new(@app, @app.yaml['app'].merge('tag' => tag), dry_run: @dry_run)
+              AppContainer.new(@app, @app.definition['app'].merge('tag' => tag), dry_run: @dry_run)
             else
               Container.new(@app, additional_containers.fetch(name), dry_run: @dry_run)
             end

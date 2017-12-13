@@ -11,13 +11,13 @@ RSpec.describe Hako::Schedulers::Ecs do
   let(:tag) { 'latest' }
   let(:containers) { Hako::DefinitionLoader.new(app, dry_run: dry_run).load(tag) }
   let(:scripts) do
-    app.yaml.fetch('scripts', []).map do |config|
+    app.definition.fetch('scripts', []).map do |config|
       Hako::Loader.new(Hako::Scripts, 'hako/scripts').load(config.fetch('type')).new(app, config, dry_run: dry_run)
     end
   end
   let(:force) { false }
   let(:scheduler) do
-    described_class.new(app.id, app.yaml['scheduler'], scripts: scripts, volumes: app.yaml.fetch('volumes', {}), force: force, dry_run: dry_run, timeout: nil)
+    described_class.new(app.id, app.definition['scheduler'], scripts: scripts, volumes: app.definition.fetch('volumes', {}), force: force, dry_run: dry_run, timeout: nil)
   end
   let(:cluster_arn) { 'arn:aws:ecs:ap-northeast-1:012345678901:cluster/eagletmt' }
   let(:service_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:service/#{app.id}" }
