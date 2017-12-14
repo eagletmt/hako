@@ -1,3 +1,7 @@
+# 2.0.1 (2017-12-14)
+## Bug fixes
+- Fix compatibility between Jsonnet and YAML when --dry-run is given
+
 # 2.0.0 (2017-12-13)
 ## New features
 - Support Jsonnet as the definition file format
