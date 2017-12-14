@@ -66,7 +66,13 @@ module Hako
           Hako.logger.level = Logger::DEBUG
         end
 
-        Commander.new(Application.new(@yaml_path)).deploy(force: @force, tag: @tag, dry_run: @dry_run, timeout: @timeout)
+        options =
+          if @dry_run
+            { expand_variables: false, ask_keys: true }
+          else
+            {}
+          end
+        Commander.new(Application.new(@yaml_path, options)).deploy(force: @force, tag: @tag, dry_run: @dry_run, timeout: @timeout)
       end
 
       DEFAULT_TIMEOUT = 1200 # 20 minutes
@@ -109,7 +115,13 @@ module Hako
           Hako.logger.level = Logger::DEBUG
         end
 
-        Commander.new(Application.new(@yaml_path)).rollback(dry_run: @dry_run)
+        options =
+          if @dry_run
+            { expand_variables: false, ask_keys: true }
+          else
+            {}
+          end
+        Commander.new(Application.new(@yaml_path, options)).rollback(dry_run: @dry_run)
       end
 
       def parse!(argv)
@@ -144,7 +156,13 @@ module Hako
           Hako.logger.level = Logger::DEBUG
         end
 
-        Commander.new(Application.new(@yaml_path)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run, no_wait: @no_wait)
+        options =
+          if @dry_run
+            { expand_variables: false, ask_keys: true }
+          else
+            {}
+          end
+        Commander.new(Application.new(@yaml_path, options)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run, no_wait: @no_wait)
       end
 
       def parse!(argv)
@@ -213,7 +231,7 @@ module Hako
         parse!(argv)
         require 'hako/application'
         require 'hako/commander'
-        Commander.new(Application.new(@yaml_path)).status
+        Commander.new(Application.new(@yaml_path, expand_variables: false)).status
       end
 
       def parse!(argv)
@@ -239,7 +257,14 @@ module Hako
         parse!(argv)
         require 'hako/application'
         require 'hako/commander'
-        Commander.new(Application.new(@yaml_path)).remove(dry_run: @dry_run)
+
+        options =
+          if @dry_run
+            { expand_variables: false, ask_keys: true }
+          else
+            {}
+          end
+        Commander.new(Application.new(@yaml_path, options)).remove(dry_run: @dry_run)
       end
 
       def parse!(argv)
@@ -267,7 +292,14 @@ module Hako
         parse!(argv)
         require 'hako/application'
         require 'hako/commander'
-        Commander.new(Application.new(@yaml_path)).stop(dry_run: @dry_run)
+
+        options =
+          if @dry_run
+            { expand_variables: false, ask_keys: true }
+          else
+            {}
+          end
+        Commander.new(Application.new(@yaml_path, options)).stop(dry_run: @dry_run)
       end
 
       def parse!(argv)

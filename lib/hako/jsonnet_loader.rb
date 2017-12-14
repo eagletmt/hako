@@ -2,6 +2,7 @@
 
 require 'hako'
 require 'hako/env_providers'
+require 'hako/error'
 require 'hako/loader'
 require 'json'
 require 'jsonnet'
@@ -10,10 +11,11 @@ module Hako
   class JsonnetLoader
     # @param [Application] application
     # @param [Boolean] expand_variables
-    def initialize(application, expand_variables)
+    # @param [Boolean] ask_keys
+    def initialize(application, expand_variables:, ask_keys:)
       @vm = Jsonnet::VM.new
       @root_path = application.root_path
-      define_provider_functions(expand_variables)
+      define_provider_functions(expand_variables, ask_keys)
       @vm.ext_var('appId', application.id)
     end
 
@@ -24,7 +26,7 @@ module Hako
 
     private
 
-    def define_provider_functions(expand_variables)
+    def define_provider_functions(expand_variables, ask_keys)
       Gem.loaded_specs.each do |gem_name, spec|
         spec.require_paths.each do |path|
           Dir.glob(File.join(spec.full_gem_path, path, 'hako/env_providers/*.rb')).each do |provider_path|
@@ -35,7 +37,15 @@ module Hako
               if expand_variables
                 provider_class.new(@root_path, JSON.parse(options)).ask([name]).fetch(name)
               else
-                "\#{#{name}}"
+                if ask_keys
+                  provider = provider_class.new(@root_path, JSON.parse(options))
+                  if provider.can_ask_keys?
+                    if provider.ask_keys([name]).empty?
+                      raise Error.new("Could not lookup #{name} from #{provider_name} provider with options=#{options}")
+                    end
+                  end
+                end
+                "${#{name}}"
               end
             end
           end
