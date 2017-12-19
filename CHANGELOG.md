@@ -1,3 +1,7 @@
+# 2.0.2 (2017-12-19)
+## Bug fixes
+- Skip expanding variables in `remove` and `stop`
+
 # 2.0.1 (2017-12-14)
 ## Bug fixes
 - Fix compatibility between Jsonnet and YAML when --dry-run is given
