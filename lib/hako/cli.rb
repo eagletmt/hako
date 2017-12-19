@@ -258,13 +258,7 @@ module Hako
         require 'hako/application'
         require 'hako/commander'
 
-        options =
-          if @dry_run
-            { expand_variables: false, ask_keys: true }
-          else
-            {}
-          end
-        Commander.new(Application.new(@yaml_path, options)).remove(dry_run: @dry_run)
+        Commander.new(Application.new(@yaml_path, expand_variables: false)).remove(dry_run: @dry_run)
       end
 
       def parse!(argv)
@@ -293,13 +287,7 @@ module Hako
         require 'hako/application'
         require 'hako/commander'
 
-        options =
-          if @dry_run
-            { expand_variables: false, ask_keys: true }
-          else
-            {}
-          end
-        Commander.new(Application.new(@yaml_path, options)).stop(dry_run: @dry_run)
+        Commander.new(Application.new(@yaml_path, expand_variables: false)).stop(dry_run: @dry_run)
       end
 
       def parse!(argv)
