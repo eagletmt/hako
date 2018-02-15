@@ -33,8 +33,12 @@ module Hako
         region = options.fetch('awslogs-region')
 
         unless log_group_exist?(group, region: region)
-          cloudwatch_logs(region).create_log_group(log_group_name: group)
-          Hako.logger.info "Created CloudWatch log group #{group} in #{region}"
+          if @dry_run
+            puts "#{self.class} will create CloudWatch log group #{group} in #{region}"
+          else
+            cloudwatch_logs(region).create_log_group(log_group_name: group)
+            Hako.logger.info "Created CloudWatch log group #{group} in #{region}"
+          end
         end
       end
 
