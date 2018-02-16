@@ -1,3 +1,7 @@
+# 2.0.3 (2018-02-16)
+## Bug fixes
+- create_aws_cloud_watch_logs_log_group script: Skip creating CloudWatch log group on dry-run
+
 # 2.0.2 (2017-12-19)
 ## Bug fixes
 - Skip expanding variables in `remove` and `stop`
