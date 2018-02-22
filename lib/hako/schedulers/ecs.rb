@@ -44,7 +44,7 @@ module Hako
         end
         @dynamic_port_mapping = options.fetch('dynamic_port_mapping', @ecs_elb_options.nil?)
         if options.key?('autoscaling')
-          @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), dry_run: @dry_run)
+          @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), @region, dry_run: @dry_run)
         end
         @autoscaling_group_for_oneshot = options.fetch('autoscaling_group_for_oneshot', nil)
         @autoscaling_topic_for_oneshot = options.fetch('autoscaling_topic_for_oneshot', nil)
