@@ -8,7 +8,8 @@ require 'hako/error'
 module Hako
   module Schedulers
     class EcsAutoscaling
-      def initialize(options, dry_run:)
+      def initialize(options, region, dry_run:)
+        @region = region
         @dry_run = dry_run
         @role_arn = required_option(options, 'role_arn')
         @min_capacity = required_option(options, 'min_capacity')
@@ -124,12 +125,12 @@ module Hako
 
       # @return [Aws::ApplicationAutoScaling]
       def autoscaling_client
-        @autoscaling_client ||= Aws::ApplicationAutoScaling::Client.new
+        @autoscaling_client ||= Aws::ApplicationAutoScaling::Client.new(region: @region)
       end
 
       # @return [Aws::CloudWatch::Client]
       def cw_client
-        @cw_client ||= Aws::CloudWatch::Client.new
+        @cw_client ||= Aws::CloudWatch::Client.new(region: @region)
       end
 
       # @param [Aws::ECS::Types::Service] service
