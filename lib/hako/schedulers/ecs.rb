@@ -1038,7 +1038,7 @@ module Hako
         cmd << '--name' << definition.fetch(:name)
         cmd << '--cpu-shares' << definition.fetch(:cpu)
         if definition[:memory]
-          cmd << '--memory' << definition[:memory]
+          cmd << '--memory' << "#{definition[:memory]}M"
         end
         definition.fetch(:links).each do |link|
           cmd << '--link' << link
