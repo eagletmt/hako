@@ -1,3 +1,10 @@
+# 2.0.4 (2018-02-26)
+## Bug fixes
+- Pass AWS region of ECS scheduler to other AWS clients (CloudWatch, ApplicationAutoScaling)
+- Eliminate `--memory` parameter from dry-run output if it's not given
+- Give missing unit to the value of `--memory` parameter in dry-run output
+- Take `memory_reservation` into account when calculating required memory
+
 # 2.0.3 (2018-02-16)
 ## Bug fixes
 - create_aws_cloud_watch_logs_log_group script: Skip creating CloudWatch log group on dry-run
