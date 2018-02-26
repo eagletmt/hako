@@ -1037,7 +1037,9 @@ module Hako
         cmd = %w[docker run]
         cmd << '--name' << definition.fetch(:name)
         cmd << '--cpu-shares' << definition.fetch(:cpu)
-        cmd << '--memory' << definition.fetch(:memory)
+        if definition[:memory]
+          cmd << '--memory' << "#{definition[:memory]}M"
+        end
         definition.fetch(:links).each do |link|
           cmd << '--link' << link
         end

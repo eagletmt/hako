@@ -23,7 +23,7 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:image, Schema::String.new)
           struct.member(:cpu, Schema::Integer.new)
-          struct.member(:memory, Schema::Integer.new)
+          struct.member(:memory, Schema::Nullable.new(Schema::Integer.new))
           struct.member(:memory_reservation, Schema::Nullable.new(Schema::Integer.new))
           struct.member(:links, Schema::UnorderedArray.new(Schema::String.new))
           struct.member(:port_mappings, Schema::UnorderedArray.new(port_mapping_schema))
