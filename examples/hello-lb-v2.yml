@@ -10,7 +10,7 @@ scheduler:
     # VPC id where the target group is located
     vpc_id: vpc-WWWWWWWW
     # If you want internal ELB, then use 'scheme'. (ex. internal service that like microservice inside VPC)
-  # scheme: internal
+    # scheme: internal
     # Health check path of the target group
     health_check_path: /site/sha
     listeners:
