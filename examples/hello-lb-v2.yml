@@ -6,6 +6,7 @@ scheduler:
   role: ecsServiceRole
   # dynamic_port_mapping is enabled by default with elb_v2
   # dynamic_port_mapping: false
+  # health_check_grace_period_seconds: 0
   elb_v2:
     # VPC id where the target group is located
     vpc_id: vpc-WWWWWWWW
