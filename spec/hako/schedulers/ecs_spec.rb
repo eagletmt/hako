@@ -42,6 +42,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       launch_type: nil,
       platform_version: nil,
       network_configuration: nil,
+      health_check_grace_period_seconds: nil,
     }
   end
   let(:update_service_params) do
@@ -55,6 +56,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       },
       platform_version: nil,
       network_configuration: nil,
+      health_check_grace_period_seconds: nil,
     }
   end
   let(:register_task_definition_params) do
