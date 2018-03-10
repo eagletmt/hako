@@ -53,27 +53,53 @@ module Hako
         load_balancer = describe_load_balancer
         unless load_balancer
           tags = @elb_v2_config.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } }
-          load_balancer = elb_client.create_load_balancer(
-            name: name,
-            subnets: @elb_v2_config.fetch('subnets'),
-            security_groups: @elb_v2_config.fetch('security_groups'),
-            scheme: @elb_v2_config.fetch('scheme', nil),
-            tags: tags.empty? ? nil : tags,
-          ).load_balancers[0]
-          Hako.logger.info "Created ELBv2 #{load_balancer.dns_name}"
+
+          elb_type = @elb_v2_config.fetch('type', nil)
+          if elb_type == 'network'
+            load_balancer = elb_client.create_load_balancer(
+              name: name,
+              subnets: @elb_v2_config.fetch('subnets'),
+              scheme: @elb_v2_config.fetch('scheme', nil),
+              type: 'network',
+              tags: tags.empty? ? nil : tags,
+            ).load_balancers[0]
+            Hako.logger.info "Created ELBv2(NLB) #{load_balancer.dns_name}"
+          else
+            load_balancer = elb_client.create_load_balancer(
+              name: name,
+              subnets: @elb_v2_config.fetch('subnets'),
+              security_groups: @elb_v2_config.fetch('security_groups'),
+              scheme: @elb_v2_config.fetch('scheme', nil),
+              type: @elb_v2_config.fetch('type', nil),
+              tags: tags.empty? ? nil : tags,
+            ).load_balancers[0]
+            Hako.logger.info "Created ELBv2 #{load_balancer.dns_name}"
+          end
         end
 
         target_group = describe_target_group
         unless target_group
-          target_group = elb_client.create_target_group(
-            name: name,
-            port: 80,
-            protocol: 'HTTP',
-            vpc_id: @elb_v2_config.fetch('vpc_id'),
-            health_check_path: @elb_v2_config.fetch('health_check_path', nil),
-            target_type: @elb_v2_config.fetch('target_type', nil),
-          ).target_groups[0]
-          Hako.logger.info "Created target group #{target_group.target_group_arn}"
+          elb_type = @elb_v2_config.fetch('type', nil)
+          if elb_type == 'network'
+            target_group = elb_client.create_target_group(
+              name: name,
+              port: 80,
+              protocol: 'TCP',
+              vpc_id: @elb_v2_config.fetch('vpc_id'),
+              target_type: @elb_v2_config.fetch('target_type', nil),
+            ).target_groups[0]
+            Hako.logger.info "Created target group #{target_group.target_group_arn}"
+          else
+            target_group = elb_client.create_target_group(
+              name: name,
+              port: 80,
+              protocol: 'HTTP',
+              vpc_id: @elb_v2_config.fetch('vpc_id'),
+              health_check_path: @elb_v2_config.fetch('health_check_path', nil),
+              target_type: @elb_v2_config.fetch('target_type', nil),
+            ).target_groups[0]
+            Hako.logger.info "Created target group #{target_group.target_group_arn}"
+          end
         end
 
         listener_ports = elb_client.describe_listeners(load_balancer_arn: load_balancer.load_balancer_arn).flat_map { |page| page.listeners.map(&:port) }
