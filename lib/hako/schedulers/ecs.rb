@@ -43,6 +43,7 @@ module Hako
           @ecs_elb_v2_options['target_type'] = 'ip'
         end
         @dynamic_port_mapping = options.fetch('dynamic_port_mapping', @ecs_elb_options.nil?)
+        @health_check_grace_period_seconds = options.fetch('health_check_grace_period_seconds', nil)
         if options.key?('autoscaling')
           @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), @region, dry_run: @dry_run)
         end
@@ -775,6 +776,7 @@ module Hako
           deployment_configuration: @deployment_configuration,
           platform_version: @platform_version,
           network_configuration: @network_configuration,
+          health_check_grace_period_seconds: @health_check_grace_period_seconds,
         }
         if @autoscaling
           # Keep current desired_count if autoscaling is enabled
@@ -804,6 +806,7 @@ module Hako
           launch_type: @launch_type,
           platform_version: @platform_version,
           network_configuration: @network_configuration,
+          health_check_grace_period_seconds: @health_check_grace_period_seconds,
         }
         if ecs_elb_client.find_or_create_load_balancer(front_port)
           ecs_elb_client.modify_attributes
