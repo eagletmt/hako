@@ -24,12 +24,10 @@ RSpec.describe Hako::Schema::Structure do
 
   describe '#same?' do
     it do
-      # rubocop:disable Style/BracesAroundHashParameters
-      expect(schema).to be_same({ foo: 1, bar: 2 }, { foo: 1, bar: 2 })
-      expect(schema).to_not be_same({ foo: 1, bar: 2 }, { foo: 1, bar: 3 })
-      expect(schema).to be_same({ foo: 1, bar: 2, baz: 3 }, { foo: 1, bar: 2, baz: 300 })
-      expect(schema).to be_same({ foo: 1, bar: 2, baz: 300 }, { foo: 1, bar: 2 })
-      # rubocop:enable all
+      expect(schema).to be_same({ foo: 1, bar: 2 }, { foo: 1, bar: 2 }) # rubocop:disable Style/BracesAroundHashParameters
+      expect(schema).to_not be_same({ foo: 1, bar: 2 }, { foo: 1, bar: 3 }) # rubocop:disable Style/BracesAroundHashParameters
+      expect(schema).to be_same({ foo: 1, bar: 2, baz: 3 }, { foo: 1, bar: 2, baz: 300 }) # rubocop:disable Style/BracesAroundHashParameters
+      expect(schema).to be_same({ foo: 1, bar: 2, baz: 300 }, { foo: 1, bar: 2 }) # rubocop:disable Style/BracesAroundHashParameters
     end
   end
 end

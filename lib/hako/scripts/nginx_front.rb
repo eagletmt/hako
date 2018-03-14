@@ -119,7 +119,7 @@ module Hako
 
         # @return [String]
         def templates_directory
-          File.expand_path('../../templates', __FILE__)
+          File.expand_path('../templates', __dir__)
         end
 
         # @return [String]

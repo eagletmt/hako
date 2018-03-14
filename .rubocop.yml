@@ -9,6 +9,10 @@ Layout/FirstParameterIndentation:
 
 Naming/PredicateName:
   Enabled: false
+Naming/UncommunicativeMethodParamName:
+  Enabled: false
+Naming/MemoizedInstanceVariableName:
+  Enabled: false
 
 Style/Alias:
   EnforcedStyle: prefer_alias_method
@@ -35,7 +39,9 @@ Style/StderrPuts:
   Enabled: false
 Style/TrailingCommaInArguments:
   Enabled: false
-Style/TrailingCommaInLiteral:
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+Style/TrailingCommaInHashLiteral:
   Enabled: false
 
 Performance/RedundantBlockCall:
