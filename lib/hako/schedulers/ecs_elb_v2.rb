@@ -80,24 +80,24 @@ module Hako
         target_group = describe_target_group
         unless target_group
           elb_type = @elb_v2_config.fetch('type', nil)
-          if elb_type == 'network'
-            target_group = elb_client.create_target_group(
-              name: name,
-              port: 80,
-              protocol: 'TCP',
-              vpc_id: @elb_v2_config.fetch('vpc_id'),
-              target_type: @elb_v2_config.fetch('target_type', nil),
-            ).target_groups[0]
-          else
-            target_group = elb_client.create_target_group(
-              name: name,
-              port: 80,
-              protocol: 'HTTP',
-              vpc_id: @elb_v2_config.fetch('vpc_id'),
-              health_check_path: @elb_v2_config.fetch('health_check_path', nil),
-              target_type: @elb_v2_config.fetch('target_type', nil),
-            ).target_groups[0]
-          end
+          target_group = if elb_type == 'network'
+                           elb_client.create_target_group(
+                             name: name,
+                             port: 80,
+                             protocol: 'TCP',
+                             vpc_id: @elb_v2_config.fetch('vpc_id'),
+                             target_type: @elb_v2_config.fetch('target_type', nil),
+                           ).target_groups[0]
+                         else
+                           elb_client.create_target_group(
+                             name: name,
+                             port: 80,
+                             protocol: 'HTTP',
+                             vpc_id: @elb_v2_config.fetch('vpc_id'),
+                             health_check_path: @elb_v2_config.fetch('health_check_path', nil),
+                             target_type: @elb_v2_config.fetch('target_type', nil),
+                           ).target_groups[0]
+                         end
 
           Hako.logger.info "Created target group #{target_group.target_group_arn}"
         end
