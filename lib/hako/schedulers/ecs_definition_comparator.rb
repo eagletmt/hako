@@ -35,6 +35,7 @@ module Hako
           struct.member(:user, Schema::Nullable.new(Schema::String.new))
           struct.member(:privileged, Schema::Boolean.new)
           struct.member(:log_configuration, Schema::Nullable.new(log_configuration_schema))
+          struct.member(:health_check, Schema::Nullable.new(health_check_schema))
           struct.member(:ulimits, Schema::Nullable.new(ulimits_schema))
           struct.member(:extra_hosts, Schema::Nullable.new(extra_hosts_schema))
           struct.member(:linux_parameters, Schema::Nullable.new(linux_parameters_schema))
@@ -75,6 +76,16 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:log_driver, Schema::String.new)
           struct.member(:options, Schema::Table.new(Schema::String.new, Schema::String.new))
+        end
+      end
+
+      def health_check_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:command, Schema::OrderedArray.new(Schema::String.new))
+          struct.member(:interval, Schema::Integer.new)
+          struct.member(:timeout, Schema::Integer.new)
+          struct.member(:retries, Schema::Integer.new)
+          struct.member(:start_period, Schema::Integer.new)
         end
       end
 

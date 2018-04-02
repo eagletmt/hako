@@ -87,6 +87,20 @@ module Hako
       end
     end
 
+    # @return[Hash, nil]
+    def health_check
+      if @definition.key?('health_check')
+        conf = @definition['health_check']
+        {
+          command: conf.fetch('command'),
+          interval: conf.fetch('interval'),
+          timeout: conf.fetch('timeout'),
+          retries: conf.fetch('retries'),
+          start_period: conf.fetch('start_period'),
+        }
+      end
+    end
+
     # @return [Array<Hash>, nil]
     def ulimits
       if @definition.key?('ulimits')
