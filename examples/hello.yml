@@ -13,6 +13,14 @@ app:
   image: ryotarai/hello-sinatra
   memory: 128
   cpu: 256
+  health_check:
+    command:
+      - "/path/to/command"
+      - "args"
+    interval: 1
+    timeout: 1
+    retries: 1
+    start_period: 1
   links:
     - redis:redis
   env:
