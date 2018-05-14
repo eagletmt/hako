@@ -15,6 +15,7 @@ app:
   cpu: 256
   health_check:
     command:
+      - "CMD-SHELL"
       - "/path/to/command"
       - "args"
     interval: 1
