@@ -1,3 +1,10 @@
+# 2.1.0 (2018-04-18)
+## New features
+- Support Network Load Balancer
+  - See [examples/hello-internal-nlb.jsonnet](examples/hello-internal-nlb.jsonnet)
+- Support `health_check_grace_period_seconds`
+  - See [examples/hello-lb-v2.jsonnet](examples/hello-lb-v2.jsonnet)
+
 # 2.0.4 (2018-02-26)
 ## Bug fixes
 - Pass AWS region of ECS scheduler to other AWS clients (CloudWatch, ApplicationAutoScaling)
@@ -27,7 +34,7 @@
 ## New features
 - Add support for awsvpc network mode
 - Add support for Fargate
-    - See [examples/hello-fargate.yml](examples/hello-fargate.yml) and [examples/hello-fargate-batch.yml](examples/hello-fargate-batch.yml)
+    - See [examples/hello-fargate.jsonnet](examples/hello-fargate.jsonnet) and [examples/hello-fargate-batch.jsonnet](examples/hello-fargate-batch.jsonnet)
 
 # 1.8.4 (2017-11-24)
 ## Improvements
@@ -48,7 +55,7 @@
 # 1.8.1 (2017-09-15)
 ## Improvements
 - Add container_name and container_port option to elb and elb_v2
-    - See [examples/hello-nofront.yml](examples/hello-nofront.yml)
+    - See [examples/hello-nofront.jsonnet](examples/hello-nofront.jsonnet)
 
 # 1.8.0 (2017-09-15)
 ## Changes

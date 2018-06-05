@@ -291,6 +291,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           subnets: ['subnet-11111111', 'subnet-22222222'],
           security_groups: ['sg-11111111'],
           scheme: nil,
+          type: nil,
           tags: nil,
         ).and_return(Aws::ElasticLoadBalancingV2::Types::CreateLoadBalancerOutput.new(
           load_balancers: [Aws::ElasticLoadBalancingV2::Types::LoadBalancer.new(

@@ -7,31 +7,23 @@ local provide(name) = fileProvider(std.toString({ path: 'hello.env' }), name);
         region: 'ap-northeast-1',
         cluster: 'eagletmt',
         desired_count: 2,
-        task_role_arn: 'arn:aws:iam::012345678901:role/HelloRole',
-        deployment_configuration: {
-            maximum_percent: 200,
-            minimum_healthy_percent: 50,
+        role: 'ecsServiceRole',
+        // dynamic_port_mapping cannot be enabled with elb
+        elb: {
+            listeners: [
+                {
+                    load_balancer_port: 80,
+                    protocol: 'HTTP',
+                },
+            ],
+            subnets: ['subnet-XXXXXXXX', 'subnet-YYYYYYYY'],
+            security_groups: ['sg-ZZZZZZZZ'],
         },
     },
     app: {
         image: 'ryotarai/hello-sinatra',
         memory: 128,
         cpu: 256,
-		health_check: {
-			command: [
-				'CMD-SHELL',
-				'/path/to/command',
-				'arg1',
-				'arg2',
-			],
-			interval: 1,
-			timeout: 1,
-			retiries: 1,
-			start_period: 1,
-		}
-        links: [
-            'redis:redis',
-        ],
         env: {
             PORT: '3000',
             MESSAGE: std.format('%s-san', provide('username')),
@@ -43,15 +35,15 @@ local provide(name) = fileProvider(std.toString({ path: 'hello.env' }), name);
             memory: 32,
             cpu: 32,
         },
-        redis: {
-            image_tag: 'redis:3.0',
-            cpu: 64,
-            memory: 512,
-        },
     },
     scripts: [
         (import 'front.libsonnet') + {
             backend_port: 3000,
+            locations: {
+                '/': {
+                    allow_only_from: ['10.0.0.0/24'],
+                },
+            },
         },
     ],
 }
