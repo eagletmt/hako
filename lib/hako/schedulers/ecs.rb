@@ -942,7 +942,10 @@ module Hako
 
       RUN_TASK_INTERVAL = 10
       def try_scale_out_with_sns(task_definition)
-        required_cpu, required_memory = task_definition.container_definitions.inject([0, 0]) { |(cpu, memory), d| [cpu + d.cpu, memory + (d.memory_reservation || d.memory)] }
+        required_cpu = task_definition.cpu && task_definition.cpu.to_i
+        required_cpu ||= task_definition.container_definitions.inject(0) { |cpu, d| cpu + d.cpu }
+        required_memory = task_definition.memory && task_definition.memory.to_i
+        required_memory ||= task_definition.container_definitions.inject(0) { |memory, d| memory + (d.memory_reservation || d.memory) }
         @hako_task_id ||= SecureRandom.uuid
         message = JSON.dump(
           group_name: @autoscaling_group_for_oneshot,
@@ -1025,7 +1028,10 @@ module Hako
       # @param [Array<Aws::ECS::Types::ContainerInstance>] container_instances
       # @return [Boolean]
       def has_capacity?(task_definition, container_instances)
-        required_cpu, required_memory = task_definition.container_definitions.inject([0, 0]) { |(cpu, memory), d| [cpu + d.cpu, memory + (d.memory_reservation || d.memory)] }
+        required_cpu = task_definition.cpu && task_definition.cpu.to_i
+        required_cpu ||= task_definition.container_definitions.inject(0) { |cpu, d| cpu + d.cpu }
+        required_memory = task_definition.memory && task_definition.memory.to_i
+        required_memory ||= task_definition.container_definitions.inject(0) { |memory, d| memory + (d.memory_reservation || d.memory) }
         container_instances.any? do |ci|
           cpu = ci.remaining_resources.find { |r| r.name == 'CPU' }.integer_value
           memory = ci.remaining_resources.find { |r| r.name == 'MEMORY' }.integer_value
