@@ -1049,6 +1049,9 @@ module Hako
         if definition[:memory]
           cmd << '--memory' << "#{definition[:memory]}M"
         end
+        if definition[:memory_reservation]
+          cmd << '--memory-reservation' << "#{definition[:memory_reservation]}M"
+        end
         definition.fetch(:links).each do |link|
           cmd << '--link' << link
         end
