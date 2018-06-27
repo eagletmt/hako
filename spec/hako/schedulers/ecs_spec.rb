@@ -39,6 +39,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       },
       placement_constraints: [],
       placement_strategy: [],
+      scheduling_strategy: nil,
       launch_type: nil,
       platform_version: nil,
       network_configuration: nil,

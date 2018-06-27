@@ -59,6 +59,7 @@ module Hako
         end
         @placement_constraints = options.fetch('placement_constraints', [])
         @placement_strategy = options.fetch('placement_strategy', [])
+        @scheduling_strategy = options.fetch('scheduling_strategy', nil)
         @execution_role_arn = options.fetch('execution_role_arn', nil)
         @cpu = options.fetch('cpu', nil)
         @memory = options.fetch('memory', nil)
@@ -85,7 +86,7 @@ module Hako
       # @param [Hash<String, Container>] containers
       # @return [nil]
       def deploy(containers)
-        unless @desired_count
+        if @desired_count.nil? && @scheduling_strategy != 'DAEMON'
           validation_error!('desired_count must be set')
         end
         front_port = determine_front_port
@@ -798,16 +799,19 @@ module Hako
           cluster: @cluster,
           service_name: @app_id,
           task_definition: task_definition_arn,
-          desired_count: 0,
           role: @role,
           deployment_configuration: @deployment_configuration,
           placement_constraints: @placement_constraints,
           placement_strategy: @placement_strategy,
+          scheduling_strategy: @scheduling_strategy,
           launch_type: @launch_type,
           platform_version: @platform_version,
           network_configuration: @network_configuration,
           health_check_grace_period_seconds: @health_check_grace_period_seconds,
         }
+        if @scheduling_strategy != 'DAEMON'
+          params[:desired_count] = 0
+        end
         if ecs_elb_client.find_or_create_load_balancer(front_port)
           ecs_elb_client.modify_attributes
           params[:load_balancers] = [ecs_elb_client.load_balancer_params_for_service]
