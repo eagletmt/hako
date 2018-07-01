@@ -24,11 +24,11 @@ local provide(name) = fileProvider(std.toString({ path: 'hello.env' }), name);
 				'arg1',
 				'arg2',
 			],
-			interval: 1,
-			timeout: 1,
-			retiries: 1,
+			interval: 5,
+			timeout: 3,
+			retries: 2,
 			start_period: 1,
-		}
+		},
         links: [
             'redis:redis',
         ],
