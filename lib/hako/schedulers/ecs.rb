@@ -59,6 +59,7 @@ module Hako
         end
         @placement_constraints = options.fetch('placement_constraints', [])
         @placement_strategy = options.fetch('placement_strategy', [])
+        @scheduling_strategy = options.fetch('scheduling_strategy', nil)
         @execution_role_arn = options.fetch('execution_role_arn', nil)
         @cpu = options.fetch('cpu', nil)
         @memory = options.fetch('memory', nil)
@@ -85,7 +86,7 @@ module Hako
       # @param [Hash<String, Container>] containers
       # @return [nil]
       def deploy(containers)
-        unless @desired_count
+        if @desired_count.nil? && @scheduling_strategy != 'DAEMON'
           validation_error!('desired_count must be set')
         end
         front_port = determine_front_port
@@ -799,16 +800,19 @@ module Hako
           cluster: @cluster,
           service_name: @app_id,
           task_definition: task_definition_arn,
-          desired_count: 0,
           role: @role,
           deployment_configuration: @deployment_configuration,
           placement_constraints: @placement_constraints,
           placement_strategy: @placement_strategy,
+          scheduling_strategy: @scheduling_strategy,
           launch_type: @launch_type,
           platform_version: @platform_version,
           network_configuration: @network_configuration,
           health_check_grace_period_seconds: @health_check_grace_period_seconds,
         }
+        if @scheduling_strategy != 'DAEMON'
+          params[:desired_count] = 0
+        end
         if ecs_elb_client.find_or_create_load_balancer(front_port)
           ecs_elb_client.modify_attributes
           params[:load_balancers] = [ecs_elb_client.load_balancer_params_for_service]
@@ -943,7 +947,10 @@ module Hako
 
       RUN_TASK_INTERVAL = 10
       def try_scale_out_with_sns(task_definition)
-        required_cpu, required_memory = task_definition.container_definitions.inject([0, 0]) { |(cpu, memory), d| [cpu + d.cpu, memory + (d.memory_reservation || d.memory)] }
+        required_cpu = task_definition.cpu && task_definition.cpu.to_i
+        required_cpu ||= task_definition.container_definitions.inject(0) { |cpu, d| cpu + d.cpu }
+        required_memory = task_definition.memory && task_definition.memory.to_i
+        required_memory ||= task_definition.container_definitions.inject(0) { |memory, d| memory + (d.memory_reservation || d.memory) }
         @hako_task_id ||= SecureRandom.uuid
         message = JSON.dump(
           group_name: @autoscaling_group_for_oneshot,
@@ -1026,7 +1033,10 @@ module Hako
       # @param [Array<Aws::ECS::Types::ContainerInstance>] container_instances
       # @return [Boolean]
       def has_capacity?(task_definition, container_instances)
-        required_cpu, required_memory = task_definition.container_definitions.inject([0, 0]) { |(cpu, memory), d| [cpu + d.cpu, memory + (d.memory_reservation || d.memory)] }
+        required_cpu = task_definition.cpu && task_definition.cpu.to_i
+        required_cpu ||= task_definition.container_definitions.inject(0) { |cpu, d| cpu + d.cpu }
+        required_memory = task_definition.memory && task_definition.memory.to_i
+        required_memory ||= task_definition.container_definitions.inject(0) { |memory, d| memory + (d.memory_reservation || d.memory) }
         container_instances.any? do |ci|
           cpu = ci.remaining_resources.find { |r| r.name == 'CPU' }.integer_value
           memory = ci.remaining_resources.find { |r| r.name == 'MEMORY' }.integer_value
@@ -1043,6 +1053,9 @@ module Hako
         cmd << '--cpu-shares' << definition.fetch(:cpu)
         if definition[:memory]
           cmd << '--memory' << "#{definition[:memory]}M"
+        end
+        if definition[:memory_reservation]
+          cmd << '--memory-reservation' << "#{definition[:memory_reservation]}M"
         end
         definition.fetch(:links).each do |link|
           cmd << '--link' << link
@@ -1063,6 +1076,9 @@ module Hako
           else
             raise "Could not find volume #{source_volume}"
           end
+        end
+        definition.fetch(:volumes_from).each do |volumes_from|
+          cmd << '--volumes-from' << "#{volumes_from.fetch(:source_container)}#{volumes_from[:read_only] ? ':ro' : ''}"
         end
         if definition[:privileged]
           cmd << '--privileged'

@@ -52,6 +52,10 @@ module Hako
             m = link.match(/\A([^:]+):([^:]+)\z/)
             names << (m ? m[1] : link)
           end
+
+          containers[name].volumes_from.each do |volumes_from|
+            names << volumes_from[:source_container]
+          end
         end
       end
       containers

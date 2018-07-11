@@ -130,8 +130,18 @@ module Hako
           return nil
         end
 
+        load_balancer = describe_load_balancer
+        subnets = @elb_v2_config.fetch('subnets').sort
+        if load_balancer && subnets != load_balancer.availability_zones.map(&:subnet_id).sort
+          if @dry_run
+            Hako.logger.info("elb_client.set_subnets(load_balancer_arn: #{load_balancer.load_balancer_arn}, subnets: #{subnets}) (dry-run)")
+          else
+            Hako.logger.info("Updating ELBv2 subnets to #{subnets}")
+            elb_client.set_subnets(load_balancer_arn: load_balancer.load_balancer_arn, subnets: subnets)
+          end
+        end
+
         if @elb_v2_config.key?('load_balancer_attributes')
-          load_balancer = describe_load_balancer
           attributes = @elb_v2_config.fetch('load_balancer_attributes').map { |key, value| { key: key, value: value } }
           if @dry_run
             if load_balancer

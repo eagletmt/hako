@@ -1,3 +1,11 @@
+# 2.2.0 (2018-06-29)
+## New features
+- Add support for `scheduling_strategy` on service
+- Change existing ELB's subnets when different from definition
+## Bug fixes
+- Take task-level cpu/memory into account on scale out
+- Show `--memory-reservation` in the dry-run output
+
 # 2.1.0 (2018-04-18)
 ## New features
 - Support Network Load Balancer
