@@ -1076,6 +1076,9 @@ module Hako
             raise "Could not find volume #{source_volume}"
           end
         end
+        definition.fetch(:volumes_from).each do |volumes_from|
+          cmd << '--volumes-from' << "#{volumes_from.fetch(:source_container)}#{volumes_from[:read_only] ? ':ro' : ''}"
+        end
         if definition[:privileged]
           cmd << '--privileged'
         end
