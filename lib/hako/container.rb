@@ -91,13 +91,25 @@ module Hako
     def health_check
       if @definition.key?('health_check')
         conf = @definition['health_check']
-        {
+        ret = {
           command: conf.fetch('command'),
-          interval: conf.fetch('interval'),
-          timeout: conf.fetch('timeout'),
-          retries: conf.fetch('retries'),
-          start_period: conf.fetch('start_period'),
         }
+
+        # optional
+        if conf.key?('interval')
+          ret[:interval] = conf.fetch('interval')
+        end
+        if conf.key?('timeout')
+          ret[:timeout] = conf.fetch('timeout')
+        end
+        if conf.key?('retries')
+          ret[:retries] = conf.fetch('retries')
+        end
+        if conf.key?('start_period')
+          ret[:start_period] = conf.fetch('start_period')
+        end
+
+        ret
       end
     end
 
