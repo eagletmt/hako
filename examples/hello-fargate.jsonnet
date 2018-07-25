@@ -72,7 +72,7 @@ local awslogs = {
     },
     log_configuration: awslogs,
   },
-  additional_containers: {
+  sidecars: {
     front: {
       image_tag: 'hako-nginx',
       log_configuration: awslogs,

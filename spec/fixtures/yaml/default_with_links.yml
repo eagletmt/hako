@@ -2,7 +2,7 @@ app:
   image: app-image
   links:
     - redis
-additional_containers:
+sidecars:
   redis:
     image_tag: redis
     links:

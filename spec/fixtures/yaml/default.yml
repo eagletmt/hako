@@ -1,6 +1,6 @@
 app:
   image: app-image
-additional_containers:
+sidecars:
   front:
     type: nginx
     image_tag: front-image

@@ -51,7 +51,7 @@ local provide(name) = fileProvider(std.toString({ path: 'hello.env' }), name);
       MESSAGE: std.format('%s-san', provide('username')),
     },
   },
-  additional_containers: {
+  sidecars: {
     front: {
       image_tag: 'hako-nginx',
       memory: 32,

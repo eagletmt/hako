@@ -18,24 +18,25 @@ module Hako
     # @param [Array<String>, nil] with
     # @return [Hash<String, Container>]
     def load(tag, with: nil)
-      additional_containers = @app.definition.fetch('additional_containers', {})
+      # XXX: Load additional_containers for compatibility
+      sidecars = @app.definition.fetch('sidecars', @app.definition.fetch('additional_containers', {}))
       container_names = ['app']
       if with
         container_names.concat(with)
       else
-        container_names.concat(additional_containers.keys)
+        container_names.concat(sidecars.keys)
       end
 
-      load_containers_from_name(tag, container_names, additional_containers)
+      load_containers_from_name(tag, container_names, sidecars)
     end
 
     private
 
     # @param [String] tag
     # @param [Array<String>] container_names
-    # @param [Hash<String, Hash>] additional_containers
+    # @param [Hash<String, Hash>] sidecars
     # @return [Hash<String, Container>]
-    def load_containers_from_name(tag, container_names, additional_containers)
+    def load_containers_from_name(tag, container_names, sidecars)
       names = Set.new(container_names)
       containers = {}
       while containers.size < names.size
@@ -45,7 +46,7 @@ module Hako
             when 'app'
               AppContainer.new(@app, @app.definition['app'].merge('tag' => tag), dry_run: @dry_run)
             else
-              Container.new(@app, additional_containers.fetch(name), dry_run: @dry_run)
+              Container.new(@app, sidecars.fetch(name), dry_run: @dry_run)
             end
 
           containers[name].links.each do |link|
