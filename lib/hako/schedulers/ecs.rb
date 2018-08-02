@@ -1072,7 +1072,11 @@ module Hako
           source_volume = mount_point.fetch(:source_volume)
           v = @volumes[source_volume]
           if v
-            cmd << '--volume' << "#{v.fetch('source_path')}:#{mount_point.fetch(:container_path)}#{mount_point[:read_only] ? ':ro' : ''}"
+            # When source_path is not given, ECS agent adds a container for generating empty volume to share between containers
+            #   https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_data_volumes.html
+            #   (To provide nonpersistent empty data volumes for containers)
+            source_path = v.fetch('source_path', "/tmp/ephemeral_#{source_volume}")
+            cmd << '--volume' << "#{source_path}:#{mount_point.fetch(:container_path)}#{mount_point[:read_only] ? ':ro' : ''}"
           else
             raise "Could not find volume #{source_volume}"
           end
