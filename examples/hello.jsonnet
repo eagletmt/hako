@@ -20,13 +20,11 @@ local provide(name) = fileProvider(std.toString({ path: 'hello.env' }), name);
     health_check: {
       command: [
         'CMD-SHELL',
-        '/path/to/command',
-        'arg1',
-        'arg2',
+        'curl -f http://localhost/ || exit 1',
       ],
-      interval: 5,
-      timeout: 3,
-      retries: 2,
+      interval: 30,
+      timeout: 5,
+      retries: 3,
       start_period: 1,
     },
     links: [
