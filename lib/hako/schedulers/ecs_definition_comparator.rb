@@ -107,6 +107,7 @@ module Hako
           struct.member(:devices, Schema::Nullable.new(devices_schema))
           struct.member(:init_process_enabled, Schema::Nullable.new(Schema::Boolean.new))
           struct.member(:shared_memory_size, Schema::Nullable.new(Schema::Integer.new))
+          struct.member(:tmpfs, Schema::Nullable.new(tmpfs_schema))
         end
       end
 
@@ -127,6 +128,16 @@ module Hako
           struct.member(:container_path, Schema::Nullable.new(Schema::String.new))
           struct.member(:permissions, Schema::UnorderedArray.new(Schema::String.new))
         end
+      end
+
+      def tmpfs_schema
+        Schema::UnorderedArray.new(
+          Schema::Structure.new.tap do |struct|
+            struct.member(:container_path, Schema::String.new)
+            struct.member(:mount_options, Schema::UnorderedArray.new(Schema::String.new))
+            struct.member(:size, Schema::Integer.new)
+          end
+        )
       end
 
       def extra_hosts_schema
