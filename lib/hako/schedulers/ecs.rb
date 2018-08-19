@@ -13,6 +13,7 @@ require 'hako/schedulers/ecs_definition_comparator'
 require 'hako/schedulers/ecs_elb'
 require 'hako/schedulers/ecs_elb_v2'
 require 'hako/schedulers/ecs_service_comparator'
+require 'hako/schedulers/ecs_volume_comparator'
 
 module Hako
   module Schedulers
@@ -94,6 +95,9 @@ module Hako
         definitions = create_definitions(containers)
 
         if @dry_run
+          volumes_definition.each do |d|
+            print_volume_definition_in_cli_format(d)
+          end
           definitions.each do |d|
             print_definition_in_cli_format(d)
           end
@@ -176,6 +180,9 @@ module Hako
         end
 
         if @dry_run
+          volumes_definition.each do |d|
+            print_volume_definition_in_cli_format(d)
+          end
           definitions.each do |d|
             if d[:name] == 'app'
               d[:command] = commands
@@ -405,6 +412,10 @@ module Hako
           # Initial deployment
           return true
         end
+        actual_volume_definitions = {}
+        actual_definition.volumes.each do |v|
+          actual_volume_definitions[v.name] = v
+        end
         container_definitions = {}
         actual_definition.container_definitions.each do |c|
           container_definitions[c.name] = c
@@ -413,7 +424,10 @@ module Hako
         if actual_definition.task_role_arn != @task_role_arn
           return true
         end
-        if different_volumes?(actual_definition.volumes)
+        if volumes_definition.any? { |definition| different_volume?(definition, actual_volume_definitions.delete(definition[:name])) }
+          return true
+        end
+        unless actual_volume_definitions.empty?
           return true
         end
         if desired_definitions.any? { |definition| different_definition?(definition, container_definitions.delete(definition[:name])) }
@@ -441,23 +455,11 @@ module Hako
         false
       end
 
-      # @param [Hash<String, Hash<String, String>>] actual_volumes
+      # @param [Hash] expected_volume
+      # @param [Aws::ECS::Types::Volume] actual_volume
       # @return [Boolean]
-      def different_volumes?(actual_volumes)
-        if @volumes.size != actual_volumes.size
-          return true
-        end
-        actual_volumes.each do |actual_volume|
-          expected_volume = @volumes[actual_volume.name]
-          if expected_volume.nil?
-            return true
-          end
-          if expected_volume['source_path'] != actual_volume.host.source_path
-            return true
-          end
-        end
-
-        false
+      def different_volume?(expected_volume, actual_volume)
+        EcsVolumeComparator.new(expected_volume).different?(actual_volume)
       end
 
       # @param [Hash] expected_container
@@ -534,13 +536,28 @@ module Hako
         raise Error.new('Unable to register task definition for oneshot due to too many client errors')
       end
 
-      # @return [Hash]
+      # @return [Array<Hash>]
       def volumes_definition
-        @volumes.map do |name, volume|
-          {
-            name: name,
-            host: { source_path: volume['source_path'] },
-          }
+        @volumes_definition ||= @volumes.map do |name, volume|
+          definition = { name: name }
+          if volume.key?('docker_volume_configuration')
+            configuration = volume['docker_volume_configuration']
+            definition[:docker_volume_configuration] = {
+              autoprovision: configuration['autoprovision'],
+              driver: configuration['driver'],
+              # ECS API doesn't allow 'driver_opts' to be an empty hash.
+              driver_opts: configuration['driver_opts'],
+              # ECS API doesn't allow 'labels' to be an empty hash.
+              labels: configuration['labels'],
+              scope: configuration['scope'],
+            }
+          else
+            # When neither 'host' nor 'docker_volume_configuration' is
+            # specified, ECS API treats it as if 'host' is specified without
+            # 'source_path'.
+            definition[:host] = { source_path: volume['source_path'] }
+          end
+          definition
         end
       end
 
@@ -1044,6 +1061,31 @@ module Hako
       end
 
       # @param [Hash] definition
+      # @return [nil]
+      def print_volume_definition_in_cli_format(definition)
+        return unless definition.dig(:docker_volume_configuration, :autoprovision) == true
+        # From version 1.20.0 of ECS agent, a local volume is provisioned when
+        # 'host' is specified without 'source_path'.
+        return if definition.dig(:host, :source_path)
+
+        cmd = %w[docker volume create]
+        if (configuration = definition[:docker_volume_configuration])
+          if configuration[:driver]
+            cmd << '--driver' << configuration[:driver]
+          end
+          (configuration[:driver_opts] || {}).each do |k, v|
+            cmd << '--opt' << "#{k}=#{v}"
+          end
+          (configuration[:labels] || {}).each do |k, v|
+            cmd << '--label' << "#{k}=#{v}"
+          end
+        end
+        cmd << definition[:name]
+        puts cmd.join(' ')
+        nil
+      end
+
+      # @param [Hash] definition
       # @param [Hash<String, String>] additional_env
       # @return [nil]
       def print_definition_in_cli_format(definition, additional_env: {})
@@ -1069,16 +1111,10 @@ module Hako
         end
         definition.fetch(:mount_points).each do |mount_point|
           source_volume = mount_point.fetch(:source_volume)
-          v = @volumes[source_volume]
-          if v
-            # When source_path is not given, ECS agent adds a container for generating empty volume to share between containers
-            #   https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_data_volumes.html
-            #   (To provide nonpersistent empty data volumes for containers)
-            source_path = v.fetch('source_path', "/tmp/ephemeral_#{source_volume}")
-            cmd << '--volume' << "#{source_path}:#{mount_point.fetch(:container_path)}#{mount_point[:read_only] ? ':ro' : ''}"
-          else
-            raise "Could not find volume #{source_volume}"
-          end
+          v = volumes_definition.find { |d| d[:name] == source_volume }
+          raise "Could not find volume #{source_volume}" unless v
+          source = v.dig(:host, :source_path) || source_volume
+          cmd << '--volume' << "#{source}:#{mount_point.fetch(:container_path)}#{mount_point[:read_only] ? ':ro' : ''}"
         end
         definition.fetch(:volumes_from).each do |volumes_from|
           cmd << '--volumes-from' << "#{volumes_from.fetch(:source_container)}#{volumes_from[:read_only] ? ':ro' : ''}"
