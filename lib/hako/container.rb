@@ -138,6 +138,8 @@ module Hako
 
         ret[:init_process_enabled] = conf.fetch('init_process_enabled', nil)
 
+        ret[:shared_memory_size] = conf.fetch('shared_memory_size', nil)
+
         ret
       end
     end

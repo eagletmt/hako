@@ -34,7 +34,8 @@ RSpec.describe Hako::Schedulers::EcsDefinitionComparator do
                 container_path: nil,
                 permissions: ['read']
               }
-            ]
+            ],
+            shared_memory_size: 128
           }
         }.merge(default_config)
       end
@@ -53,7 +54,8 @@ RSpec.describe Hako::Schedulers::EcsDefinitionComparator do
                 container_path: nil,
                 permissions: ['read']
               }
-            ]
+            ],
+            shared_memory_size: 128
           )
         }.merge(default_config))
       end
