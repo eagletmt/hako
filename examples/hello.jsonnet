@@ -17,6 +17,16 @@ local provide(name) = fileProvider(std.toString({ path: 'hello.env' }), name);
     image: 'ryotarai/hello-sinatra',
     memory: 128,
     cpu: 256,
+    health_check: {
+      command: [
+        'CMD-SHELL',
+        'curl -f http://localhost:3000/ || exit 1',
+      ],
+      interval: 30,
+      timeout: 5,
+      retries: 3,
+      start_period: 1,
+    },
     links: [
       'redis:redis',
     ],

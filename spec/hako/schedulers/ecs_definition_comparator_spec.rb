@@ -96,5 +96,43 @@ RSpec.describe Hako::Schedulers::EcsDefinitionComparator do
         expect(ecs_definition_comparator).to_not be_different(actual_container)
       end
     end
+
+    describe 'compares correctly even if the definition includes Container healthcheck' do
+      let(:expected_container) do
+        {
+          name: 'app',
+          health_check: {
+            command: [
+              'ls',
+              '/'
+            ],
+            interval: 5,
+            timeout: 4,
+            retries: 3,
+            start_period: 1
+          }
+        }.merge(default_config)
+      end
+
+      let(:actual_container) do
+        Aws::ECS::Types::ContainerDefinition.new({
+          name: 'app',
+          health_check: Aws::ECS::Types::HealthCheck.new(
+            command: [
+              'ls',
+              '/'
+            ],
+            interval: 5,
+            timeout: 4,
+            retries: 3,
+            start_period: 1
+          )
+        }.merge(default_config))
+      end
+
+      it 'returns valid value' do
+        expect(ecs_definition_comparator).to_not be_different(actual_container)
+      end
+    end
   end
 end

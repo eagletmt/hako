@@ -574,6 +574,7 @@ module Hako
           volumes_from: container.volumes_from,
           user: container.user,
           log_configuration: container.log_configuration,
+          health_check: container.health_check,
           ulimits: container.ulimits,
           extra_hosts: container.extra_hosts,
         }
