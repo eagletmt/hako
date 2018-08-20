@@ -1063,7 +1063,7 @@ module Hako
       # @param [Hash] definition
       # @return [nil]
       def print_volume_definition_in_cli_format(definition)
-        return unless definition.dig(:docker_volume_configuration, :autoprovision) == true
+        return if definition.dig(:docker_volume_configuration, :autoprovision)
         # From version 1.20.0 of ECS agent, a local volume is provisioned when
         # 'host' is specified without 'source_path'.
         return if definition.dig(:host, :source_path)
