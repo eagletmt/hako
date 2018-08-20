@@ -1119,7 +1119,7 @@ module Hako
             cmd << '--shm-size' << "#{definition[:linux_parameters][:shared_memory_size]}m"
           end
 
-          definition[:linux_parameters][:tmpfs].each do |tmpfs|
+          definition[:linux_parameters].fetch(:tmpfs, []).each do |tmpfs|
             options = ["size=#{tmpfs[:size]}m"].concat(tmpfs[:mount_options])
             cmd << '--tmpfs' << "#{tmpfs[:container_path]}:#{options.join(',')}"
           end
