@@ -1111,7 +1111,7 @@ module Hako
             end
           end
 
-          if definition[:init_process_enabled]
+          if definition[:linux_parameters][:init_process_enabled]
             cmd << '--init'
           end
         end
