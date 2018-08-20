@@ -1114,6 +1114,10 @@ module Hako
           if definition[:linux_parameters][:init_process_enabled]
             cmd << '--init'
           end
+
+          if definition[:linux_parameters][:shared_memory_size]
+            cmd << '--shm-size' << "#{definition[:linux_parameters][:shared_memory_size]}m"
+          end
         end
         definition.fetch(:volumes_from).each do |volumes_from|
           p volumes_from
