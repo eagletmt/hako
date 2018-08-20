@@ -159,6 +159,16 @@ module Hako
 
         ret[:shared_memory_size] = conf.fetch('shared_memory_size', nil)
 
+        if conf.key?('tmpfs')
+          ret[:tmpfs] = conf['tmpfs'].map do |t|
+            {
+              container_path: t.fetch('container_path'),
+              mount_options: t.fetch('mount_options', []),
+              size: t.fetch('size')
+            }
+          end
+        end
+
         ret
       end
     end

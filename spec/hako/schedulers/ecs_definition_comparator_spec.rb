@@ -35,7 +35,14 @@ RSpec.describe Hako::Schedulers::EcsDefinitionComparator do
                 permissions: ['read']
               }
             ],
-            shared_memory_size: 128
+            shared_memory_size: 128,
+            tmpfs: [
+              {
+                container_path: '/tmp',
+                mount_options: ['defaults'],
+                size: 128
+              }
+            ]
           }
         }.merge(default_config)
       end
@@ -55,7 +62,14 @@ RSpec.describe Hako::Schedulers::EcsDefinitionComparator do
                 permissions: ['read']
               }
             ],
-            shared_memory_size: 128
+            shared_memory_size: 128,
+            tmpfs: [
+              {
+                container_path: '/tmp',
+                mount_options: ['defaults'],
+                size: 128
+              }
+            ]
           )
         }.merge(default_config))
       end
