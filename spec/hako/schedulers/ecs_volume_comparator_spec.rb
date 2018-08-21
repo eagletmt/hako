@@ -11,11 +11,11 @@ RSpec.describe Hako::Schedulers::EcsVolumeComparator do
       docker_volume_configuration: {
         autoprovision: false,
         driver_opts: {
-          type: 'tmpfs',
-          device: 'tmpfs',
+          'type' => 'tmpfs',
+          'device' => 'tmpfs',
         },
         labels: {
-          foo: 'bar',
+          'foo' => 'bar',
         },
       },
       host: {
@@ -30,11 +30,11 @@ RSpec.describe Hako::Schedulers::EcsVolumeComparator do
         autoprovision: false,
         driver: 'local',
         driver_opts: {
-          type: 'tmpfs',
-          device: 'tmpfs',
+          'type' => 'tmpfs',
+          'device' => 'tmpfs',
         },
         labels: {
-          foo: 'bar',
+          'foo' => 'bar',
         },
         scope: 'task',
       ),
@@ -54,7 +54,7 @@ RSpec.describe Hako::Schedulers::EcsVolumeComparator do
 
     context 'when some parameters differ' do
       before do
-        actual_volume.name = 'bar'
+        actual_volume.docker_volume_configuration.labels['foo'] = 'baz'
       end
 
       it 'returns true' do
