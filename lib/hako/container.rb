@@ -195,8 +195,8 @@ module Hako
     # @param [Array<Hash>] provider_configs
     # @return [Array<EnvProvider>]
     def load_providers(provider_configs)
-      provider_configs.map do |yaml|
-        Loader.new(Hako::EnvProviders, 'hako/env_providers').load(yaml.fetch('type')).new(@app.root_path, yaml)
+      provider_configs.map do |provider_config|
+        Loader.new(Hako::EnvProviders, 'hako/env_providers').load(provider_config.fetch('type')).new(@app.root_path, provider_config)
       end
     end
 

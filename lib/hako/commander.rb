@@ -118,21 +118,21 @@ module Hako
       DefinitionLoader.new(@app, dry_run: dry_run).load(tag, with: with)
     end
 
-    # @param [Hash] yaml
+    # @param [Hash] scheduler_definition
     # @param [Hash] volumes
     # @param [Boolean] force
     # @param [Boolean] dry_run
     # @param [Integer] timeout
     # @return [Scheduler]
-    def load_scheduler(yaml, scripts, volumes: {}, force: false, dry_run:, timeout: nil)
-      Loader.new(Hako::Schedulers, 'hako/schedulers').load(yaml.fetch('type')).new(@app.id, yaml, volumes: volumes, scripts: scripts, force: force, dry_run: dry_run, timeout: timeout)
+    def load_scheduler(scheduler_definition, scripts, volumes: {}, force: false, dry_run:, timeout: nil)
+      Loader.new(Hako::Schedulers, 'hako/schedulers').load(scheduler_definition.fetch('type')).new(@app.id, scheduler_definition, volumes: volumes, scripts: scripts, force: force, dry_run: dry_run, timeout: timeout)
     end
 
-    # @param [Hash] yaml
+    # @param [Hash] script_definition
     # @param [Boolean] dry_run
     # @return [Script]
-    def load_script(yaml, dry_run:)
-      Loader.new(Hako::Scripts, 'hako/scripts').load(yaml.fetch('type')).new(@app, yaml, dry_run: dry_run)
+    def load_script(script_definition, dry_run:)
+      Loader.new(Hako::Scripts, 'hako/scripts').load(script_definition.fetch('type')).new(@app, script_definition, dry_run: dry_run)
     end
   end
 end

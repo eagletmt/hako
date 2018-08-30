@@ -1171,7 +1171,7 @@ module Hako
         definition.fetch(:environment).each do |env|
           name = env.fetch(:name)
           value = env.fetch(:value)
-          # additional_env (given in command line) has priority over env (declared in YAML)
+          # additional_env (given in command line) has priority over env (declared in definition file)
           unless additional_env.key?(name)
             cmd << '--env' << "#{name}=#{value}"
             cmd << "\\\n  "

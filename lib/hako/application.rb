@@ -15,8 +15,8 @@ module Hako
     #   @return [Hash]
     attr_reader :id, :root_path, :definition
 
-    def initialize(yaml_path, expand_variables: true, ask_keys: false)
-      path = Pathname.new(yaml_path)
+    def initialize(definition_path, expand_variables: true, ask_keys: false)
+      path = Pathname.new(definition_path)
       @id = path.basename.sub_ext('').to_s
       @root_path = path.parent
       @definition =

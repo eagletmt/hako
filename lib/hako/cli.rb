@@ -72,7 +72,7 @@ module Hako
           else
             {}
           end
-        Commander.new(Application.new(@yaml_path, options)).deploy(force: @force, tag: @tag, dry_run: @dry_run, timeout: @timeout)
+        Commander.new(Application.new(@definition_path, options)).deploy(force: @force, tag: @tag, dry_run: @dry_run, timeout: @timeout)
       end
 
       DEFAULT_TIMEOUT = 1200 # 20 minutes
@@ -84,9 +84,9 @@ module Hako
         @verbose = false
         @timeout = DEFAULT_TIMEOUT
         parser.parse!(argv)
-        @yaml_path = argv.first
+        @definition_path = argv.first
 
-        if @yaml_path.nil?
+        if @definition_path.nil?
           puts parser.help
           exit 1
         end
@@ -121,16 +121,16 @@ module Hako
           else
             {}
           end
-        Commander.new(Application.new(@yaml_path, options)).rollback(dry_run: @dry_run)
+        Commander.new(Application.new(@definition_path, options)).rollback(dry_run: @dry_run)
       end
 
       def parse!(argv)
         @dry_run = false
         @verbose = false
         parser.parse!(argv)
-        @yaml_path = argv.first
+        @definition_path = argv.first
 
-        if @yaml_path.nil?
+        if @definition_path.nil?
           puts parser.help
           exit 1
         end
@@ -162,7 +162,7 @@ module Hako
           else
             {}
           end
-        Commander.new(Application.new(@yaml_path, options)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run, no_wait: @no_wait)
+        Commander.new(Application.new(@definition_path, options)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run, no_wait: @no_wait)
       end
 
       def parse!(argv)
@@ -173,10 +173,10 @@ module Hako
         @verbose = false
         @no_wait = false
         parser.parse!(argv)
-        @yaml_path = argv.shift
+        @definition_path = argv.shift
         @argv = argv
 
-        if @yaml_path.nil? || @argv.empty?
+        if @definition_path.nil? || @argv.empty?
           puts parser.help
           exit 1
         end
@@ -231,14 +231,14 @@ module Hako
         parse!(argv)
         require 'hako/application'
         require 'hako/commander'
-        Commander.new(Application.new(@yaml_path, expand_variables: false)).status
+        Commander.new(Application.new(@definition_path, expand_variables: false)).status
       end
 
       def parse!(argv)
         parser.parse!(argv)
-        @yaml_path = argv.first
+        @definition_path = argv.first
 
-        if @yaml_path.nil?
+        if @definition_path.nil?
           puts parser.help
           exit 1
         end
@@ -258,15 +258,15 @@ module Hako
         require 'hako/application'
         require 'hako/commander'
 
-        Commander.new(Application.new(@yaml_path, expand_variables: false)).remove(dry_run: @dry_run)
+        Commander.new(Application.new(@definition_path, expand_variables: false)).remove(dry_run: @dry_run)
       end
 
       def parse!(argv)
         @dry_run = false
         parser.parse!(argv)
-        @yaml_path = argv.first
+        @definition_path = argv.first
 
-        if @yaml_path.nil?
+        if @definition_path.nil?
           puts parser.help
           exit 1
         end
@@ -287,15 +287,15 @@ module Hako
         require 'hako/application'
         require 'hako/commander'
 
-        Commander.new(Application.new(@yaml_path, expand_variables: false)).stop(dry_run: @dry_run)
+        Commander.new(Application.new(@definition_path, expand_variables: false)).stop(dry_run: @dry_run)
       end
 
       def parse!(argv)
         @dry_run = false
         parser.parse!(argv)
-        @yaml_path = argv.first
+        @definition_path = argv.first
 
-        if @yaml_path.nil?
+        if @definition_path.nil?
           puts parser.help
           exit 1
         end
