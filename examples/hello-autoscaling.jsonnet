@@ -46,6 +46,15 @@ local provide(name) = fileProvider(std.toString({ path: 'hello.env' }), name);
           metric_interval_upper_bound: 0,
           metric_aggregation_type: 'Average',
         },
+        // Adjust the numer of tasks to keep the metric close to the target value
+        {
+          policy_type: 'TargetTrackingScaling',
+          name: 'ecs-target-tracking-scaling-hello-autoscaling-service',
+          target_value: 50,
+          predefined_metric_type: 'ECSServiceAverageCPUUtilization',
+          scale_out_cooldown: 300,
+          scale_in_cooldown: 300,
+        },
       ],
     },
   },

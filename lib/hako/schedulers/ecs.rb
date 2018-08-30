@@ -46,7 +46,7 @@ module Hako
         @dynamic_port_mapping = options.fetch('dynamic_port_mapping', @ecs_elb_options.nil?)
         @health_check_grace_period_seconds = options.fetch('health_check_grace_period_seconds', nil)
         if options.key?('autoscaling')
-          @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), @region, dry_run: @dry_run)
+          @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), @region, ecs_elb_client, dry_run: @dry_run)
         end
         @autoscaling_group_for_oneshot = options.fetch('autoscaling_group_for_oneshot', nil)
         @autoscaling_topic_for_oneshot = options.fetch('autoscaling_topic_for_oneshot', nil)
