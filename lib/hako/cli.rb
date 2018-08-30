@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'hako'
+require 'json'
 require 'optparse'
 require 'pathname'
 
@@ -204,7 +205,7 @@ module Hako
         parse!(argv)
         require 'hako/application'
         app = Application.new(@path, expand_variables: @expand_variables)
-        puts app.definition.to_yaml
+        puts JSON.pretty_generate(app.definition)
       end
 
       def parse!(argv)
