@@ -17,8 +17,7 @@ module Hako
     # @param [String] tag
     # @return [Hash<String, Container>]
     def load(tag)
-      # XXX: Load additional_containers for compatibility
-      sidecars = @app.definition.fetch('sidecars', @app.definition.fetch('additional_containers', {}))
+      sidecars = @app.definition.fetch('sidecars', {})
       containers = {
         'app' => AppContainer.new(@app, @app.definition['app'].merge('tag' => tag), dry_run: @dry_run),
       }
