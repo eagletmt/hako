@@ -5,7 +5,6 @@
     cluster: 'eagletmt',
     desired_count: 2,
     role: 'ecsServiceRole',
-    autoscaling_group_for_oneshot: 'hako-batch-cluster',
   },
   app: {
     image: 'ryotarai/hello-sinatra',

@@ -48,11 +48,7 @@ module Hako
         if options.key?('autoscaling')
           @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), @region, ecs_elb_client, dry_run: @dry_run)
         end
-        @autoscaling_group_for_oneshot = options.fetch('autoscaling_group_for_oneshot', nil)
         @autoscaling_topic_for_oneshot = options.fetch('autoscaling_topic_for_oneshot', nil)
-        if @autoscaling_topic_for_oneshot && !@autoscaling_group_for_oneshot
-          validation_error!('autoscaling_group_for_oneshot must be set when autoscaling_topic_for_oneshot is set')
-        end
         @oneshot_notification_prefix = options.fetch('oneshot_notification_prefix', nil)
         @deployment_configuration = {}
         %i[maximum_percent minimum_healthy_percent].each do |key|
@@ -951,14 +947,10 @@ module Hako
       # @param [Aws::ECS::Types::TaskDefinition] task_definition
       # @return [Boolean] true if the capacity is reserved
       def on_no_tasks_started(task_definition)
-        unless @autoscaling_group_for_oneshot
-          return false
-        end
-
         if @autoscaling_topic_for_oneshot
           try_scale_out_with_sns(task_definition)
         else
-          try_scale_out_with_as(task_definition)
+          false
         end
       end
 
@@ -970,7 +962,6 @@ module Hako
         required_memory ||= task_definition.container_definitions.inject(0) { |memory, d| memory + (d.memory_reservation || d.memory) }
         @hako_task_id ||= SecureRandom.uuid
         message = JSON.dump(
-          group_name: @autoscaling_group_for_oneshot,
           cluster: @cluster,
           cpu: required_cpu,
           memory: required_memory,
@@ -982,68 +973,6 @@ module Hako
         Hako.logger.info("Sent message_id=#{resp.message_id}")
         sleep(RUN_TASK_INTERVAL)
         true
-      end
-
-      MIN_ASG_INTERVAL = 1
-      MAX_ASG_INTERVAL = 120
-      def try_scale_out_with_as(task_definition)
-        autoscaling = Aws::AutoScaling::Client.new(region: @region)
-        interval = MIN_ASG_INTERVAL
-        Hako.logger.info("Unable to start tasks. Start trying scaling out '#{@autoscaling_group_for_oneshot}'")
-        loop do
-          begin
-            asg = autoscaling.describe_auto_scaling_groups(auto_scaling_group_names: [@autoscaling_group_for_oneshot]).auto_scaling_groups[0]
-          rescue Aws::AutoScaling::Errors::Throttling => e
-            Hako.logger.error(e)
-            interval = [interval * 2, MAX_ASG_INTERVAL].min
-            Hako.logger.info("Retrying after #{interval} seconds...")
-            sleep interval
-            next
-          end
-          unless asg
-            raise Error.new("AutoScaling Group '#{@autoscaling_group_for_oneshot}' does not exist")
-          end
-
-          container_instances = ecs_client.list_container_instances(cluster: @cluster).flat_map do |c|
-            if c.container_instance_arns.empty?
-              []
-            else
-              ecs_client.describe_container_instances(cluster: @cluster, container_instances: c.container_instance_arns).container_instances.select do |container_instance|
-                container_instance.agent_connected && container_instance.status == 'ACTIVE'
-              end
-            end
-          end
-          if has_capacity?(task_definition, container_instances)
-            Hako.logger.info("There's remaining capacity. Start retrying...")
-            return true
-          end
-
-          interval = [interval / 2, MIN_ASG_INTERVAL].max
-          # Check autoscaling group health
-          current = asg.instances.count { |i| i.lifecycle_state == 'InService' }
-          if asg.desired_capacity != current
-            Hako.logger.debug("#{asg.auto_scaling_group_name} isn't in desired state. desired_capacity=#{asg.desired_capacity} in-service instances=#{current}. Retry after #{interval} seconds")
-            sleep interval
-            next
-          end
-
-          # Check out-of-service instances
-          out_instances = asg.instances.map(&:instance_id)
-          container_instances.each do |ci|
-            out_instances.delete(ci.ec2_instance_id)
-          end
-          unless out_instances.empty?
-            Hako.logger.debug("There's instances that is running but not registered as container instances: #{out_instances}. Retry after #{interval} seconds")
-            sleep interval
-            next
-          end
-
-          # Scale out
-          desired = current + 1
-          Hako.logger.info("Increment desired_capacity of #{asg.auto_scaling_group_name} from #{current} to #{desired}")
-          autoscaling.set_desired_capacity(auto_scaling_group_name: asg.auto_scaling_group_name, desired_capacity: desired)
-          sleep interval
-        end
       end
 
       # @param [Aws::ECS::Types::TaskDefinition] task_definition
