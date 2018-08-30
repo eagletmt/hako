@@ -1,3 +1,0 @@
-<<: !include base.yml
-bar: 3
-baz: 4

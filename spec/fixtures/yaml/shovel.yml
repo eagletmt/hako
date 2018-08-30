@@ -1,5 +1,0 @@
-scheduler:
-  <<: !include scheduler/type.yml
-  desired_count: 1
-app:
-  !include app/type.yml

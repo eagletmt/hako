@@ -1,4 +1,0 @@
-scheduler:
-  !include scheduler/type.yml
-app:
-  !include app/type.yml
