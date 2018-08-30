@@ -13,12 +13,15 @@ Amazon S3 is a good storage for polling, so connecting CloudWatch Events to AWS 
 
 The example implementation of AWS Lambda can be found in [../examples/put-ecs-container-status-to-s3](../examples/put-ecs-container-status-to-s3) directory.
 
-To enable task notification with S3, you have to configure scheduler in YAML.
+To enable task notification with S3, you have to configure scheduler in definition file.
 
-```yaml
-scheduler:
-  type: ecs
-  oneshot_notification_prefix: 's3://ecs-task-notifications/task_statuses?region=ap-northeast-1'
+```js
+{
+  scheduler: {
+    type: 'ecs',
+    oneshot_notification_prefix: 's3://ecs-task-notifications/task_statuses?region=ap-northeast-1',
+  },
+}
 ```
 
 It uses ecs-task-notifications bucket in ap-northeast-1 region.
