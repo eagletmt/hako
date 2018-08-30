@@ -1,3 +1,20 @@
+# 2.3.0 (2018-08-30)
+## New features
+- Support `health_check` parameter
+- Support `shared_memory_size` parameter
+- Support `tmpfs` parameter
+- Support `docker_volume_configuration` parameter
+- Support target tracking scaling policy
+
+## Changes
+- Run containers referenced by `volumes_from` on hako oneshot
+- Rename `additional_containers` parameter to `sidecars`
+  - `additional_containers` is still supported for compatibility
+
+## Bug fixes
+- Show `--volumes-from` in dry-run output
+- Fix `--init` not being shown in dry-run output
+
 # 2.2.0 (2018-06-29)
 ## New features
 - Add support for `scheduling_strategy` on service
