@@ -130,7 +130,7 @@ RSpec.describe Hako::Schedulers::Ecs do
 
   describe '#deploy' do
     context 'when initial deployment' do
-      let(:app) { Hako::Application.new(fixture_root.join('yaml', 'ecs.yml')) }
+      let(:app) { Hako::Application.new(fixture_root.join('jsonnet', 'ecs.jsonnet')) }
       let(:task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
 
       before do
@@ -167,7 +167,7 @@ RSpec.describe Hako::Schedulers::Ecs do
     end
 
     context 'when the same service is running' do
-      let(:app) { Hako::Application.new(fixture_root.join('yaml', 'ecs.yml')) }
+      let(:app) { Hako::Application.new(fixture_root.join('jsonnet', 'ecs.jsonnet')) }
       let(:task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
 
       before do
@@ -191,7 +191,7 @@ RSpec.describe Hako::Schedulers::Ecs do
     end
 
     context 'when the running service has different desired_count' do
-      let(:app) { Hako::Application.new(fixture_root.join('yaml', 'ecs.yml')) }
+      let(:app) { Hako::Application.new(fixture_root.join('jsonnet', 'ecs.jsonnet')) }
       let(:task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
 
       before do
@@ -221,7 +221,7 @@ RSpec.describe Hako::Schedulers::Ecs do
     end
 
     context 'when ther running service has different task definition' do
-      let(:app) { Hako::Application.new(fixture_root.join('yaml', 'ecs.yml')) }
+      let(:app) { Hako::Application.new(fixture_root.join('jsonnet', 'ecs.jsonnet')) }
       let(:running_task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
       let(:updated_task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:2" }
 
@@ -256,7 +256,7 @@ RSpec.describe Hako::Schedulers::Ecs do
     end
 
     context 'with ELBv2' do
-      let(:app) { Hako::Application.new(fixture_root.join('yaml', 'ecs-elbv2.yml')) }
+      let(:app) { Hako::Application.new(fixture_root.join('jsonnet', 'ecs-elbv2.jsonnet')) }
       let(:task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
       let(:elb_v2_client) { double('Aws::ElasticLoadBalancingV2::Client') }
       let(:load_balancer_arn) { "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:loadbalancer/app/hako-#{app.id}/0123456789abcdef" }
