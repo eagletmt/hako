@@ -47,8 +47,8 @@ module Hako
     # @param [Boolean] dry_run
     # @param [Boolean] no_wait
     # @return [nil]
-    def oneshot(commands, tag:, containers:, env: {}, dry_run: false, no_wait: false)
-      containers = load_containers(tag, dry_run: dry_run, with: containers)
+    def oneshot(commands, tag:, env: {}, dry_run: false, no_wait: false)
+      containers = load_containers(tag, dry_run: dry_run)
       scripts = @app.definition.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
       volumes = @app.definition.fetch('volumes', {})
       scheduler = load_scheduler(@app.definition['scheduler'], scripts, volumes: volumes, dry_run: dry_run)
@@ -112,10 +112,9 @@ module Hako
 
     # @param [String] tag
     # @param [Boolean] dry_run
-    # @param [Array<String>, nil] with
     # @return [Hash<String, Container>]
-    def load_containers(tag, dry_run:, with: nil)
-      DefinitionLoader.new(@app, dry_run: dry_run).load(tag, with: with)
+    def load_containers(tag, dry_run:)
+      DefinitionLoader.new(@app, dry_run: dry_run).load(tag)
     end
 
     # @param [Hash] scheduler_definition

@@ -163,13 +163,12 @@ module Hako
           else
             {}
           end
-        Commander.new(Application.new(@definition_path, options)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run, no_wait: @no_wait)
+        Commander.new(Application.new(@definition_path, options)).oneshot(@argv, tag: @tag, env: @env, dry_run: @dry_run, no_wait: @no_wait)
       end
 
       def parse!(argv)
         @tag = 'latest'
         @dry_run = false
-        @containers = []
         @env = {}
         @verbose = false
         @no_wait = false
@@ -189,7 +188,6 @@ module Hako
           opts.version = VERSION
           opts.on('-t', '--tag=TAG', 'Specify tag (default: latest)') { |v| @tag = v }
           opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
-          opts.on('-c', '--container=NAME', 'Additional container name to start with the app container') { |v| @containers << v }
           opts.on('-v', '--verbose', 'Enable verbose logging') { @verbose = true }
           opts.on('--no-wait', 'Run Docker container in background and return task information depending on scheduler (experimental)') { @no_wait = true }
           opts.on('-e', '--env=NAME=VAL', 'Add environment variable') do |arg|
