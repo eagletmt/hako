@@ -6,8 +6,8 @@ require 'hako/definition_loader'
 
 RSpec.describe Hako::DefinitionLoader do
   let(:definition_loader) { described_class.new(app, dry_run: dry_run) }
-  let(:fixture_name) { 'default.yml' }
-  let(:app) { Hako::Application.new(fixture_root.join('yaml', fixture_name)) }
+  let(:fixture_name) { 'default.jsonnet' }
+  let(:app) { Hako::Application.new(fixture_root.join('jsonnet', fixture_name)) }
   let(:dry_run) { false }
 
   describe '#load' do
@@ -31,7 +31,7 @@ RSpec.describe Hako::DefinitionLoader do
     end
 
     context 'with links' do
-      let(:fixture_name) { 'default_with_links.yml' }
+      let(:fixture_name) { 'default_with_links.jsonnet' }
 
       it 'loads all containers' do
         containers = definition_loader.load('latest')
@@ -48,7 +48,7 @@ RSpec.describe Hako::DefinitionLoader do
     end
 
     context 'with volumes_from' do
-      let(:fixture_name) { 'default_with_volumes_from.yml' }
+      let(:fixture_name) { 'default_with_volumes_from.jsonnet' }
 
       it 'loads all containers' do
         containers = definition_loader.load('latest')
