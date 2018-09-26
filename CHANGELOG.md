@@ -1,7 +1,7 @@
 # 2.3.1 (2018-09-26)
 ## Changes
 - Change show-definition output from YAML to JSON
-  - The show-definition output is still persable as YAML
+  - The show-definition output is still parsable as YAML
 
 ## Bug fixes
 - Set `deployment_configuration` to nil when absent
