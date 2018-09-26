@@ -54,9 +54,13 @@ module Hako
           validation_error!('autoscaling_group_for_oneshot must be set when autoscaling_topic_for_oneshot is set')
         end
         @oneshot_notification_prefix = options.fetch('oneshot_notification_prefix', nil)
-        @deployment_configuration = {}
-        %i[maximum_percent minimum_healthy_percent].each do |key|
-          @deployment_configuration[key] = options.dig('deployment_configuration', key.to_s)
+        if options.key?('deployment_configuration')
+          @deployment_configuration = {}
+          %i[maximum_percent minimum_healthy_percent].each do |key|
+            @deployment_configuration[key] = options.fetch('deployment_configuration')[key.to_s]
+          end
+        else
+          @deployment_configuration = nil
         end
         @placement_constraints = options.fetch('placement_constraints', [])
         @placement_strategy = options.fetch('placement_strategy', [])
