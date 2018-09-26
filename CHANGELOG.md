@@ -1,3 +1,11 @@
+# 2.3.1 (2018-09-26)
+## Changes
+- Change show-definition output from YAML to JSON
+  - The show-definition output is still persable as YAML
+
+## Bug fixes
+- Set `deployment_configuration` to nil when absent
+
 # 2.3.0 (2018-08-30)
 ## New features
 - Support `health_check` parameter
