@@ -208,6 +208,7 @@ module Hako
             unless deleted
               raise Error.new("Cannot delete target group #{target_group.target_group_arn}")
             end
+
             Hako.logger.info "Deleted target group #{target_group.target_group_arn}"
           end
         end

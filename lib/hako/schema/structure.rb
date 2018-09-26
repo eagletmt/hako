@@ -11,6 +11,7 @@ module Hako
         unless object.is_a?(::Hash)
           return false
         end
+
         @members.each do |key, val_schema|
           unless val_schema.valid?(object[key])
             return false

@@ -36,6 +36,7 @@ module Hako
         if variables.empty?
           break
         end
+
         provider.ask(variables.to_a).each do |var, val|
           values[var] = val
           variables.delete(var)
@@ -69,6 +70,7 @@ module Hako
         if variables.empty?
           break
         end
+
         if provider.can_ask_keys?
           provider.ask_keys(variables.to_a).each do |var|
             variables.delete(var)
@@ -81,6 +83,7 @@ module Hako
       unless variables.empty?
         raise ExpansionError.new("Could not find embedded variables from $providers=#{@providers}: #{variables.to_a}")
       end
+
       true
     end
 
@@ -94,6 +97,7 @@ module Hako
         unless val.is_a?(String)
           raise ExpansionError.new("#{key} must be a String but got #{val.class}: #{val.inspect}")
         end
+
         parsed_env[key] = parse(val)
       end
       parsed_env
@@ -116,6 +120,7 @@ module Hako
         else
           tokens << Variable.new(var)
         end
+
         pos = s.pos
       end
       unless s.rest.empty?

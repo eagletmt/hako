@@ -362,6 +362,7 @@ module Hako
         if @dry_run
           return DEFAULT_FRONT_PORT
         end
+
         service = describe_service
         if service
           find_front_port(service)
@@ -416,6 +417,7 @@ module Hako
           # Initial deployment
           return true
         end
+
         actual_volume_definitions = {}
         actual_definition.volumes.each do |v|
           actual_volume_definitions[v.name] = v
@@ -632,6 +634,7 @@ module Hako
         if result.tasks.empty?
           raise NoTasksStarted.new('No tasks started')
         end
+
         result.tasks[0]
       rescue Aws::ECS::Errors::InvalidParameterException => e
         if e.message == 'No Container Instances were found in your cluster.' && on_no_tasks_started(task_definition)
@@ -878,6 +881,7 @@ module Hako
             if e.id == latest_event_id
               break
             end
+
             Hako.logger.info "#{e.created_at}: #{e.message}"
             task_id = extract_task_id(e.message)
             if task_id && e.message.include?(' has started ')
@@ -1118,6 +1122,7 @@ module Hako
           source_volume = mount_point.fetch(:source_volume)
           v = volumes_definition.find { |d| d[:name] == source_volume }
           raise "Could not find volume #{source_volume}" unless v
+
           source = v.dig(:host, :source_path) || source_volume
           cmd << '--volume' << "#{source}:#{mount_point.fetch(:container_path)}#{mount_point[:read_only] ? ':ro' : ''}"
         end

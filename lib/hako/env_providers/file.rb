@@ -57,6 +57,7 @@ module Hako
               # line comment
               next
             end
+
             key, val = line.split('=', 2)
             if val
               block.call(key, val)

@@ -80,10 +80,12 @@ module Hako
                 if service.load_balancers.empty? || service.load_balancers[0].target_group_arn.nil?
                   raise Error.new('Target group must be attached to the ECS service for predefined metric type ALBRequestCountPerTarget')
                 end
+
                 resource_label = target_group_resource_label
                 unless resource_label.start_with?('app/')
                   raise Error.new("Load balancer type must be 'application' for predefined metric type ALBRequestCountPerTarget")
                 end
+
                 predefined_metric_specification[:resource_label] = resource_label
               end
               policy_params[:target_tracking_scaling_policy_configuration] = {
