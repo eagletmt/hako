@@ -81,6 +81,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         health_check: nil,
         ulimits: nil,
         extra_hosts: nil,
+        readonly_root_filesystem: nil,
       }],
       volumes: [],
       requires_compatibilities: nil,

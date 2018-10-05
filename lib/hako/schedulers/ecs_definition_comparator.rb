@@ -39,6 +39,7 @@ module Hako
           struct.member(:ulimits, Schema::Nullable.new(ulimits_schema))
           struct.member(:extra_hosts, Schema::Nullable.new(extra_hosts_schema))
           struct.member(:linux_parameters, Schema::Nullable.new(linux_parameters_schema))
+          struct.member(:readonly_root_filesystem, Schema::Nullable.new(Schema::Boolean.new))
         end
       end
 

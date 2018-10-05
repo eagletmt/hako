@@ -29,6 +29,7 @@ module Hako
       command
       user
       privileged
+      readonly_root_filesystem
     ].each do |name|
       define_method(name) do
         @definition[name]
