@@ -30,6 +30,7 @@ module Hako
       user
       privileged
       readonly_root_filesystem
+      docker_security_options
     ].each do |name|
       define_method(name) do
         @definition[name]
@@ -212,6 +213,7 @@ module Hako
         'port_mappings' => [],
         'volumes_from' => [],
         'privileged' => false,
+        'docker_security_options' => [],
       }
     end
 

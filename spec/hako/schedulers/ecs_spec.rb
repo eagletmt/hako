@@ -82,6 +82,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         ulimits: nil,
         extra_hosts: nil,
         readonly_root_filesystem: nil,
+        docker_security_options: [],
       }],
       volumes: [],
       requires_compatibilities: nil,
@@ -115,6 +116,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       mount_points: [],
       privileged: false,
       volumes_from: [],
+      docker_security_options: [],
     )
   end
 

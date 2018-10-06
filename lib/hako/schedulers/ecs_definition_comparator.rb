@@ -40,6 +40,7 @@ module Hako
           struct.member(:extra_hosts, Schema::Nullable.new(extra_hosts_schema))
           struct.member(:linux_parameters, Schema::Nullable.new(linux_parameters_schema))
           struct.member(:readonly_root_filesystem, Schema::Nullable.new(Schema::Boolean.new))
+          struct.member(:docker_security_options, Schema::UnorderedArray.new(Schema::String.new))
         end
       end
 
