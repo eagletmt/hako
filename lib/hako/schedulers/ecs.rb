@@ -600,6 +600,7 @@ module Hako
           health_check: container.health_check,
           ulimits: container.ulimits,
           extra_hosts: container.extra_hosts,
+          readonly_root_filesystem: container.readonly_root_filesystem,
         }
       end
 
@@ -1174,6 +1175,9 @@ module Hako
         end
         if definition[:user]
           cmd << '--user' << definition[:user]
+        end
+        if definition[:readonly_root_filesystem]
+          cmd << '--read-only'
         end
 
         cmd << "\\\n  "
