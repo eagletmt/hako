@@ -213,7 +213,6 @@ module Hako
         'port_mappings' => [],
         'volumes_from' => [],
         'privileged' => false,
-        'docker_security_options' => [],
       }
     end
 

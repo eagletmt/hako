@@ -16,7 +16,6 @@ RSpec.describe Hako::Schedulers::EcsDefinitionComparator do
         mount_points: [],
         port_mappings: [],
         volumes_from: [],
-        docker_security_options: [],
       }
     end
 
