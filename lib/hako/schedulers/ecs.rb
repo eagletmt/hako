@@ -1180,7 +1180,7 @@ module Hako
         if definition[:readonly_root_filesystem]
           cmd << '--read-only'
         end
-        definition.fetch(:docker_security_options).each do |docker_security_option|
+        (definition[:docker_security_options] || []).each do |docker_security_option|
           cmd << '--security-opt' << docker_security_option
         end
 
