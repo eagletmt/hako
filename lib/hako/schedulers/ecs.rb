@@ -601,6 +601,7 @@ module Hako
           ulimits: container.ulimits,
           extra_hosts: container.extra_hosts,
           readonly_root_filesystem: container.readonly_root_filesystem,
+          docker_security_options: container.docker_security_options,
         }
       end
 
@@ -1178,6 +1179,9 @@ module Hako
         end
         if definition[:readonly_root_filesystem]
           cmd << '--read-only'
+        end
+        (definition[:docker_security_options] || []).each do |docker_security_option|
+          cmd << '--security-opt' << docker_security_option
         end
 
         cmd << "\\\n  "
