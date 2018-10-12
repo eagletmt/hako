@@ -289,10 +289,14 @@ module Hako
         service = describe_service
         if service
           if @dry_run
-            Hako.logger.info "ecs_client.update_service(cluster: #{service.cluster_arn}, service: #{service.service_arn}, desired_count: 0)"
+            unless service.scheduling_strategy == 'DAEMON'
+              Hako.logger.info "ecs_client.update_service(cluster: #{service.cluster_arn}, service: #{service.service_arn}, desired_count: 0)"
+            end
             Hako.logger.info "ecs_client.delete_service(cluster: #{service.cluster_arn}, service: #{service.service_arn})"
           else
-            ecs_client.update_service(cluster: service.cluster_arn, service: service.service_arn, desired_count: 0)
+            unless service.scheduling_strategy == 'DAEMON'
+              ecs_client.update_service(cluster: service.cluster_arn, service: service.service_arn, desired_count: 0)
+            end
             ecs_client.delete_service(cluster: service.cluster_arn, service: service.service_arn)
             Hako.logger.info "#{service.service_arn} is deleted"
           end
