@@ -108,6 +108,7 @@ module Hako
             load_balancer_arn: load_balancer.load_balancer_arn,
             protocol: l.fetch('protocol'),
             port: l.fetch('port'),
+            ssl_policy: l['ssl_policy'],
             default_actions: [{ type: 'forward', target_group_arn: target_group.target_group_arn }],
           }
           certificate_arn = l.fetch('certificate_arn', nil)

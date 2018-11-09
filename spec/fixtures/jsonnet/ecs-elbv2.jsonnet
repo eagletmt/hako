@@ -16,6 +16,7 @@
         {
           port: 443,
           protocol: 'HTTPS',
+          ssl_policy: 'ELBSecurityPolicy-2016-08',
           certificate_arn: 'arn:aws:acm:ap-northeast-1:012345678901:certificate/01234567-89ab-cdef-0123-456789abcdef',
         },
       ],
