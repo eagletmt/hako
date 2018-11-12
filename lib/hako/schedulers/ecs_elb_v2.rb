@@ -108,6 +108,7 @@ module Hako
             load_balancer_arn: load_balancer.load_balancer_arn,
             protocol: l.fetch('protocol'),
             port: l.fetch('port'),
+            ssl_policy: l['ssl_policy'],
             default_actions: [{ type: 'forward', target_group_arn: target_group.target_group_arn }],
           }
           certificate_arn = l.fetch('certificate_arn', nil)
@@ -138,6 +139,22 @@ module Hako
           else
             Hako.logger.info("Updating ELBv2 subnets to #{subnets}")
             elb_client.set_subnets(load_balancer_arn: load_balancer.load_balancer_arn, subnets: subnets)
+          end
+        end
+
+        new_listeners = @elb_v2_config.fetch('listeners')
+        if load_balancer
+          current_listeners = elb_client.describe_listeners(load_balancer_arn: load_balancer.load_balancer_arn).listeners
+          new_listeners.each do |new_listener|
+            current_listener = current_listeners.find { |l| l.port == new_listener['port'] }
+            if current_listener && new_listener['ssl_policy'] && new_listener['ssl_policy'] != current_listener.ssl_policy
+              if @dry_run
+                Hako.logger.info("elb_client.modify_listener(listener_arn: #{current_listener.listener_arn}, ssl_policy: #{new_listener['ssl_policy']}) (dry-run)")
+              else
+                Hako.logger.info("Updating ELBv2 listener #{new_listener['port']} ssl_policy to #{new_listener['ssl_policy']}")
+                elb_client.modify_listener(listener_arn: current_listener.listener_arn, ssl_policy: new_listener['ssl_policy'])
+              end
+            end
           end
         end
 

@@ -312,6 +312,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           load_balancer_arn: load_balancer_arn,
           protocol: 'HTTP',
           port: 80,
+          ssl_policy: nil,
           default_actions: [{ type: 'forward', target_group_arn: target_group_arn }],
         ).and_return(Aws::ElasticLoadBalancingV2::Types::CreateListenerOutput.new(
           listeners: [Aws::ElasticLoadBalancingV2::Types::Listener.new(listener_arn: "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:listener/app/#{app.id}/0123456789abcdef/0123456789abcdef")],
@@ -320,6 +321,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           load_balancer_arn: load_balancer_arn,
           protocol: 'HTTPS',
           port: 443,
+          ssl_policy: 'ELBSecurityPolicy-2016-08',
           default_actions: [{ type: 'forward', target_group_arn: target_group_arn }],
           certificates: [{ certificate_arn: 'arn:aws:acm:ap-northeast-1:012345678901:certificate/01234567-89ab-cdef-0123-456789abcdef' }],
         ).and_return(Aws::ElasticLoadBalancingV2::Types::CreateListenerOutput.new(
