@@ -1,3 +1,12 @@
+# 2.4.0 (2018-11-13)
+## New features
+- Support `readonly_root_filesystem` parameter
+- Support `docker_security_options` parameter
+- Support `ssl_policy` option in `elb_v2`
+
+## Bug fixes
+- Skip updating `desired_count` before removing service using daemon scheduling strategy
+
 # 2.3.1 (2018-09-26)
 ## Changes
 - Change show-definition output from YAML to JSON
