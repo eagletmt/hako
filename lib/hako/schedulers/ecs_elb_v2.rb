@@ -38,7 +38,7 @@ module Hako
 
       # @return [Aws::ElasticLoadBalancingV2::Types::TargetGroup]
       def describe_target_group
-        elb_client.describe_target_groups(names: [elb_name]).target_groups[0]
+        elb_client.describe_target_groups(names: [target_group_name]).target_groups[0]
       rescue Aws::ElasticLoadBalancingV2::Errors::TargetGroupNotFound
         nil
       end
@@ -82,7 +82,7 @@ module Hako
           elb_type = @elb_v2_config.fetch('type', nil)
           target_group = if elb_type == 'network'
                            elb_client.create_target_group(
-                             name: elb_name,
+                             name: target_group_name,
                              port: 80,
                              protocol: 'TCP',
                              vpc_id: @elb_v2_config.fetch('vpc_id'),
@@ -90,7 +90,7 @@ module Hako
                            ).target_groups[0]
                          else
                            elb_client.create_target_group(
-                             name: elb_name,
+                             name: target_group_name,
                              port: 80,
                              protocol: 'HTTP',
                              vpc_id: @elb_v2_config.fetch('vpc_id'),
