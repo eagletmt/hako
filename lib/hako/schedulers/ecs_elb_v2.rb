@@ -236,6 +236,11 @@ module Hako
         @elb_v2_config.fetch('elb_name', "hako-#{@app_id}")
       end
 
+      # @return [String]
+      def target_group_name
+        @elb_v2_config.fetch('target_group_name', "hako-#{@app_id}")
+      end
+
       # @return [Hash]
       def load_balancer_params_for_service
         {
