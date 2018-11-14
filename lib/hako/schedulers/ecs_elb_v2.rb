@@ -233,7 +233,7 @@ module Hako
 
       # @return [String]
       def name
-        "hako-#{@app_id}"
+        @elb_v2_config.fetch('elb_name', "hako-#{@app_id}")
       end
 
       # @return [Hash]
