@@ -31,14 +31,14 @@ module Hako
 
       # @return [Aws::ElasticLoadBalancingV2::Types::LoadBalancer]
       def describe_load_balancer
-        elb_client.describe_load_balancers(names: [name]).load_balancers[0]
+        elb_client.describe_load_balancers(names: [elb_name]).load_balancers[0]
       rescue Aws::ElasticLoadBalancingV2::Errors::LoadBalancerNotFound
         nil
       end
 
       # @return [Aws::ElasticLoadBalancingV2::Types::TargetGroup]
       def describe_target_group
-        elb_client.describe_target_groups(names: [name]).target_groups[0]
+        elb_client.describe_target_groups(names: [elb_name]).target_groups[0]
       rescue Aws::ElasticLoadBalancingV2::Errors::TargetGroupNotFound
         nil
       end
@@ -57,7 +57,7 @@ module Hako
           elb_type = @elb_v2_config.fetch('type', nil)
           if elb_type == 'network'
             load_balancer = elb_client.create_load_balancer(
-              name: name,
+              name: elb_name,
               subnets: @elb_v2_config.fetch('subnets'),
               scheme: @elb_v2_config.fetch('scheme', nil),
               type: 'network',
@@ -66,7 +66,7 @@ module Hako
             Hako.logger.info "Created ELBv2(NLB) #{load_balancer.dns_name}"
           else
             load_balancer = elb_client.create_load_balancer(
-              name: name,
+              name: elb_name,
               subnets: @elb_v2_config.fetch('subnets'),
               security_groups: @elb_v2_config.fetch('security_groups'),
               scheme: @elb_v2_config.fetch('scheme', nil),
@@ -82,7 +82,7 @@ module Hako
           elb_type = @elb_v2_config.fetch('type', nil)
           target_group = if elb_type == 'network'
                            elb_client.create_target_group(
-                             name: name,
+                             name: elb_name,
                              port: 80,
                              protocol: 'TCP',
                              vpc_id: @elb_v2_config.fetch('vpc_id'),
@@ -90,7 +90,7 @@ module Hako
                            ).target_groups[0]
                          else
                            elb_client.create_target_group(
-                             name: name,
+                             name: elb_name,
                              port: 80,
                              protocol: 'HTTP',
                              vpc_id: @elb_v2_config.fetch('vpc_id'),
@@ -203,7 +203,7 @@ module Hako
             Hako.logger.info "Deleted ELBv2 #{load_balancer.load_balancer_arn}"
           end
         else
-          Hako.logger.info "ELBv2 #{name} doesn't exist"
+          Hako.logger.info "ELBv2 #{elb_name} doesn't exist"
         end
 
         target_group = describe_target_group
@@ -232,7 +232,7 @@ module Hako
       end
 
       # @return [String]
-      def name
+      def elb_name
         @elb_v2_config.fetch('elb_name', "hako-#{@app_id}")
       end
 
