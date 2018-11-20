@@ -238,7 +238,7 @@ module Hako
 
       # @return [String]
       def target_group_name
-        @elb_v2_config.fetch('target_group_name', "hako-#{@app_id}")
+        @elb_v2_config.fetch('target_group_name', elb_name)
       end
 
       # @return [Hash]
