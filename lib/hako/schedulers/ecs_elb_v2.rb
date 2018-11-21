@@ -233,7 +233,7 @@ module Hako
 
       # @return [String]
       def elb_name
-        @elb_v2_config.fetch('elb_name', "hako-#{@app_id}")
+        @elb_v2_config.fetch('load_balancer_name', "hako-#{@app_id}")
       end
 
       # @return [String]
