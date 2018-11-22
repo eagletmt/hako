@@ -99,7 +99,7 @@ module Hako
 
       # @return [String]
       def name
-        "hako-#{@app_id}"
+        @elb_config.fetch('load_balancer_name', "hako-#{@app_id}")
       end
 
       # @return [Hash]
