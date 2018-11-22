@@ -155,7 +155,7 @@ module Hako
         task_definition = ecs_client.describe_task_definition(task_definition: current_service.task_definition).task_definition
         current_definition = "#{task_definition.family}:#{task_definition.revision}"
         target_definition = find_rollback_target(task_definition)
-        Hako.logger.info "Current task defintion is #{current_definition}. Rolling back to #{target_definition}"
+        Hako.logger.info "Current task definition is #{current_definition}. Rolling back to #{target_definition}"
         call_rollback_started(task_definition, target_definition)
 
         if @dry_run
