@@ -593,6 +593,7 @@ module Hako
           port_mappings: container.port_mappings,
           essential: true,
           environment: environment,
+          secrets: container.secrets,
           docker_labels: container.docker_labels,
           mount_points: container.mount_points,
           command: container.command,
@@ -1195,6 +1196,14 @@ module Hako
           # additional_env (given in command line) has priority over env (declared in definition file)
           unless additional_env.key?(name)
             cmd << '--env' << "#{name}=#{value}"
+            cmd << "\\\n  "
+          end
+        end
+        (definition[:secrets] || []).each do |secret|
+          name = secret.fetch(:name)
+          # additional_env (given in command line) has priority over secrets (declared in definition file)
+          unless additional_env.key?(name)
+            cmd << '--env' << "#{name}=secret:#{secret.fetch(:value_from)}"
             cmd << "\\\n  "
           end
         end

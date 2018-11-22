@@ -1,6 +1,3 @@
-local fileProvider = std.native('provide.file');
-local provide(name) = fileProvider(std.toString({ path: 'hello.env' }), name);
-
 {
   scheduler: {
     type: 'ecs',
@@ -48,8 +45,11 @@ local provide(name) = fileProvider(std.toString({ path: 'hello.env' }), name);
     cpu: 256,
     env: {
       PORT: '3000',
-      MESSAGE: std.format('%s-san', provide('username')),
     },
+    secrets: [{
+      name: 'MESSAGE',
+      value_from: 'arn:aws:ssm:ap-northeast-1:012345678901:parameter/hako/hello-lb-v2/secret-message',
+    }],
   },
   sidecars: {
     front: {

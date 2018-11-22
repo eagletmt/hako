@@ -46,6 +46,18 @@ module Hako
       @expanded_env ||= expand_env(@definition.fetch('env'))
     end
 
+    # @return [Array<Hash>, nil]
+    def secrets
+      if @definition['secrets']
+        @definition['secrets'].map do |secret|
+          {
+            name: secret.fetch('name'),
+            value_from: secret.fetch('value_from'),
+          }
+        end
+      end
+    end
+
     # @return [Array<Hash>]
     def port_mappings
       @definition['port_mappings'].map do |port_mapping|

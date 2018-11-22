@@ -70,6 +70,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         port_mappings: [],
         essential: true,
         environment: [],
+        secrets: nil,
         docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },
         mount_points: [],
         command: nil,

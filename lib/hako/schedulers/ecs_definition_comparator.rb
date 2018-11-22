@@ -28,6 +28,7 @@ module Hako
           struct.member(:links, Schema::UnorderedArray.new(Schema::String.new))
           struct.member(:port_mappings, Schema::UnorderedArray.new(port_mapping_schema))
           struct.member(:environment, Schema::UnorderedArray.new(environment_schema))
+          struct.member(:secrets, Schema::Nullable.new(Schema::UnorderedArray.new(secrets_schema)))
           struct.member(:docker_labels, Schema::Table.new(Schema::String.new, Schema::String.new))
           struct.member(:mount_points, Schema::UnorderedArray.new(mount_point_schema))
           struct.member(:command, Schema::Nullable.new(Schema::OrderedArray.new(Schema::String.new)))
@@ -150,6 +151,13 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:hostname, Schema::String.new)
           struct.member(:ip_address, Schema::String.new)
+        end
+      end
+
+      def secrets_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:name, Schema::String.new)
+          struct.member(:value_from, Schema::String.new)
         end
       end
     end
