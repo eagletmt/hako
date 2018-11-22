@@ -1,3 +1,8 @@
+# 2.5.0 (2018-11-22)
+## New features
+- Add `load_balancer_name` and `target_group_name` option to skip creating ELB
+- Support ECS secrets
+
 # 2.4.0 (2018-11-13)
 ## New features
 - Support `readonly_root_filesystem` parameter
