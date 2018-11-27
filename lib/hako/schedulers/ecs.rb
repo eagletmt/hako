@@ -1234,6 +1234,13 @@ module Hako
       def check_secrets(container_definition)
         parameter_names = (container_definition[:secrets] || []).map { |secret| secret.fetch(:value_from) }
         invalid_parameter_names = parameter_names.each_slice(10).flat_map do |names|
+          names = names.map do |name|
+            if name.start_with?('arn:')
+              name.slice(%r{:parameter(/.+)\z}, 1)
+            else
+              name
+            end
+          end
           ssm_client.get_parameters(names: names).invalid_parameters
         end
         unless invalid_parameter_names.empty?
