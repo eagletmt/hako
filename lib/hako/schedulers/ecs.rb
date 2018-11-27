@@ -5,6 +5,7 @@ require 'aws-sdk-ec2'
 require 'aws-sdk-ecs'
 require 'aws-sdk-s3'
 require 'aws-sdk-sns'
+require 'aws-sdk-ssm'
 require 'hako'
 require 'hako/error'
 require 'hako/scheduler'
@@ -104,6 +105,7 @@ module Hako
           end
           definitions.each do |d|
             print_definition_in_cli_format(d)
+            check_secrets(d)
           end
           if @autoscaling
             @autoscaling.apply(Aws::ECS::Types::Service.new(cluster_arn: @cluster, service_name: @app_id))
@@ -192,6 +194,7 @@ module Hako
               d[:command] = commands
             end
             print_definition_in_cli_format(d, additional_env: env)
+            check_secrets(d)
           end
           0
         else
@@ -335,6 +338,11 @@ module Hako
       # @return [Aws::EC2::Client]
       def ec2_client
         @ec2_client ||= Aws::EC2::Client.new(region: @region)
+      end
+
+      # @return [Aws::SSM::Client]
+      def ssm_client
+        @ssm_client ||= Aws::SSM::Client.new(region: @region)
       end
 
       # @return [EcsElb, EcsElbV2]
@@ -1218,6 +1226,20 @@ module Hako
           cmd += definition[:command]
         end
         puts cmd.join(' ')
+        nil
+      end
+
+      # @param [Hash] container_definition
+      # @return [nil]
+      def check_secrets(container_definition)
+        parameter_names = (container_definition[:secrets] || []).map { |secret| secret.fetch(:value_from) }
+        invalid_parameter_names = parameter_names.each_slice(10).flat_map do |names|
+          ssm_client.get_parameters(names: names).invalid_parameters
+        end
+        unless invalid_parameter_names.empty?
+          raise Error.new("Invalid parameters for secrets: #{invalid_parameter_names}")
+        end
+
         nil
       end
 
