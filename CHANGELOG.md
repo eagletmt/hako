@@ -1,3 +1,7 @@
+# 2.5.1 (2018-11-29)
+## Bug fixes
+- Check secrets existence in dry-run mode
+
 # 2.5.0 (2018-11-22)
 ## New features
 - Add `load_balancer_name` and `target_group_name` option to skip creating ELB
