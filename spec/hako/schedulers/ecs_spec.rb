@@ -330,6 +330,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         )).once
         expect(ecs_client).to receive(:create_service).with(create_service_params.merge(
           task_definition: task_definition_arn,
+          health_check_grace_period_seconds: 0,
           load_balancers: [{
             target_group_arn: target_group_arn,
             container_name: 'front',
@@ -341,7 +342,10 @@ RSpec.describe Hako::Schedulers::Ecs do
             placement_strategy: [],
           ),
         )).once
-        expect(ecs_client).to receive(:update_service).with(update_service_params.merge(task_definition: task_definition_arn)).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
+        expect(ecs_client).to receive(:update_service).with(update_service_params.merge(
+          task_definition: task_definition_arn,
+          health_check_grace_period_seconds: 0,
+        )).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
           service: Aws::ECS::Types::Service.new(
             cluster_arn: cluster_arn,
             service_arn: service_arn,
