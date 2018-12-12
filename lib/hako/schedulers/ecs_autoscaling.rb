@@ -115,24 +115,6 @@ module Hako
 
       # @param [Aws::ECS::Types::Service] service
       # @return [nil]
-      def remove(service)
-        resource_id = service_resource_id(service)
-        service_namespace = 'ecs'
-        scalable_dimension = 'ecs:service:DesiredCount'
-
-        Hako.logger.info("Deregister scalable target #{resource_id} and its policies")
-        unless @dry_run
-          begin
-            autoscaling_client.deregister_scalable_target(service_namespace: service_namespace, resource_id: resource_id, scalable_dimension: scalable_dimension)
-          rescue Aws::ApplicationAutoScaling::Errors::ObjectNotFoundException => e
-            Hako.logger.warn(e)
-          end
-        end
-        nil
-      end
-
-      # @param [Aws::ECS::Types::Service] service
-      # @return [nil]
       def status(service)
         resource_id = service_resource_id(service)
         service_namespace = 'ecs'
