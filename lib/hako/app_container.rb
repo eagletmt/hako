@@ -6,7 +6,7 @@ module Hako
   class AppContainer < Container
     # @return [String]
     def image_tag
-      "#{@definition['image']}:#{@definition['tag']}"
+      "#{@definition['image']}:#{@definition.fetch('tag', 'latest')}"
     end
   end
 end

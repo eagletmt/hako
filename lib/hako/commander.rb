@@ -15,10 +15,10 @@ module Hako
     end
 
     # @param [Boolean] force
-    # @param [String] tag
+    # @param [String, nil] tag
     # @param [Boolean] dry_run
     # @return [nil]
-    def deploy(force: false, tag: 'latest', dry_run: false, timeout:)
+    def deploy(force: false, tag:, dry_run: false, timeout:)
       containers = load_containers(tag, dry_run: dry_run)
       scripts = @app.definition.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
       volumes = @app.definition.fetch('volumes', {})
@@ -42,7 +42,7 @@ module Hako
     end
 
     # @param [Array<String>] commands
-    # @param [String] tag
+    # @param [String, nil] tag
     # @param [Hash<String, String>] env
     # @param [Boolean] dry_run
     # @param [Boolean] no_wait
@@ -110,12 +110,12 @@ module Hako
       exit_code
     end
 
-    # @param [String] tag
+    # @param [String, nil] tag
     # @param [Boolean] dry_run
     # @param [Array<String>, nil] with
     # @return [Hash<String, Container>]
     def load_containers(tag, dry_run:, with: nil)
-      DefinitionLoader.new(@app, dry_run: dry_run).load(tag, with: with)
+      DefinitionLoader.new(@app, dry_run: dry_run).load(tag: tag, with: with)
     end
 
     # @param [Hash] scheduler_definition
