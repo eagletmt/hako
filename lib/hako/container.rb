@@ -26,6 +26,7 @@ module Hako
       memory
       memory_reservation
       links
+      essential
       command
       user
       privileged
@@ -221,6 +222,7 @@ module Hako
         'env' => {},
         'docker_labels' => {},
         'links' => [],
+        'essential' => true,
         'mount_points' => [],
         'port_mappings' => [],
         'volumes_from' => [],
