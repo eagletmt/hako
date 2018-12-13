@@ -1,3 +1,12 @@
+# 2.6.0 (2018-12-13)
+## New features
+- Support `essential` parameter for each container
+  - The default value remains `true`
+
+## Bug fixes
+- Stop trying to deregister non-existent scalable target on `hako remove`
+- Update service when `health_check_grace_period_seconds` changes
+
 # 2.5.1 (2018-11-29)
 ## Bug fixes
 - Check secrets existence in dry-run mode
