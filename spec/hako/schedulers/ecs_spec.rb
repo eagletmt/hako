@@ -111,6 +111,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       cpu: 32,
       memory: 64,
       links: [],
+      essential: true,
       port_mappings: [],
       environment: [],
       docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },

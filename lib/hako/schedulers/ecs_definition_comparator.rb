@@ -26,6 +26,7 @@ module Hako
           struct.member(:memory, Schema::Nullable.new(Schema::Integer.new))
           struct.member(:memory_reservation, Schema::Nullable.new(Schema::Integer.new))
           struct.member(:links, Schema::UnorderedArray.new(Schema::String.new))
+          struct.member(:essential, Schema::Boolean.new)
           struct.member(:port_mappings, Schema::UnorderedArray.new(port_mapping_schema))
           struct.member(:environment, Schema::UnorderedArray.new(environment_schema))
           struct.member(:secrets, Schema::Nullable.new(Schema::UnorderedArray.new(secrets_schema)))

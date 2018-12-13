@@ -598,7 +598,7 @@ module Hako
           memory_reservation: container.memory_reservation,
           links: container.links,
           port_mappings: container.port_mappings,
-          essential: true,
+          essential: container.essential,
           environment: environment,
           secrets: container.secrets,
           docker_labels: container.docker_labels,
