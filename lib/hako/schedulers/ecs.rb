@@ -739,7 +739,9 @@ module Hako
         container_instances.any? do |ci|
           cpu = ci.remaining_resources.find { |r| r.name == 'CPU' }.integer_value
           memory = ci.remaining_resources.find { |r| r.name == 'MEMORY' }.integer_value
-          required_cpu < cpu && required_memory < memory
+          # https://docs.aws.amazon.com/sdk-for-ruby/v3/api/Aws/ECS/Types/ContainerInstance.html#status-instance_method
+          status = ci.status # ACTIVE or INACTIVE or DRAINING
+          required_cpu < cpu && required_memory < memory && status != 'DRAINING' # exclude instances in DRAINING state
         end
       end
     end
