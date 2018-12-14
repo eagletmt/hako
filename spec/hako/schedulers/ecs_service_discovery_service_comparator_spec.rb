@@ -15,11 +15,6 @@ RSpec.describe Hako::Schedulers::EcsServiceDiscoveryServiceComparator do
           type: 'A',
         ],
       },
-      health_check_config: {
-        failure_threshold: 1,
-        resource_path: '/bar',
-        type: 'HTTP',
-      },
     }
   end
   let(:actual_service) do
@@ -32,11 +27,6 @@ RSpec.describe Hako::Schedulers::EcsServiceDiscoveryServiceComparator do
             type: 'A',
           ),
         ],
-      ),
-      health_check_config: Aws::ServiceDiscovery::Types::HealthCheckConfig.new(
-        failure_threshold: 1,
-        resource_path: '/bar',
-        type: 'HTTP',
       ),
     )
   end

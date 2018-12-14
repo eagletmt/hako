@@ -23,7 +23,6 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:description, Schema::Nullable.new(Schema::String.new))
           struct.member(:dns_config, dns_config_schema)
-          struct.member(:health_check_config, Schema::Nullable.new(health_check_config_schema))
         end
       end
 
@@ -37,13 +36,6 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:ttl, Schema::Integer.new)
           struct.member(:type, Schema::String.new)
-        end
-      end
-
-      def health_check_config_schema
-        Schema::Structure.new.tap do |struct|
-          struct.member(:failure_threshold, Schema::Nullable.new(Schema::Integer.new))
-          struct.member(:resource_path, Schema::Nullable.new(Schema::String.new))
         end
       end
     end

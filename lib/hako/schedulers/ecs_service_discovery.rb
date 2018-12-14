@@ -21,6 +21,13 @@ module Hako
         @config.map do |service_discovery|
           service = service_discovery.fetch('service')
           namespace_id = service.fetch('namespace_id')
+          namespace = get_namespace(namespace_id)
+          if !namespace
+            raise "Service discovery namespace #{namespace_id} not found"
+          elsif namespace.type != 'DNS_PRIVATE'
+            raise "ECS only supports registering a service into a private DNS namespace: #{namespace.name} (#{namespace_id})"
+          end
+
           service_name = service.fetch('name')
           current_service = find_service(namespace_id, service_name)
           if !current_service
@@ -51,7 +58,7 @@ module Hako
           service = get_service(service_id)
           next unless service
 
-          namespace = service_discovery_client.get_namespace(id: service.namespace_id).namespace
+          namespace = get_namespace(service.namespace_id)
           instances = service_discovery_client.list_instances(service_id: service.id).flat_map(&:instances)
           puts "  #{service.name}.#{namespace.name} instance_count=#{instances.size}"
           instances.each do |instance|
@@ -160,13 +167,6 @@ module Hako
             ttl: dns_record.fetch('ttl'),
           }
         end
-        if (health_check_config = service['health_check_config'])
-          params[:health_check_config] = {
-            type: health_check_config['type'],
-            resource_path: health_check_config['resource_path'],
-            failure_threshold: health_check_config['failure_threshold'],
-          }
-        end
         if (health_check_custom_config = service['health_check_custom_config'])
           params[:health_check_custom_config] = {
             failure_threshold: health_check_custom_config['failure_threshold'],
@@ -209,13 +209,6 @@ module Hako
             ttl: dns_record.fetch('ttl'),
           }
         end
-        if (health_check_config = service['health_check_config'])
-          params[:health_check_config] = {
-            type: health_check_config['type'],
-            resource_path: health_check_config['resource_path'],
-            failure_threshold: health_check_config['failure_threshold'],
-          }
-        end
         params
       end
 
@@ -238,6 +231,14 @@ module Hako
         nil
       end
 
+      # @param [String] namespace_id
+      # @return [Aws::ServiceDiscovery::Types::Namespace, nil]
+      def get_namespace(namespace_id)
+        service_discovery_client.get_namespace(id: namespace_id).namespace
+      rescue Aws::ServiceDiscovery::Errors::NamespaceNotFound
+        nil
+      end
+
       # @param [Hash] expected_service
       # @param [Aws::ServiceDiscovery::Types::ServiceSummary] actual_service
       # @return [void]
@@ -245,9 +246,6 @@ module Hako
         expected_service = create_service_params(expected_service)
         if expected_service.dig(:dns_config, :routing_policy) != actual_service.dns_config.routing_policy
           Hako.logger.warn("Ignoring updated service_discovery.dns_config.routing_policy in the configuration, because AWS doesn't allow updating it for now.")
-        end
-        if expected_service.dig(:health_check_config, :type) != actual_service.health_check_config&.type
-          Hako.logger.warn("Ignoring updated service_discovery.health_check_config.type in the configuration, because AWS doesn't allow updating it for now.")
         end
         if expected_service[:health_check_custom_config] != actual_service.health_check_custom_config&.to_h
           Hako.logger.warn("Ignoring updated service_discovery.health_check_custom_config in the configuration, because AWS doesn't allow updating it for now.")
