@@ -102,6 +102,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       placement_constraints: [],
       placement_strategy: [],
       deployments: [Aws::ECS::Types::Deployment.new(status: 'PRIMARY', desired_count: 1, running_count: 1)],
+      service_registries: [],
     )
   end
   let(:dummy_container_definition) do
@@ -146,6 +147,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           service: Aws::ECS::Types::Service.new(
             placement_constraints: [],
             placement_strategy: [],
+            service_registries: [],
           ),
         )).once
         expect(ecs_client).to receive(:update_service).with(update_service_params.merge(task_definition: task_definition_arn)).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
@@ -341,6 +343,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           service: Aws::ECS::Types::Service.new(
             placement_constraints: [],
             placement_strategy: [],
+            service_registries: [],
           ),
         )).once
         expect(ecs_client).to receive(:update_service).with(update_service_params.merge(
