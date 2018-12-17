@@ -1,3 +1,11 @@
+# 2.6.1 (2018-12-17)
+## Bug fixes
+- Avoid updating service when `platform_version` is not specified
+- Keep essential parameter in `hako oneshot`
+
+## Improvements
+- Show more information about tasks in `hako status`
+
 # 2.6.0 (2018-12-13)
 ## New features
 - Support `essential` parameter for each container
