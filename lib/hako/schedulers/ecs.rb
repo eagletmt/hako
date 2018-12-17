@@ -183,9 +183,6 @@ module Hako
       # @return [Integer] Returns exit code
       def oneshot(containers, commands, env, no_wait: false)
         definitions = create_definitions(containers)
-        definitions.each do |definition|
-          definition.delete(:essential)
-        end
 
         if @dry_run
           volumes_definition.each do |d|
