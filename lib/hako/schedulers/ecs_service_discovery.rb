@@ -47,7 +47,7 @@ module Hako
                 Hako.logger.info("Updated service discovery service #{service_name} (#{current_service.id})")
               end
             end
-            warn_unallowed_service_change(service, current_service)
+            warn_disallowed_service_change(service, current_service)
           end
         end
       end
@@ -243,7 +243,7 @@ module Hako
       # @param [Hash] expected_service
       # @param [Aws::ServiceDiscovery::Types::ServiceSummary] actual_service
       # @return [void]
-      def warn_unallowed_service_change(expected_service, actual_service)
+      def warn_disallowed_service_change(expected_service, actual_service)
         expected_service = create_service_params(expected_service)
         if expected_service.dig(:dns_config, :routing_policy) != actual_service.dns_config.routing_policy
           Hako.logger.warn("Ignoring updated service_discovery.dns_config.routing_policy in the configuration, because AWS doesn't allow updating it for now.")
