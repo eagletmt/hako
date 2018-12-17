@@ -2,6 +2,7 @@
 
 require 'aws-sdk-servicediscovery'
 require 'hako'
+require 'hako/error'
 require 'hako/schedulers/ecs_service_discovery_service_comparator'
 
 module Hako
@@ -23,9 +24,9 @@ module Hako
           namespace_id = service.fetch('namespace_id')
           namespace = get_namespace(namespace_id)
           if !namespace
-            raise "Service discovery namespace #{namespace_id} not found"
+            raise Error.new("Service discovery namespace #{namespace_id} not found")
           elsif namespace.type != 'DNS_PRIVATE'
-            raise "ECS only supports registering a service into a private DNS namespace: #{namespace.name} (#{namespace_id})"
+            raise Error.new("ECS only supports registering a service into a private DNS namespace: #{namespace.name} (#{namespace_id})")
           end
 
           service_name = service.fetch('name')
@@ -108,7 +109,7 @@ module Hako
           service_name = service.fetch('name')
           current_service = find_service(namespace_id, service_name)
           unless current_service
-            raise "Service discovery service #{service_name} not found"
+            raise Error.new("Service discovery service #{service_name} not found")
           end
 
           {
@@ -191,7 +192,7 @@ module Hako
         ).operation_id
         operation = wait_for_operation(operation_id)
         if operation.status != 'SUCCESS'
-          raise "Unable to update service discovery service (#{operation.error_code}): #{operation.error_message}"
+          raise Error.new("Unable to update service discovery service (#{operation.error_code}): #{operation.error_message}")
         end
       end
 
