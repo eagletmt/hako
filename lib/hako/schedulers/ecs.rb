@@ -251,24 +251,34 @@ module Hako
         ecs_client.list_tasks(cluster: @cluster, service_name: service.service_arn).each do |page|
           unless page.task_arns.empty?
             tasks = ecs_client.describe_tasks(cluster: @cluster, tasks: page.task_arns).tasks
+            container_instance_arns = tasks.map(&:container_instance_arn).compact
             container_instances = {}
-            ecs_client.describe_container_instances(cluster: @cluster, container_instances: tasks.map(&:container_instance_arn)).container_instances.each do |ci|
-              container_instances[ci.container_instance_arn] = ci
+            unless container_instance_arns.empty?
+              ecs_client.describe_container_instances(cluster: @cluster, container_instances: container_instance_arns).container_instances.each do |ci|
+                container_instances[ci.container_instance_arn] = ci
+              end
             end
             ec2_instances = {}
-            ec2_client.describe_instances(instance_ids: container_instances.values.map(&:ec2_instance_id)).reservations.each do |r|
-              r.instances.each do |i|
-                ec2_instances[i.instance_id] = i
+            unless container_instances.empty?
+              ec2_client.describe_instances(instance_ids: container_instances.values.map(&:ec2_instance_id)).reservations.each do |r|
+                r.instances.each do |i|
+                  ec2_instances[i.instance_id] = i
+                end
               end
             end
             tasks.each do |task|
+              task_id = task.task_arn.slice(%r{task/(.+)\z}, 1)
+              task_definition = task.task_definition_arn.slice(%r{task-definition/(.+)\z}, 1)
+              print "  [#{task.last_status}] #{task_id} task_definition=#{task_definition}, desired_status=#{task.desired_status}"
               ci = container_instances[task.container_instance_arn]
-              instance = ec2_instances[ci.ec2_instance_id]
-              print "  [#{task.last_status}]: #{ci.ec2_instance_id}"
-              if instance
-                name_tag = instance.tags.find { |t| t.key == 'Name' }
-                if name_tag
-                  print " (#{name_tag.value})"
+              if ci
+                print ", instance_id=#{ci.ec2_instance_id}"
+                instance = ec2_instances[ci.ec2_instance_id]
+                if instance
+                  name_tag = instance.tags.find { |t| t.key == 'Name' }
+                  if name_tag
+                    print " (#{name_tag.value})"
+                  end
                 end
               end
               puts
