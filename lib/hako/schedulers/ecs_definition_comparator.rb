@@ -32,6 +32,7 @@ module Hako
           struct.member(:secrets, Schema::Nullable.new(Schema::UnorderedArray.new(secrets_schema)))
           struct.member(:docker_labels, Schema::Table.new(Schema::String.new, Schema::String.new))
           struct.member(:mount_points, Schema::UnorderedArray.new(mount_point_schema))
+          struct.member(:entry_point, Schema::Nullable.new(Schema::OrderedArray.new(Schema::String.new)))
           struct.member(:command, Schema::Nullable.new(Schema::OrderedArray.new(Schema::String.new)))
           struct.member(:volumes_from, Schema::UnorderedArray.new(volumes_from_schema))
           struct.member(:user, Schema::Nullable.new(Schema::String.new))

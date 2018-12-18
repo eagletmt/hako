@@ -610,6 +610,7 @@ module Hako
           secrets: container.secrets,
           docker_labels: container.docker_labels,
           mount_points: container.mount_points,
+          entry_point: container.entry_point,
           command: container.command,
           privileged: container.privileged,
           linux_parameters: container.linux_parameters,
@@ -1201,6 +1202,9 @@ module Hako
         end
         (definition[:docker_security_options] || []).each do |docker_security_option|
           cmd << '--security-opt' << docker_security_option
+        end
+        if definition[:entry_point]
+          cmd << '--entrypoint' << definition[:entry_point]
         end
 
         cmd << "\\\n  "
