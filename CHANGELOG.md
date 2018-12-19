@@ -1,3 +1,7 @@
+# 2.6.2 (2018-12-19)
+## Bug fixes
+- Set `platform_version` correctly
+
 # 2.6.1 (2018-12-17)
 ## Bug fixes
 - Avoid updating service when `platform_version` is not specified
