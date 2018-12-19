@@ -73,6 +73,7 @@ module Hako
         @memory = options.fetch('memory', nil)
         @requires_compatibilities = options.fetch('requires_compatibilities', nil)
         @launch_type = options.fetch('launch_type', nil)
+        @platform_version = options.fetch('platform_version', nil)
         if options.key?('network_configuration')
           network_configuration = options.fetch('network_configuration')
           if network_configuration.key?('awsvpc_configuration')
