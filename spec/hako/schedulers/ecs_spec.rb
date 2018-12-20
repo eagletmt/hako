@@ -102,6 +102,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       placement_constraints: [],
       placement_strategy: [],
       deployments: [Aws::ECS::Types::Deployment.new(status: 'PRIMARY', desired_count: 1, running_count: 1)],
+      service_registries: [],
     )
   end
   let(:dummy_container_definition) do
@@ -146,6 +147,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           service: Aws::ECS::Types::Service.new(
             placement_constraints: [],
             placement_strategy: [],
+            service_registries: [],
           ),
         )).once
         expect(ecs_client).to receive(:update_service).with(update_service_params.merge(task_definition: task_definition_arn)).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
@@ -341,6 +343,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           service: Aws::ECS::Types::Service.new(
             placement_constraints: [],
             placement_strategy: [],
+            service_registries: [],
           ),
         )).once
         expect(ecs_client).to receive(:update_service).with(update_service_params.merge(
@@ -360,6 +363,111 @@ RSpec.describe Hako::Schedulers::Ecs do
         expect(logger_io.string).to include('Created ELBv2')
         expect(logger_io.string).to include('Created target group')
         expect(logger_io.string).to include('Created listener')
+        expect(logger_io.string).to include('Updated service')
+        expect(logger_io.string).to include('Deployment completed')
+      end
+    end
+
+    context 'with service discovery' do
+      let(:app) { Hako::Application.new(fixture_root.join('jsonnet', 'ecs-service-discovery.jsonnet')) }
+      let(:task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
+      let(:service_discovery_client) { double('Aws::ServiceDiscovery::Client') }
+      let(:namespace_id) { 'ns-1111111111111111' }
+      let(:service_discovery_services) { [] }
+      let(:service_discovery_service_arn) { "arn:aws:servicediscovery:ap-northeast-1:012345678901:service/#{service_discovery_service_id}" }
+      let(:service_discovery_service_id) { 'srv-1111111111111111' }
+
+      before do
+        allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [])).once
+        allow(ecs_client).to receive(:describe_task_definition).with(task_definition: app.id).and_raise(Aws::ECS::Errors::ClientException.new(nil, 'Unable to describe task definition')).once
+
+        allow(Aws::ServiceDiscovery::Client).to receive(:new).and_return(service_discovery_client)
+        namespace = Aws::ServiceDiscovery::Types::Namespace.new(type: 'DNS_PRIVATE')
+        allow(service_discovery_client).to receive(:get_namespace).with(id: namespace_id).and_return(Aws::ServiceDiscovery::Types::GetNamespaceResponse.new(namespace: namespace)).twice
+        allow(service_discovery_client).to receive(:list_services).with(
+          filters: [
+            name: 'NAMESPACE_ID',
+            values: [namespace_id],
+            condition: 'EQ',
+          ],
+        ) do
+          services = Aws::ServiceDiscovery::Types::ListServicesResponse.new(services: service_discovery_services).extend(Aws::PageableResponse)
+          services.pager = double('Aws::Pager', truncated?: false)
+          services
+        end.exactly(4).times
+      end
+
+      it 'creates a new service discovery and service' do
+        expect(ecs_client).to receive(:register_task_definition).with(register_task_definition_params).and_return(Aws::ECS::Types::RegisterTaskDefinitionResponse.new(
+          task_definition: Aws::ECS::Types::TaskDefinition.new(
+            task_definition_arn: task_definition_arn,
+          ),
+        )).once
+        expect(service_discovery_client).to receive(:create_service).with(
+          name: 'ecs-service-discovery',
+          namespace_id: namespace_id,
+          description: nil,
+          dns_config: {
+            dns_records: [{
+              type: 'SRV',
+              ttl: 60,
+            }],
+            namespace_id: nil,
+            routing_policy: 'MULTIVALUE',
+          },
+          health_check_custom_config: { failure_threshold: 1 },
+        ) do
+          service = Aws::ServiceDiscovery::Types::Service.new(
+            arn: service_discovery_service_arn,
+            id: service_discovery_service_id,
+            dns_config: Aws::ServiceDiscovery::Types::DnsConfig.new(
+              dns_records: [Aws::ServiceDiscovery::Types::DnsRecord.new(
+                type: 'SRV',
+                ttl: 60,
+              )],
+              routing_policy: 'MULTIVALUE',
+            ),
+            health_check_custom_config: Aws::ServiceDiscovery::Types::HealthCheckCustomConfig.new(
+              failure_threshold: 1
+            ),
+            name: 'ecs-service-discovery',
+            namespace_id: namespace_id,
+          )
+          service_discovery_services << service
+          Aws::ECS::Types::CreateServiceResponse.new(service: service)
+        end.once
+        expect(ecs_client).to receive(:create_service).with(create_service_params.merge(
+          task_definition: task_definition_arn,
+          service_registries: [{
+            container_name: 'app',
+            container_port: 80,
+            registry_arn: service_discovery_service_arn,
+          }],
+        )).and_return(Aws::ECS::Types::CreateServiceResponse.new(
+          service: Aws::ECS::Types::Service.new(
+            placement_constraints: [],
+            placement_strategy: [],
+            service_registries: [Aws::ECS::Types::ServiceRegistry.new(
+              container_name: 'app',
+              container_port: 80,
+              registry_arn: service_discovery_service_arn,
+            )],
+          ),
+        )).once
+        expect(ecs_client).to receive(:update_service).with(update_service_params.merge(
+          task_definition: task_definition_arn,
+        )).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
+          service: Aws::ECS::Types::Service.new(
+            cluster_arn: cluster_arn,
+            service_arn: service_arn,
+            events: [],
+          ),
+        )).once
+        expect(ecs_client).to receive(:describe_services).with(cluster: cluster_arn, services: [service_arn]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [dummy_service_response])).once
+
+        scheduler.deploy(containers)
+        expect(logger_io.string).to include('Registered task definition')
+        expect(logger_io.string).to include('Created service discovery service')
         expect(logger_io.string).to include('Updated service')
         expect(logger_io.string).to include('Deployment completed')
       end

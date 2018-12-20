@@ -30,6 +30,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'aws-sdk-elasticloadbalancing'
   spec.add_dependency 'aws-sdk-elasticloadbalancingv2'
   spec.add_dependency 'aws-sdk-s3'
+  spec.add_dependency 'aws-sdk-servicediscovery'
   spec.add_dependency 'aws-sdk-sns'
   spec.add_dependency 'aws-sdk-ssm'
   spec.add_dependency 'jsonnet'

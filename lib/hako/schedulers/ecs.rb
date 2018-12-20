@@ -14,6 +14,7 @@ require 'hako/schedulers/ecs_definition_comparator'
 require 'hako/schedulers/ecs_elb'
 require 'hako/schedulers/ecs_elb_v2'
 require 'hako/schedulers/ecs_service_comparator'
+require 'hako/schedulers/ecs_service_discovery'
 require 'hako/schedulers/ecs_volume_comparator'
 
 module Hako
@@ -87,6 +88,9 @@ module Hako
             }
           end
         end
+        if options['service_discovery']
+          @service_discovery = EcsServiceDiscovery.new(options.fetch('service_discovery'), @region, dry_run: @dry_run)
+        end
 
         @started_at = nil
         @container_instance_arn = nil
@@ -114,6 +118,9 @@ module Hako
             @autoscaling.apply(Aws::ECS::Types::Service.new(cluster_arn: @cluster, service_name: @app_id))
           end
           ecs_elb_client.modify_attributes
+          if @service_discovery
+            @service_discovery.apply
+          end
         else
           current_service = describe_service
           task_definition_changed, task_definition = register_task_definition(definitions)
@@ -130,12 +137,18 @@ module Hako
               @autoscaling.apply(current_service)
             end
             ecs_elb_client.modify_attributes
+            if @service_discovery
+              @service_discovery.apply
+            end
           else
             Hako.logger.info "Updated service: #{service.service_arn}"
             if @autoscaling
               @autoscaling.apply(service)
             end
             ecs_elb_client.modify_attributes
+            if @service_discovery
+              @service_discovery.apply
+            end
             unless wait_for_ready(service)
               if task_definition_changed
                 Hako.logger.error("Rolling back to #{current_service.task_definition}")
@@ -295,6 +308,13 @@ module Hako
         else
           puts 'Autoscaling: No'
         end
+
+        if service.service_registries.empty?
+          puts 'Service Discovery: No'
+        else
+          puts 'Service Discovery:'
+          @service_discovery.status(service.service_registries)
+        end
       end
 
       # @return [nil]
@@ -312,6 +332,9 @@ module Hako
             end
             ecs_client.delete_service(cluster: service.cluster_arn, service: service.service_arn)
             Hako.logger.info "#{service.service_arn} is deleted"
+          end
+          unless service.service_registries.empty?
+            @service_discovery.remove(service.service_registries)
           end
         else
           puts "Service #{@app_id} doesn't exist"
@@ -831,6 +854,7 @@ module Hako
           params[:desired_count] = current_service.desired_count
         end
         warn_placement_policy_change(current_service)
+        warn_service_registries_change(current_service)
         if service_changed?(current_service, params)
           ecs_client.update_service(params).service
         else
@@ -862,6 +886,10 @@ module Hako
         if ecs_elb_client.find_or_create_load_balancer(front_port)
           ecs_elb_client.modify_attributes
           params[:load_balancers] = [ecs_elb_client.load_balancer_params_for_service]
+        end
+        if @service_discovery
+          @service_discovery.apply
+          params[:service_registries] = @service_discovery.service_registries
         end
         ecs_client.create_service(params).service
       end
@@ -1280,6 +1308,16 @@ module Hako
         end
         if @placement_strategy != placement_strategy
           Hako.logger.warn "Ignoring updated placement_strategy in the configuration, because AWS doesn't allow updating them for now."
+        end
+      end
+
+      # @param [Aws::ECS::Types::Service] service
+      # @return [void]
+      def warn_service_registries_change(service)
+        actual_service_registries = service.service_registries.sort_by(&:registry_arn).map(&:to_h)
+        expected_service_registries = @service_discovery&.service_registries&.sort_by { |s| s[:registry_arn] } || []
+        if actual_service_registries != expected_service_registries
+          Hako.logger.warn "Ignoring updated service_registries in the configuration, because AWS doesn't allow updating them for now."
         end
       end
 
