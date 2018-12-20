@@ -27,6 +27,7 @@ module Hako
       memory_reservation
       links
       essential
+      entry_point
       command
       user
       privileged

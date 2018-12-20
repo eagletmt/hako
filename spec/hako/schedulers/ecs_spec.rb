@@ -73,6 +73,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         secrets: nil,
         docker_labels: { 'cc.wanko.hako.version' => Hako::VERSION },
         mount_points: [],
+        entry_point: nil,
         command: nil,
         privileged: false,
         linux_parameters: nil,
