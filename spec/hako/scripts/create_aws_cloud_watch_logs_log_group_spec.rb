@@ -2,6 +2,7 @@
 require 'spec_helper'
 require 'hako/app_container'
 require 'hako/scripts/create_aws_cloud_watch_logs_log_group'
+require 'aws-sdk-ecs'
 
 RSpec.describe Hako::Scripts::CreateAwsCloudWatchLogsLogGroup do
   let(:script) { described_class.new(app, options, dry_run: false) }

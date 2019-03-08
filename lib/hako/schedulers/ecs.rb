@@ -1,5 +1,7 @@
 # frozen_string_literal: true
-require 'aws-sdk'
+require 'aws-sdk-autoscaling'
+require 'aws-sdk-ec2'
+require 'aws-sdk-ecs'
 require 'hako'
 require 'hako/error'
 require 'hako/scheduler'

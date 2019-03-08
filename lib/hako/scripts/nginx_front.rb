@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-require 'aws-sdk'
+require 'aws-sdk-s3'
 require 'erb'
 require 'hako'
 require 'hako/script'
