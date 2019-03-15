@@ -1,3 +1,9 @@
+# 2.7.0 (2019-03-15)
+## New features
+- Support `entry_point` parameter
+- Support ECS Service Discovery
+  - See [examples/hello-service-discovery.jsonnet](examples/hello-service-discovery.jsonnet)
+
 # 2.6.2 (2018-12-19)
 ## Bug fixes
 - Set `platform_version` correctly
