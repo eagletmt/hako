@@ -1,3 +1,9 @@
+# 2.8.0 (2019-03-17)
+## New features
+- Add `deploy_failed` method to Hako::Script which is called when `hako deploy` fails
+- Add .app.tag field to definition to specify the default value of app container's tag
+  - The default value was fixed to "latest", but you can now specify custom default value.
+
 # 2.7.0 (2019-03-15)
 ## New features
 - Support `entry_point` parameter
