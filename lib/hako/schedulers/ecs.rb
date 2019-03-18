@@ -150,6 +150,7 @@ module Hako
               @service_discovery.apply
             end
             unless wait_for_ready(service)
+              @scripts.each { |script| script.deploy_failed(containers, task_ids: @started_task_ids) }
               if task_definition_changed
                 Hako.logger.error("Rolling back to #{current_service.task_definition}")
                 update_service(service, current_service.task_definition)
@@ -912,7 +913,7 @@ module Hako
             Process.clock_gettime(Process::CLOCK_MONOTONIC)
           end
 
-        started_task_ids = []
+        @started_task_ids = []
 
         loop do
           if started_at
@@ -936,16 +937,16 @@ module Hako
             Hako.logger.info "#{e.created_at}: #{e.message}"
             task_id = extract_task_id(e.message)
             if task_id && e.message.include?(' has started ')
-              started_task_ids << task_id
+              @started_task_ids << task_id
             end
           end
           latest_event_id = find_latest_event_id(s.events)
           Hako.logger.debug "  latest_event_id=#{latest_event_id}, deployments=#{s.deployments}"
           no_active = s.deployments.all? { |d| d.status != 'ACTIVE' }
           primary = s.deployments.find { |d| d.status == 'PRIMARY' }
-          if primary.desired_count < started_task_ids.size
+          if primary.desired_count < @started_task_ids.size
             Hako.logger.error('Some started tasks are stopped. It seems new deployment is failing to start')
-            ecs_client.describe_tasks(cluster: service.cluster_arn, tasks: started_task_ids).tasks.each do |task|
+            ecs_client.describe_tasks(cluster: service.cluster_arn, tasks: @started_task_ids).tasks.each do |task|
               report_task_diagnostics(task)
             end
             return false
