@@ -23,6 +23,10 @@ module Hako
     # @param [Hash<String, Container>] _containers
     def deploy_finished(_containers); end
 
+    # @param [Hash<String, Container>] _containers
+    # @param [Hash] _options
+    def deploy_failed(_containers, _options); end
+
     def rollback_starting; end
 
     # @param [String] _current_image_tag
