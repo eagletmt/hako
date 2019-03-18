@@ -8,8 +8,7 @@ require 'hako/schedulers/ecs'
 
 RSpec.describe Hako::Schedulers::Ecs do
   let(:dry_run) { false }
-  let(:tag) { 'latest' }
-  let(:containers) { Hako::DefinitionLoader.new(app, dry_run: dry_run).load(tag) }
+  let(:containers) { Hako::DefinitionLoader.new(app, dry_run: dry_run).load }
   let(:scripts) do
     app.definition.fetch('scripts', []).map do |config|
       Hako::Loader.new(Hako::Scripts, 'hako/scripts').load(config.fetch('type')).new(app, config, dry_run: dry_run)

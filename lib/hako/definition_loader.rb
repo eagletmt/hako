@@ -14,10 +14,10 @@ module Hako
       @dry_run = dry_run
     end
 
-    # @param [String] tag
+    # @param [String, nil] tag
     # @param [Array<String>, nil] with
     # @return [Hash<String, Container>]
-    def load(tag, with: nil)
+    def load(tag: nil, with: nil)
       # XXX: Load additional_containers for compatibility
       sidecars = @app.definition.fetch('sidecars', @app.definition.fetch('additional_containers', {}))
       container_names = ['app']
@@ -32,7 +32,7 @@ module Hako
 
     private
 
-    # @param [String] tag
+    # @param [String, nil] tag
     # @param [Array<String>] container_names
     # @param [Hash<String, Hash>] sidecars
     # @return [Hash<String, Container>]
@@ -44,7 +44,8 @@ module Hako
           containers[name] =
             case name
             when 'app'
-              AppContainer.new(@app, @app.definition['app'].merge('tag' => tag), dry_run: @dry_run)
+              @app.definition['app']['tag'] = tag if tag
+              AppContainer.new(@app, @app.definition['app'], dry_run: @dry_run)
             else
               Container.new(@app, sidecars.fetch(name), dry_run: @dry_run)
             end

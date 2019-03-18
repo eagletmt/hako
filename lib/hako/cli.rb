@@ -80,7 +80,6 @@ module Hako
 
       def parse!(argv)
         @force = false
-        @tag = 'latest'
         @dry_run = false
         @verbose = false
         @timeout = DEFAULT_TIMEOUT
@@ -98,7 +97,7 @@ module Hako
           opts.banner = 'hako deploy [OPTIONS] FILE'
           opts.version = VERSION
           opts.on('-f', '--force', 'Run deployment even if nothing is changed') { @force = true }
-          opts.on('-t', '--tag=TAG', 'Specify tag (default: latest)') { |v| @tag = v }
+          opts.on('-t', '--tag=TAG', 'Specify tag') { |v| @tag = v }
           opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
           opts.on('-v', '--verbose', 'Enable verbose logging') { @verbose = true }
           opts.on('--timeout=TIMEOUT_SEC', "Timeout deployment after TIMEOUT_SEC seconds (default: #{DEFAULT_TIMEOUT})") { |v| @timeout = v.to_i }
@@ -167,7 +166,6 @@ module Hako
       end
 
       def parse!(argv)
-        @tag = 'latest'
         @dry_run = false
         @containers = []
         @env = {}
@@ -187,7 +185,7 @@ module Hako
         @parser ||= OptionParser.new do |opts|
           opts.banner = 'hako oneshot [OPTIONS] FILE COMMAND ARG...'
           opts.version = VERSION
-          opts.on('-t', '--tag=TAG', 'Specify tag (default: latest)') { |v| @tag = v }
+          opts.on('-t', '--tag=TAG', 'Specify tag') { |v| @tag = v }
           opts.on('-n', '--dry-run', 'Enable dry-run mode') { @dry_run = true }
           opts.on('-c', '--container=NAME', 'Additional container name to start with the app container') { |v| @containers << v }
           opts.on('-v', '--verbose', 'Enable verbose logging') { @verbose = true }
