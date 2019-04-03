@@ -261,24 +261,35 @@ RSpec.describe Hako::Schedulers::Ecs do
       let(:elb_v2_client) { double('Aws::ElasticLoadBalancingV2::Client') }
       let(:load_balancer_arn) { "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:loadbalancer/app/hako-#{app.id}/0123456789abcdef" }
       let(:target_group_arn) { "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:targetgroup/hako-#{app.id}/0123456789abcdef" }
+      let(:load_balancers) { [] }
       let(:target_groups) { [] }
+      let(:listeners) { [] }
 
       before do
         allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [])).once
         allow(ecs_client).to receive(:describe_task_definition).with(task_definition: app.id).and_raise(Aws::ECS::Errors::ClientException.new(nil, 'Unable to describe task definition')).once
 
         allow(Aws::ElasticLoadBalancingV2::Client).to receive(:new).and_return(elb_v2_client)
-        allow(elb_v2_client).to receive(:describe_load_balancers).with(names: ["hako-#{app.id}"]).and_raise(Aws::ElasticLoadBalancingV2::Errors::LoadBalancerNotFound.new(nil, ''))
+        @created_load_balancer = nil
+        allow(elb_v2_client).to receive(:describe_load_balancers).with(names: ["hako-#{app.id}"]) {
+          if load_balancers.empty?
+            raise Aws::ElasticLoadBalancingV2::Errors::LoadBalancerNotFound.new(nil, '')
+          else
+            Aws::ElasticLoadBalancingV2::Types::DescribeLoadBalancersOutput.new(load_balancers: load_balancers)
+          end
+        }
         allow(elb_v2_client).to receive(:describe_target_groups).with(names: ["hako-#{app.id}"]) {
           if target_groups.empty?
             raise Aws::ElasticLoadBalancingV2::Errors::TargetGroupNotFound.new(nil, '')
           else
             Aws::ElasticLoadBalancingV2::Types::DescribeTargetGroupsOutput.new(target_groups: target_groups)
           end
-        }.twice
-        listeners = Aws::ElasticLoadBalancingV2::Types::DescribeListenersOutput.new(listeners: []).extend(Aws::PageableResponse)
-        listeners.pager = double('Aws::Pager', truncated?: false)
-        allow(elb_v2_client).to receive(:describe_listeners).with(load_balancer_arn: load_balancer_arn).and_return(listeners).once
+        }
+        allow(elb_v2_client).to receive(:describe_listeners).with(load_balancer_arn: load_balancer_arn) {
+          Aws::ElasticLoadBalancingV2::Types::DescribeListenersOutput.new(listeners: listeners).extend(Aws::PageableResponse).tap do |output|
+            output.pager = double('Aws::Pager', truncated?: false)
+          end
+        }
       end
 
       it 'creates new ELBv2 and service' do
@@ -294,12 +305,17 @@ RSpec.describe Hako::Schedulers::Ecs do
           scheme: nil,
           type: nil,
           tags: nil,
-        ).and_return(Aws::ElasticLoadBalancingV2::Types::CreateLoadBalancerOutput.new(
-          load_balancers: [Aws::ElasticLoadBalancingV2::Types::LoadBalancer.new(
+        ) do
+          load_balancers << Aws::ElasticLoadBalancingV2::Types::LoadBalancer.new(
             load_balancer_arn: load_balancer_arn,
             dns_name: "hako-#{app.id}-012345678.ap-northeast-1.elb.amazonaws.com",
-          )],
-        )).once
+            availability_zones: [
+              Aws::ElasticLoadBalancingV2::Types::AvailabilityZone.new(subnet_id: 'subnet-11111111'),
+              Aws::ElasticLoadBalancingV2::Types::AvailabilityZone.new(subnet_id: 'subnet-22222222'),
+            ],
+          )
+          Aws::ElasticLoadBalancingV2::Types::CreateLoadBalancerOutput.new(load_balancers: load_balancers)
+        end.once
         expect(elb_v2_client).to receive(:create_target_group).with(
           name: "hako-#{app.id}",
           port: 80,
@@ -318,9 +334,13 @@ RSpec.describe Hako::Schedulers::Ecs do
           port: 80,
           ssl_policy: nil,
           default_actions: [{ type: 'forward', target_group_arn: target_group_arn }],
-        ).and_return(Aws::ElasticLoadBalancingV2::Types::CreateListenerOutput.new(
-          listeners: [Aws::ElasticLoadBalancingV2::Types::Listener.new(listener_arn: "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:listener/app/#{app.id}/0123456789abcdef/0123456789abcdef")],
-        )).once
+        ) do
+          listeners << Aws::ElasticLoadBalancingV2::Types::Listener.new(
+            listener_arn: "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:listener/app/#{app.id}/0123456789abcdef/0123456789abcdef",
+            port: 80,
+          )
+          Aws::ElasticLoadBalancingV2::Types::CreateListenerOutput.new(listeners: listeners)
+        end.once
         expect(elb_v2_client).to receive(:create_listener).with(
           load_balancer_arn: load_balancer_arn,
           protocol: 'HTTPS',
@@ -328,9 +348,14 @@ RSpec.describe Hako::Schedulers::Ecs do
           ssl_policy: 'ELBSecurityPolicy-2016-08',
           default_actions: [{ type: 'forward', target_group_arn: target_group_arn }],
           certificates: [{ certificate_arn: 'arn:aws:acm:ap-northeast-1:012345678901:certificate/01234567-89ab-cdef-0123-456789abcdef' }],
-        ).and_return(Aws::ElasticLoadBalancingV2::Types::CreateListenerOutput.new(
-          listeners: [Aws::ElasticLoadBalancingV2::Types::Listener.new(listener_arn: "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:listener/app/#{app.id}/0123456789abcdef/abcdef0123456789")],
-        )).once
+        ) do
+          listeners << Aws::ElasticLoadBalancingV2::Types::Listener.new(
+            listener_arn: "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:listener/app/#{app.id}/0123456789abcdef/abcdef0123456789",
+            port: 443,
+            ssl_policy: 'ELBSecurityPolicy-2016-08',
+          )
+          Aws::ElasticLoadBalancingV2::Types::CreateListenerOutput.new(listeners: listeners)
+        end.once
         expect(ecs_client).to receive(:create_service).with(create_service_params.merge(
           task_definition: task_definition_arn,
           health_check_grace_period_seconds: 0,

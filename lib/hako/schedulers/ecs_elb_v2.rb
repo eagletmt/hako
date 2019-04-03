@@ -51,7 +51,7 @@ module Hako
         end
 
         load_balancer = describe_load_balancer
-        unless load_balancer
+        if !load_balancer_given? && !load_balancer
           tags = @elb_v2_config.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } }
 
           elb_type = @elb_v2_config.fetch('type', nil)
@@ -78,7 +78,7 @@ module Hako
         end
 
         target_group = describe_target_group
-        unless target_group
+        if !target_group_given? && !target_group
           elb_type = @elb_v2_config.fetch('type', nil)
           target_group = if elb_type == 'network'
                            elb_client.create_target_group(
@@ -102,23 +102,25 @@ module Hako
           Hako.logger.info "Created target group #{target_group.target_group_arn}"
         end
 
-        listener_ports = elb_client.describe_listeners(load_balancer_arn: load_balancer.load_balancer_arn).flat_map { |page| page.listeners.map(&:port) }
-        @elb_v2_config.fetch('listeners').each do |l|
-          params = {
-            load_balancer_arn: load_balancer.load_balancer_arn,
-            protocol: l.fetch('protocol'),
-            port: l.fetch('port'),
-            ssl_policy: l['ssl_policy'],
-            default_actions: [{ type: 'forward', target_group_arn: target_group.target_group_arn }],
-          }
-          certificate_arn = l.fetch('certificate_arn', nil)
-          if certificate_arn
-            params[:certificates] = [{ certificate_arn: certificate_arn }]
-          end
+        unless load_balancer_given?
+          listener_ports = elb_client.describe_listeners(load_balancer_arn: load_balancer.load_balancer_arn).flat_map { |page| page.listeners.map(&:port) }
+          @elb_v2_config.fetch('listeners').each do |l|
+            params = {
+              load_balancer_arn: load_balancer.load_balancer_arn,
+              protocol: l.fetch('protocol'),
+              port: l.fetch('port'),
+              ssl_policy: l['ssl_policy'],
+              default_actions: [{ type: 'forward', target_group_arn: target_group.target_group_arn }],
+            }
+            certificate_arn = l.fetch('certificate_arn', nil)
+            if certificate_arn
+              params[:certificates] = [{ certificate_arn: certificate_arn }]
+            end
 
-          unless listener_ports.include?(params[:port])
-            listener = elb_client.create_listener(params).listeners[0]
-            Hako.logger.info("Created listener #{listener.listener_arn}")
+            unless listener_ports.include?(params[:port])
+              listener = elb_client.create_listener(params).listeners[0]
+              Hako.logger.info("Created listener #{listener.listener_arn}")
+            end
           end
         end
 
@@ -131,58 +133,63 @@ module Hako
           return nil
         end
 
-        load_balancer = describe_load_balancer
-        subnets = @elb_v2_config.fetch('subnets').sort
-        if load_balancer && subnets != load_balancer.availability_zones.map(&:subnet_id).sort
-          if @dry_run
-            Hako.logger.info("elb_client.set_subnets(load_balancer_arn: #{load_balancer.load_balancer_arn}, subnets: #{subnets}) (dry-run)")
-          else
-            Hako.logger.info("Updating ELBv2 subnets to #{subnets}")
-            elb_client.set_subnets(load_balancer_arn: load_balancer.load_balancer_arn, subnets: subnets)
+        unless load_balancer_given?
+          load_balancer = describe_load_balancer
+          subnets = @elb_v2_config.fetch('subnets').sort
+          if load_balancer && subnets != load_balancer.availability_zones.map(&:subnet_id).sort
+            if @dry_run
+              Hako.logger.info("elb_client.set_subnets(load_balancer_arn: #{load_balancer.load_balancer_arn}, subnets: #{subnets}) (dry-run)")
+            else
+              Hako.logger.info("Updating ELBv2 subnets to #{subnets}")
+              elb_client.set_subnets(load_balancer_arn: load_balancer.load_balancer_arn, subnets: subnets)
+            end
           end
-        end
 
-        new_listeners = @elb_v2_config.fetch('listeners')
-        if load_balancer
-          current_listeners = elb_client.describe_listeners(load_balancer_arn: load_balancer.load_balancer_arn).listeners
-          new_listeners.each do |new_listener|
-            current_listener = current_listeners.find { |l| l.port == new_listener['port'] }
-            if current_listener && new_listener['ssl_policy'] && new_listener['ssl_policy'] != current_listener.ssl_policy
-              if @dry_run
-                Hako.logger.info("elb_client.modify_listener(listener_arn: #{current_listener.listener_arn}, ssl_policy: #{new_listener['ssl_policy']}) (dry-run)")
-              else
-                Hako.logger.info("Updating ELBv2 listener #{new_listener['port']} ssl_policy to #{new_listener['ssl_policy']}")
-                elb_client.modify_listener(listener_arn: current_listener.listener_arn, ssl_policy: new_listener['ssl_policy'])
+          new_listeners = @elb_v2_config.fetch('listeners')
+          if load_balancer
+            current_listeners = elb_client.describe_listeners(load_balancer_arn: load_balancer.load_balancer_arn).listeners
+            new_listeners.each do |new_listener|
+              current_listener = current_listeners.find { |l| l.port == new_listener['port'] }
+              if current_listener && new_listener['ssl_policy'] && new_listener['ssl_policy'] != current_listener.ssl_policy
+                if @dry_run
+                  Hako.logger.info("elb_client.modify_listener(listener_arn: #{current_listener.listener_arn}, ssl_policy: #{new_listener['ssl_policy']}) (dry-run)")
+                else
+                  Hako.logger.info("Updating ELBv2 listener #{new_listener['port']} ssl_policy to #{new_listener['ssl_policy']}")
+                  elb_client.modify_listener(listener_arn: current_listener.listener_arn, ssl_policy: new_listener['ssl_policy'])
+                end
               end
             end
           end
-        end
 
-        if @elb_v2_config.key?('load_balancer_attributes')
-          attributes = @elb_v2_config.fetch('load_balancer_attributes').map { |key, value| { key: key, value: value } }
-          if @dry_run
-            if load_balancer
-              Hako.logger.info("elb_client.modify_load_balancer_attributes(load_balancer_arn: #{load_balancer.load_balancer_arn}, attributes: #{attributes.inspect}) (dry-run)")
+          if @elb_v2_config.key?('load_balancer_attributes')
+            attributes = @elb_v2_config.fetch('load_balancer_attributes').map { |key, value| { key: key, value: value } }
+            if @dry_run
+              if load_balancer
+                Hako.logger.info("elb_client.modify_load_balancer_attributes(load_balancer_arn: #{load_balancer.load_balancer_arn}, attributes: #{attributes.inspect}) (dry-run)")
+              else
+                Hako.logger.info("elb_client.modify_load_balancer_attributes(load_balancer_arn: unknown, attributes: #{attributes.inspect}) (dry-run)")
+              end
             else
-              Hako.logger.info("elb_client.modify_load_balancer_attributes(load_balancer_arn: unknown, attributes: #{attributes.inspect}) (dry-run)")
+              Hako.logger.info("Updating ELBv2 attributes to #{attributes.inspect}")
+              elb_client.modify_load_balancer_attributes(load_balancer_arn: load_balancer.load_balancer_arn, attributes: attributes)
             end
-          else
-            Hako.logger.info("Updating ELBv2 attributes to #{attributes.inspect}")
-            elb_client.modify_load_balancer_attributes(load_balancer_arn: load_balancer.load_balancer_arn, attributes: attributes)
           end
         end
-        if @elb_v2_config.key?('target_group_attributes')
-          target_group = describe_target_group
-          attributes = @elb_v2_config.fetch('target_group_attributes').map { |key, value| { key: key, value: value } }
-          if @dry_run
-            if target_group
-              Hako.logger.info("elb_client.modify_target_group_attributes(target_group_arn: #{target_group.target_group_arn}, attributes: #{attributes.inspect}) (dry-run)")
+
+        unless target_group_given?
+          if @elb_v2_config.key?('target_group_attributes')
+            target_group = describe_target_group
+            attributes = @elb_v2_config.fetch('target_group_attributes').map { |key, value| { key: key, value: value } }
+            if @dry_run
+              if target_group
+                Hako.logger.info("elb_client.modify_target_group_attributes(target_group_arn: #{target_group.target_group_arn}, attributes: #{attributes.inspect}) (dry-run)")
+              else
+                Hako.logger.info("elb_client.modify_target_group_attributes(target_group_arn: unknown, attributes: #{attributes.inspect}) (dry-run)")
+              end
             else
-              Hako.logger.info("elb_client.modify_target_group_attributes(target_group_arn: unknown, attributes: #{attributes.inspect}) (dry-run)")
+              Hako.logger.info("Updating target group attributes to #{attributes.inspect}")
+              elb_client.modify_target_group_attributes(target_group_arn: target_group.target_group_arn, attributes: attributes)
             end
-          else
-            Hako.logger.info("Updating target group attributes to #{attributes.inspect}")
-            elb_client.modify_target_group_attributes(target_group_arn: target_group.target_group_arn, attributes: attributes)
           end
         end
         nil
@@ -194,39 +201,43 @@ module Hako
           return false
         end
 
-        load_balancer = describe_load_balancer
-        if load_balancer
-          if @dry_run
-            Hako.logger.info("elb_client.delete_load_balancer(load_balancer_arn: #{load_balancer.load_balancer_arn})")
+        unless load_balancer_given?
+          load_balancer = describe_load_balancer
+          if load_balancer
+            if @dry_run
+              Hako.logger.info("elb_client.delete_load_balancer(load_balancer_arn: #{load_balancer.load_balancer_arn})")
+            else
+              elb_client.delete_load_balancer(load_balancer_arn: load_balancer.load_balancer_arn)
+              Hako.logger.info "Deleted ELBv2 #{load_balancer.load_balancer_arn}"
+            end
           else
-            elb_client.delete_load_balancer(load_balancer_arn: load_balancer.load_balancer_arn)
-            Hako.logger.info "Deleted ELBv2 #{load_balancer.load_balancer_arn}"
+            Hako.logger.info "ELBv2 #{elb_name} doesn't exist"
           end
-        else
-          Hako.logger.info "ELBv2 #{elb_name} doesn't exist"
         end
 
-        target_group = describe_target_group
-        if target_group
-          if @dry_run
-            Hako.logger.info("elb_client.delete_target_group(target_group_arn: #{target_group.target_group_arn})")
-          else
-            deleted = false
-            30.times do
-              begin
-                elb_client.delete_target_group(target_group_arn: target_group.target_group_arn)
-                deleted = true
-                break
-              rescue Aws::ElasticLoadBalancingV2::Errors::ResourceInUse => e
-                Hako.logger.warn("#{e.class}: #{e.message}")
+        unless target_group_given?
+          target_group = describe_target_group
+          if target_group
+            if @dry_run
+              Hako.logger.info("elb_client.delete_target_group(target_group_arn: #{target_group.target_group_arn})")
+            else
+              deleted = false
+              30.times do
+                begin
+                  elb_client.delete_target_group(target_group_arn: target_group.target_group_arn)
+                  deleted = true
+                  break
+                rescue Aws::ElasticLoadBalancingV2::Errors::ResourceInUse => e
+                  Hako.logger.warn("#{e.class}: #{e.message}")
+                end
+                sleep 1
               end
-              sleep 1
-            end
-            unless deleted
-              raise Error.new("Cannot delete target group #{target_group.target_group_arn}")
-            end
+              unless deleted
+                raise Error.new("Cannot delete target group #{target_group.target_group_arn}")
+              end
 
-            Hako.logger.info "Deleted target group #{target_group.target_group_arn}"
+              Hako.logger.info "Deleted target group #{target_group.target_group_arn}"
+            end
           end
         end
       end
@@ -236,9 +247,19 @@ module Hako
         @elb_v2_config.fetch('load_balancer_name', "hako-#{@app_id}")
       end
 
+      # @return [Boolean]
+      def load_balancer_given?
+        @elb_v2_config.key?('load_balancer_name')
+      end
+
       # @return [String]
       def target_group_name
-        @elb_v2_config.fetch('target_group_name', elb_name)
+        @elb_v2_config.fetch('target_group_name', "hako-#{@app_id}")
+      end
+
+      # @return [Boolean]
+      def target_group_given?
+        @elb_v2_config.key?('target_group_name')
       end
 
       # @return [Hash]
