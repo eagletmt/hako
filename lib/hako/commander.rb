@@ -70,6 +70,7 @@ module Hako
     # @return [nil]
     def remove(dry_run:)
       scripts = @app.definition.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
+      scripts.each(&:remove_starting)
       load_scheduler(@app.definition['scheduler'], scripts, dry_run: dry_run).remove
       scripts.each(&:after_remove)
     end

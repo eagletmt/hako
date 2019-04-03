@@ -44,6 +44,8 @@ module Hako
     # @param [Hash<String, Container>] _containers
     def oneshot_finished(_containers); end
 
+    def remove_starting; end
+
     def after_remove; end
 
     private
