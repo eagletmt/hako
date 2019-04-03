@@ -1,3 +1,15 @@
+# 2.9.0 (2019-04-03)
+## New features
+- Add `remove_starting` method to Hako::Script which is called when `hako remove` starts
+- Support sharing load balancers
+  - When `elb_v2` field has `load_balancer_name` but doesn't have `target_group_name`, hako will manage only the target group and doesn't touch the load balancer.
+  - This is useful when one load balancer is shared with multiple target groups and some of them is deployed by hako.
+  - See [examples/hello-shared-alb.jsonnet](examples/hello-shared-alb.jsonnet)
+
+## Changes
+- When `load_balancer_name` is specified and `target_group_name` is not, the default `target_group_name` is changed from `load_balancer_name` to `hako-#{app_id}`.
+  - If you use `load_balancer_name` field only, you must specify `target_group_name` field too.
+
 # 2.8.0 (2019-03-17)
 ## New features
 - Add `deploy_failed` method to Hako::Script which is called when `hako deploy` fails
