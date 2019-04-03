@@ -103,6 +103,7 @@ module Hako
           validation_error!('desired_count must be set')
         end
         front_port = determine_front_port
+        ecs_elb_client.find_or_create_load_balancer(front_port)
         @scripts.each { |script| script.deploy_started(containers, front_port) }
         definitions = create_definitions(containers)
 
@@ -886,7 +887,6 @@ module Hako
           params[:desired_count] = 0
         end
         if ecs_elb_client.find_or_create_load_balancer(front_port)
-          ecs_elb_client.modify_attributes
           params[:load_balancers] = [ecs_elb_client.load_balancer_params_for_service]
         end
         if @service_discovery
