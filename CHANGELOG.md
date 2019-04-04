@@ -1,3 +1,7 @@
+# 2.9.1 (2019-04-04)
+- Skip creating load balancer on dry-run
+  - Regression in v2.9.0
+
 # 2.9.0 (2019-04-03)
 ## New features
 - Add `remove_starting` method to Hako::Script which is called when `hako remove` starts
