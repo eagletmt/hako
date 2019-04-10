@@ -1,4 +1,10 @@
+# 2.9.2 (2019-04-10)
+## Bug fixes
+- Change threshold for detecting a deployment failure
+  - See [this commit](https://github.com/eagletmt/hako/commit/12e27259dc2f0317f8b2c1156b66572c88a3801e) for details
+
 # 2.9.1 (2019-04-04)
+## Bug fixes
 - Skip creating load balancer on dry-run
   - Regression in v2.9.0
 
