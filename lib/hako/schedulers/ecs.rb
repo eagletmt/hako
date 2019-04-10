@@ -946,10 +946,12 @@ module Hako
           Hako.logger.debug "  latest_event_id=#{latest_event_id}, deployments=#{s.deployments}"
           no_active = s.deployments.all? { |d| d.status != 'ACTIVE' }
           primary = s.deployments.find { |d| d.status == 'PRIMARY' }
-          if primary.desired_count < @started_task_ids.size
+          if primary.desired_count * 2 < @started_task_ids.size
             Hako.logger.error('Some started tasks are stopped. It seems new deployment is failing to start')
-            ecs_client.describe_tasks(cluster: service.cluster_arn, tasks: @started_task_ids).tasks.each do |task|
-              report_task_diagnostics(task)
+            @started_task_ids.each_slice(100) do |task_ids|
+              ecs_client.describe_tasks(cluster: service.cluster_arn, tasks: task_ids).tasks.each do |task|
+                report_task_diagnostics(task)
+              end
             end
             return false
           end
