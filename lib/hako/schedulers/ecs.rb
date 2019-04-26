@@ -642,6 +642,7 @@ module Hako
           command: container.command,
           privileged: container.privileged,
           linux_parameters: container.linux_parameters,
+          depends_on: container.depends_on,
           volumes_from: container.volumes_from,
           user: container.user,
           log_configuration: container.log_configuration,

@@ -189,6 +189,17 @@ module Hako
       end
     end
 
+    def depends_on
+      if @definition.key?('depends_on')
+        @definition['depends_on'].map do |depends_on|
+          {
+            container_name: depends_on.fetch('container_name'),
+            condition: depends_on.fetch('condition'),
+          }
+        end
+      end
+    end
+
     private
 
     PROVIDERS_KEY = '$providers'
