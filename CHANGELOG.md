@@ -1,3 +1,7 @@
+# 2.10.0 (2019-05-09)
+## New features
+- Support `depends_on` parameter in container definition
+
 # 2.9.2 (2019-04-10)
 ## Bug fixes
 - Change threshold for detecting a deployment failure
