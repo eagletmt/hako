@@ -76,6 +76,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         command: nil,
         privileged: false,
         linux_parameters: nil,
+        depends_on: nil,
         volumes_from: [],
         user: nil,
         log_configuration: nil,

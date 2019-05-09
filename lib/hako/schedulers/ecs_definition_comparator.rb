@@ -34,6 +34,7 @@ module Hako
           struct.member(:mount_points, Schema::UnorderedArray.new(mount_point_schema))
           struct.member(:entry_point, Schema::Nullable.new(Schema::OrderedArray.new(Schema::String.new)))
           struct.member(:command, Schema::Nullable.new(Schema::OrderedArray.new(Schema::String.new)))
+          struct.member(:depends_on, Schema::Nullable.new(Schema::UnorderedArray.new(depends_on_schema)))
           struct.member(:volumes_from, Schema::UnorderedArray.new(volumes_from_schema))
           struct.member(:user, Schema::Nullable.new(Schema::String.new))
           struct.member(:privileged, Schema::Boolean.new)
@@ -160,6 +161,13 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:name, Schema::String.new)
           struct.member(:value_from, Schema::String.new)
+        end
+      end
+
+      def depends_on_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:container_name, Schema::String.new)
+          struct.member(:condition, Schema::String.new)
         end
       end
     end
