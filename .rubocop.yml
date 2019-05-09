@@ -4,7 +4,7 @@ AllCops:
   DisplayCopNames: true
   TargetRubyVersion: 2.3
 
-Layout/FirstParameterIndentation:
+Layout/IndentFirstArgument:
   Enabled: false
 
 Naming/PredicateName:
@@ -42,7 +42,4 @@ Style/TrailingCommaInArguments:
 Style/TrailingCommaInArrayLiteral:
   Enabled: false
 Style/TrailingCommaInHashLiteral:
-  Enabled: false
-
-Performance/RedundantBlockCall:
   Enabled: false
