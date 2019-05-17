@@ -45,6 +45,7 @@ module Hako
           struct.member(:linux_parameters, Schema::Nullable.new(linux_parameters_schema))
           struct.member(:readonly_root_filesystem, Schema::Nullable.new(Schema::Boolean.new))
           struct.member(:docker_security_options, Schema::Nullable.new(Schema::UnorderedArray.new(Schema::String.new)))
+          struct.member(:system_controls, Schema::Nullable.new(system_controls_schema))
         end
       end
 
@@ -168,6 +169,13 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:container_name, Schema::String.new)
           struct.member(:condition, Schema::String.new)
+        end
+      end
+
+      def system_controls_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:namespace, Schema::String.new)
+          struct.member(:value, Schema::String.new)
         end
       end
     end
