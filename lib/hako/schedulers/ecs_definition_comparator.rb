@@ -173,6 +173,10 @@ module Hako
       end
 
       def system_controls_schema
+        Schema::UnorderedArray.new(system_control_schema)
+      end
+
+      def system_control_schema
         Schema::Structure.new.tap do |struct|
           struct.member(:namespace, Schema::String.new)
           struct.member(:value, Schema::String.new)
