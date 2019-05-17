@@ -33,6 +33,7 @@ module Hako
       privileged
       readonly_root_filesystem
       docker_security_options
+      system_controls
     ].each do |name|
       define_method(name) do
         @definition[name]
@@ -186,6 +187,18 @@ module Hako
         end
 
         ret
+      end
+    end
+
+    # @return [Array<Hash>, nil]
+    def system_controls
+      if @definition.key?('system_controls')
+        @definition['system_controls'].map do |system_control|
+          {
+            namespace: system_control.fetch('namespace'),
+            value: system_control.fetch('value'),
+          }
+        end
       end
     end
 

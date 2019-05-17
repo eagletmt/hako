@@ -651,6 +651,7 @@ module Hako
           extra_hosts: container.extra_hosts,
           readonly_root_filesystem: container.readonly_root_filesystem,
           docker_security_options: container.docker_security_options,
+          system_controls: container.system_controls,
         }
       end
 
@@ -1240,6 +1241,11 @@ module Hako
         end
         if definition[:entry_point]
           cmd << '--entrypoint' << definition[:entry_point]
+        end
+        if definition[:system_controls]
+          definition.fetch(:system_controls).each do |system_control|
+            cmd << '--sysctl' << "#{system_control.fetch(:namespace)}=#{system_control.fetch(:value)}"
+          end
         end
 
         cmd << "\\\n  "
