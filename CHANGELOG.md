@@ -1,3 +1,7 @@
+# 2.11.0 (2019-05-17)
+## New features
+- Support `system_controls` parameter in container definition
+
 # 2.10.0 (2019-05-09)
 ## New features
 - Support `depends_on` parameter in container definition
