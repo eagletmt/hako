@@ -1,3 +1,7 @@
+# 2.11.1 (2019-05-17)
+## Bug fixes
+- Fix comparison of `system_controls` parameter
+
 # 2.11.0 (2019-05-17)
 ## New features
 - Support `system_controls` parameter in container definition
