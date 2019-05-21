@@ -1247,6 +1247,28 @@ module Hako
             cmd << '--sysctl' << "#{system_control.fetch(:namespace)}=#{system_control.fetch(:value)}"
           end
         end
+        if definition[:health_check]
+          if definition[:health_check][:command]
+            health_check_command_type = definition[:health_check][:command][0]
+            case health_check_command_type
+            when 'NONE'
+              cmd << '--no-healthcheck'
+            when 'CMD', 'CMD-SHELL'
+              health_check_command = definition[:health_check][:command][1..-1].join(' ')
+              cmd << '--health-cmd' << health_check_command.inspect
+            else
+              raise "Health check command type #{health_check_command_type} is not supported. CMD, CMD-SHELL and NONE are supported."
+            end
+          end
+          if definition[:health_check][:retries]
+            cmd << '--health-retries' << definition[:health_check][:retries]
+          end
+          %i[interval timeout start_period].each do |property|
+            if definition[:health_check][property]
+              cmd << "--health-#{property}" << "#{definition[:health_check][property]}s"
+            end
+          end
+        end
 
         cmd << "\\\n  "
         definition.fetch(:environment).each do |env|
