@@ -1257,7 +1257,7 @@ module Hako
               health_check_command = definition[:health_check][:command][1..-1].join(' ')
               cmd << '--health-cmd' << health_check_command.inspect
             else
-              raise "Health check command type #{health_check_command_type} is not supported.\nCMD, CMD-SHELL and NONE are supported."
+              raise "Health check command type #{health_check_command_type} is not supported. CMD, CMD-SHELL and NONE are supported."
             end
           end
           if definition[:health_check][:retries]
