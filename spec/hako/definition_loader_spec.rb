@@ -63,5 +63,37 @@ RSpec.describe Hako::DefinitionLoader do
         end
       end
     end
+
+    context 'with ext_vars' do
+      let(:fixture_name) { 'default_with_ext_var.jsonnet' }
+      let(:app) { Hako::Application.new(fixture_root.join('jsonnet', fixture_name), ext_vars: ext_vars) }
+
+      context 'specify ext_vars' do
+        let(:ext_vars) do
+          {
+            app_image: 'app-image',
+            front_image: 'front-image',
+          }
+        end
+
+        it 'loads all containers' do
+          containers = definition_loader.load
+          expect(containers.keys).to match_array(%w[app front])
+          expect(containers.values).to all(be_a(Hako::Container))
+          expect(containers['app'].image_tag).to eq('app-image:latest')
+          expect(containers['app'].links).to eq([])
+          expect(containers['front'].image_tag).to eq('front-image')
+          expect(containers['front'].links).to eq([])
+        end
+      end
+
+      context 'not specify ext_vars' do
+        let(:ext_vars) { {} }
+
+        it 'error occur' do
+          expect { definition_loader.load }.to raise_error(Jsonnet::EvaluationError)
+        end
+      end
+    end
   end
 end
