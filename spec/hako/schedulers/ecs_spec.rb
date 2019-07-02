@@ -302,7 +302,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         )).once
         expect(elb_v2_client).to receive(:create_load_balancer).with(
           name: "hako-#{app.id}",
-          subnets: ['subnet-11111111', 'subnet-22222222'],
+          subnets: %w[subnet-11111111 subnet-22222222],
           security_groups: ['sg-11111111'],
           scheme: nil,
           type: nil,
