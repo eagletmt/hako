@@ -198,8 +198,9 @@ module Hako
       # @param [Array<String>] commands
       # @param [Hash<String, String>] env
       # @param [Boolean] no_wait
+      # @param [Hako::CLI::Oneshot::Overrides, nil] overrides
       # @return [Integer] Returns exit code
-      def oneshot(containers, commands, env, no_wait: false)
+      def oneshot(containers, commands, env, no_wait: false, overrides: nil)
         definitions = create_definitions(containers)
 
         if @dry_run
@@ -210,7 +211,7 @@ module Hako
             if d[:name] == 'app'
               d[:command] = commands
             end
-            print_definition_in_cli_format(d, additional_env: env)
+            print_definition_in_cli_format(d, additional_env: env, overrides: overrides)
             check_secrets(d)
           end
           0
@@ -221,7 +222,7 @@ module Hako
           else
             Hako.logger.info "Task definition isn't changed: #{task_definition.task_definition_arn}"
           end
-          @task = run_task(task_definition, commands, env)
+          @task = run_task(task_definition, commands, env, overrides)
           Hako.logger.info "Started task: #{@task.task_arn}"
           @scripts.each { |script| script.oneshot_started(self) }
           if no_wait
@@ -658,21 +659,13 @@ module Hako
       # @param [Aws::ECS::Types::TaskDefinition] task_definition
       # @param [Array<String>] commands
       # @param [Hash<String, String>] env
+      # @param [Hako::CLI::Oneshot::Overrides] overrides
       # @return [Aws::ECS::Types::Task]
-      def run_task(task_definition, commands, env)
-        environment = env.map { |k, v| { name: k, value: v } }
+      def run_task(task_definition, commands, env, overrides)
         result = ecs_client.run_task(
           cluster: @cluster,
           task_definition: task_definition.task_definition_arn,
-          overrides: {
-            container_overrides: [
-              {
-                name: 'app',
-                command: commands,
-                environment: environment,
-              },
-            ],
-          },
+          overrides: overrides_option(commands, env, overrides),
           count: 1,
           placement_constraints: @placement_constraints,
           started_by: 'hako oneshot',
@@ -700,6 +693,25 @@ module Hako
         else
           raise e
         end
+      end
+
+      # @param [Array<String>] commands
+      # @param [Hash<String, String>] env
+      # @param [Hako::CLI::Oneshot::Overrides, nil] overrides
+      # @doc https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_ContainerOverride.html
+      def overrides_option(commands, env, overrides)
+        {
+          container_overrides: [
+            {
+              name: 'app',
+              cpu: overrides&.app_cpu,
+              memory: overrides&.app_memory,
+              memory_reservation: overrides&.app_memory_reservation,
+              command: commands,
+              environment: env.map { |k, v| { name: k, value: v } },
+            },
+          ],
+        }
       end
 
       # @return [Fixnum]
@@ -1154,17 +1166,33 @@ module Hako
 
       # @param [Hash] definition
       # @param [Hash<String, String>] additional_env
+      # @param [Hako::CLI::Oneshot::Overrides, nil] overrides
       # @return [nil]
-      def print_definition_in_cli_format(definition, additional_env: {})
+      def print_definition_in_cli_format(definition, additional_env: {}, overrides: nil)
         cmd = %w[docker run]
         cmd << '--name' << definition.fetch(:name)
-        cmd << '--cpu-shares' << definition.fetch(:cpu)
-        if definition[:memory]
-          cmd << '--memory' << "#{definition[:memory]}M"
+
+        if overrides && definition.fetch(:name) == 'app'
+          cpu = overrides.app_cpu || definition.fetch(:cpu)
+          cmd << '--cpu-shares' << cpu
+          memory = overrides.app_memory || definition[:memory]
+          if memory
+            cmd << '--memory' << "#{memory}M"
+          end
+          memory_reservation = overrides.app_memory_reservation || definition[:memory_reservation]
+          if memory_reservation
+            cmd << '--memory-reservation' << "#{memory_reservation}M"
+          end
+        else
+          cmd << '--cpu-shares' << definition.fetch(:cpu)
+          if definition[:memory]
+            cmd << '--memory' << "#{definition[:memory]}M"
+          end
+          if definition[:memory_reservation]
+            cmd << '--memory-reservation' << "#{definition[:memory_reservation]}M"
+          end
         end
-        if definition[:memory_reservation]
-          cmd << '--memory-reservation' << "#{definition[:memory_reservation]}M"
-        end
+
         definition.fetch(:links).each do |link|
           cmd << '--link' << link
         end
