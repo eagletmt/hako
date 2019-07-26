@@ -12,11 +12,12 @@ module Hako
     # @param [Application] application
     # @param [Boolean] expand_variables
     # @param [Boolean] ask_keys
-    def initialize(application, expand_variables:, ask_keys:)
+    def initialize(application, expand_variables:, ask_keys:, ext_vars:)
       @vm = Jsonnet::VM.new
       @root_path = application.root_path
       define_provider_functions(expand_variables, ask_keys)
       @vm.ext_var('appId', application.id)
+      ext_vars.each { |k, v| @vm.ext_var(k.to_s, v) }
     end
 
     # @param [Pathname] path

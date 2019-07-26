@@ -15,7 +15,7 @@ module Hako
     #   @return [Hash]
     attr_reader :id, :root_path, :definition
 
-    def initialize(definition_path, expand_variables: true, ask_keys: false)
+    def initialize(definition_path, expand_variables: true, ask_keys: false, ext_vars: {})
       path = Pathname.new(definition_path)
       @id = path.basename.sub_ext('').to_s
       @root_path = path.parent
@@ -24,7 +24,7 @@ module Hako
         when '.yml', '.yaml'
           YamlLoader.new.load(path)
         when '.jsonnet', '.json'
-          JsonnetLoader.new(self, expand_variables: expand_variables, ask_keys: ask_keys).load(path)
+          JsonnetLoader.new(self, expand_variables: expand_variables, ask_keys: ask_keys, ext_vars: ext_vars).load(path)
         else
           raise Error.new("Unknown extension: #{path}")
         end
