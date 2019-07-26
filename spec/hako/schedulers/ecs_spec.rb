@@ -505,7 +505,7 @@ RSpec.describe Hako::Schedulers::Ecs do
   describe '#oneshot' do
     context 'when the same task definition exists' do
       let(:app) { Hako::Application.new(fixture_root.join('jsonnet', 'ecs.jsonnet')) }
-      let(:app_id) { "#{app.id}-oneshot" }
+      let(:task_definition) { "#{app.id}-oneshot" }
       let(:commands) { 'echo hello' }
       let(:env) { { 'AWESOME' => '1' } }
       let(:task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
@@ -514,7 +514,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       let(:ec2_instance_id) { 'i-A1B2C3D4' }
 
       before do
-        allow(ecs_client).to receive(:describe_task_definition).with(task_definition: app_id).and_return(Aws::ECS::Types::DescribeTaskDefinitionResponse.new(
+        allow(ecs_client).to receive(:describe_task_definition).with(task_definition: task_definition).and_return(Aws::ECS::Types::DescribeTaskDefinitionResponse.new(
           task_definition: Aws::ECS::Types::TaskDefinition.new(
             task_definition_arn: task_definition_arn,
             container_definitions: [dummy_container_definition],
