@@ -20,9 +20,10 @@ module Hako
 
       # @param [Aws::ECS::Types::LoadBalancer] ecs_lb
       # @return [nil]
-      def show_status(ecs_lb)
-        lbs = describe_load_balancers
-        lbs.each do |lb|
+      def show_status(ecs_lbs)
+        ecs_lbs.each do |ecs_lb|
+          elb_config = @elb_v2s_config.find{|c| elb_name(c) == ecs_lb.load_balancer_name}
+          lb = describe_load_balancer(elb_config)
           elb_client.describe_listeners(load_balancer_arn: lb.load_balancer_arn).each do |page|
             page.listeners.each do |listener|
               puts "  #{lb.dns_name}:#{listener.port} -> #{ecs_lb.container_name}:#{ecs_lb.container_port}"
@@ -150,12 +151,14 @@ module Hako
       end
 
       # @return [Hash]
-      def load_balancer_params_for_service
-        {
-          target_group_arn: describe_target_group.target_group_arn,
-          container_name: @elb_v2s_config.fetch('container_name', 'front'),
-          container_port: @elb_v2s_config.fetch('container_port', 80),
-        }
+      def load_balancer_params_for_services
+        @elb_v2s_config.map do |elb_config|
+          {
+            target_group_arn: describe_target_group.target_group_arn,
+            container_name: elb_config.fetch('container_name', 'front'),
+            container_port: elb_config.fetch('container_port', 80),
+          }
+        end
       end
 
       private

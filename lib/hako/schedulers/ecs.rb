@@ -254,7 +254,11 @@ module Hako
 
         unless service.load_balancers.empty?
           puts 'Load balancer:'
-          ecs_elb_client.show_status(service.load_balancers[0])
+          if @elb_v2s_config
+            ecs_elb_client.show_status(service.load_balancers)
+          else
+            ecs_elb_client.show_status(service.load_balancers[0])
+          end
         end
 
         puts 'Deployments:'
@@ -894,7 +898,11 @@ module Hako
           params[:desired_count] = 0
         end
         if ecs_elb_client.find_or_create_load_balancer(front_port)
-          params[:load_balancers] = [ecs_elb_client.load_balancer_params_for_service]
+          if @ecs_elb_v2s_options
+            params[:load_balancers] = ecs_elb_client.load_balancer_params_for_services
+          else
+            params[:load_balancers] = [ecs_elb_client.load_balancer_params_for_service]
+          end
         end
         if @service_discovery
           @service_discovery.apply
