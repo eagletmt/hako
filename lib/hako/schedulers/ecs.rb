@@ -37,7 +37,8 @@ module Hako
         @task_role_arn = options.fetch('task_role_arn', nil)
         @ecs_elb_options = options.fetch('elb', nil)
         @ecs_elb_v2_options = options.fetch('elb_v2', nil)
-        if @ecs_elb_options && @ecs_elb_v2_options
+        @ecs_elb_v2s_options = options.fetch('elb_v2s', nil)
+        if @ecs_elb_options && @ecs_elb_v2_options && @ecs_elb_v2s_options
           validation_error!('Cannot specify both elb and elb_v2')
         end
         @network_mode = options.fetch('network_mode', nil)
@@ -47,7 +48,7 @@ module Hako
         end
         @dynamic_port_mapping = options.fetch('dynamic_port_mapping', @ecs_elb_options.nil?)
         @health_check_grace_period_seconds = options.fetch('health_check_grace_period_seconds') do
-          @ecs_elb_options || @ecs_elb_v2_options ? 0 : nil
+          @ecs_elb_options || @ecs_elb_v2_options || @ecs_elb_v2s_options ? 0 : nil
         end
         if options.key?('autoscaling')
           @autoscaling = EcsAutoscaling.new(options.fetch('autoscaling'), @region, ecs_elb_client, dry_run: @dry_run)
@@ -379,13 +380,15 @@ module Hako
         @ssm_client ||= Aws::SSM::Client.new(region: @region)
       end
 
-      # @return [EcsElb, EcsElbV2]
+      # @return [EcsElb, EcsElbV2, EcsElbV2s]
       def ecs_elb_client
         @ecs_elb_client ||=
           if @ecs_elb_options
             EcsElb.new(@app_id, @region, @ecs_elb_options, dry_run: @dry_run)
-          else
+          elsif @ecs_elb_v2_options
             EcsElbV2.new(@app_id, @region, @ecs_elb_v2_options, dry_run: @dry_run)
+          else
+            EcsElbV2s.new(@app_id, @region, @ecs_elb_v2s_options, dry_run: @dry_run)
           end
       end
 
