@@ -34,28 +34,34 @@ module Hako
 
       # @return [Aws::ElasticLoadBalancingV2::Types::TargetGroup]
       def describe_target_group
-        elb_client.describe_target_groups(names: [target_group_name]).target_groups[0]
+        cfg = @elb_v2s_config.find{|c| c.fetch('primary_target', false)}
+        if cfg == nil
+          cfg = @elb_v2s_config[0]
+        end
+        tg = cfg.fetch('target_group_name', "hako-#{@app_id}")
+        elb_client.describe_target_groups(names: [tg]).target_groups[0]
       rescue Aws::ElasticLoadBalancingV2::Errors::TargetGroupNotFound
         nil
       end
 
       # @param [Fixnum] front_port
-      # @return [nil]
+      # @return [Boolean]
       def find_or_create_load_balancer(_front_port)
         unless @elb_v2s_config
           return false
         end
         @elb_v2s_config.each do |elb_config|
           load_balancer = describe_load_balancer(elb_config)
-          if !load_balancer_given?(elb_config) && !load_balancer
+          if load_balancer_given?(elb_config) && !load_balancer
             create_load_balancer(elb_config)
           end
+
           target_group = describe_tg(elb_config)
-          if !target_group_given?(elb_config) && !target_group
+          if target_group_given?(elb_config) && !target_group
            create_target_group(elb_config)
           end
 
-          unless load_balancer_given?(elb_config)
+          if load_balancer_given?(elb_config)
             listener_ports = elb_client.describe_listeners(load_balancer_arn: load_balancer.load_balancer_arn).flat_map { |page| page.listeners.map(&:port) }
             (elb_config).fetch('listeners').each do |l|
               params = {
@@ -101,7 +107,7 @@ module Hako
         nil
       end
 
-      # @return [nil]
+      # @return [Boolean]
       def destroy
         unless @elb_v2s_config
           return false
@@ -123,7 +129,7 @@ module Hako
           end
           
           unless target_group_given?(elb_config)
-            target_group = describe_target_group(elb_config)
+            target_group = describe_tg(elb_config)
             if target_group
               if @dry_run
                 Hako.logger.info("elb_client.delete_target_group(target_group_arn: #{target_group.target_group_arn})")
@@ -154,7 +160,7 @@ module Hako
       def load_balancer_params_for_services
         @elb_v2s_config.map do |elb_config|
           {
-            target_group_arn: describe_target_group.target_group_arn,
+            target_group_arn: describe_tg(elb_config).target_group_arn,
             container_name: elb_config.fetch('container_name', 'front'),
             container_port: elb_config.fetch('container_port', 80),
           }
@@ -233,7 +239,7 @@ module Hako
         target_group = if elb_type == 'network'
                          elb_client.create_target_group(
                            name: target_group_name(elb_config),
-                           port: elb_config.fetch('target_port'),
+                           port: elb_config.fetch('container_port'),
                            protocol: 'TCP',
                            vpc_id: elb_config.fetch('vpc_id'),
                            target_type: elb_config.fetch('target_type', nil),
@@ -241,11 +247,11 @@ module Hako
                        else
                          elb_client.create_target_group(
                            name: target_group_name(elb_config),
-                           port: elb_config.fetch('target_port'),
+                           port: elb_config.fetch('container_port'),
                            protocol: 'HTTP',
                            vpc_id: elb_config.fetch('vpc_id'),
                            health_check_path: elb_config.fetch('health_check_path', nil),
-                           target_type: elb_config.fetch('target_type', nil),
+                           target_type: elb_config.fetch('target_type', 'ip'),
                          ).target_groups[0]
                        end
         Hako.logger.info "Created target group #{target_group.target_group_arn}"
@@ -303,7 +309,7 @@ module Hako
       # @return [nil]
       def set_target_group_attributes(elb_config)
         if elb_config.key?('target_group_attributes')
-          target_group = describe_target_group(elb_config)
+          target_group = describe_tg(elb_config)
           attributes = elb_config.fetch('target_group_attributes').map { |key, value| { key: key, value: value } }
           if @dry_run
             if target_group
