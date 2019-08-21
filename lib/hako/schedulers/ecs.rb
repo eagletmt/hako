@@ -899,11 +899,12 @@ module Hako
           params[:desired_count] = 0
         end
         if ecs_elb_client.find_or_create_load_balancer(front_port)
-          if @ecs_elb_v2s_options
-            params[:load_balancers] = ecs_elb_client.load_balancer_params_for_services
-          else
-            params[:load_balancers] = [ecs_elb_client.load_balancer_params_for_service]
-          end
+          params[:load_balancers] =
+            if @ecs_elb_v2s_options
+              ecs_elb_client.load_balancer_params_for_services
+            else
+              [ecs_elb_client.load_balancer_params_for_service]
+            end
         end
         if @service_discovery
           @service_discovery.apply

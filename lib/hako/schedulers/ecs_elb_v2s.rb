@@ -22,7 +22,7 @@ module Hako
       # @return [nil]
       def show_status(ecs_lbs)
         ecs_lbs.each do |ecs_lb|
-          elb_config = @elb_v2s_config.find{|c| elb_name(c) == ecs_lb.load_balancer_name}
+          elb_config = @elb_v2s_config.find { |c| elb_name(c) == ecs_lb.load_balancer_name }
           lb = describe_load_balancer(elb_config)
           elb_client.describe_listeners(load_balancer_arn: lb.load_balancer_arn).each do |page|
             page.listeners.each do |listener|
@@ -34,8 +34,8 @@ module Hako
 
       # @return [Aws::ElasticLoadBalancingV2::Types::TargetGroup]
       def describe_target_group
-        cfg = @elb_v2s_config.find{|c| c.fetch('primary_target', false)}
-        if cfg == nil
+        cfg = @elb_v2s_config.find { |c| c.fetch('primary_target', false) }
+        if cfg.nil?
           cfg = @elb_v2s_config[0]
         end
         tg = cfg.fetch('target_group_name', "hako-#{@app_id}")
@@ -50,6 +50,7 @@ module Hako
         unless @elb_v2s_config
           return false
         end
+
         @elb_v2s_config.each do |elb_config|
           load_balancer = describe_load_balancer(elb_config)
           if load_balancer_given?(elb_config) && !load_balancer
@@ -58,12 +59,12 @@ module Hako
 
           target_group = describe_tg(elb_config)
           if target_group_given?(elb_config) && !target_group
-           create_target_group(elb_config)
+            create_target_group(elb_config)
           end
 
           if load_balancer_given?(elb_config)
             listener_ports = elb_client.describe_listeners(load_balancer_arn: load_balancer.load_balancer_arn).flat_map { |page| page.listeners.map(&:port) }
-            (elb_config).fetch('listeners').each do |l|
+            elb_config.fetch('listeners').each do |l|
               params = {
                 load_balancer_arn: load_balancer.load_balancer_arn,
                 protocol: l.fetch('protocol'),
@@ -75,7 +76,7 @@ module Hako
               if certificate_arn
                 params[:certificates] = [{ certificate_arn: certificate_arn }]
               end
-  
+
               unless listener_ports.include?(params[:port])
                 listener = elb_client.create_listener(params).listeners[0]
                 Hako.logger.info("Created listener #{listener.listener_arn}")
@@ -101,7 +102,7 @@ module Hako
           end
 
           unless target_group_given?(elb_config)
-            set_target_group_attributes(elb_config)
+            modify_target_group_attributes(elb_config)
           end
         end
         nil
@@ -127,7 +128,7 @@ module Hako
               Hako.logger.info "ELBv2 #{elb_name(elb_config)} doesn't exist"
             end
           end
-          
+
           unless target_group_given?(elb_config)
             target_group = describe_tg(elb_config)
             if target_group
@@ -148,7 +149,7 @@ module Hako
                 unless deleted
                   raise Error.new("Cannot delete target group #{target_group.target_group_arn}")
                 end
-  
+
                 Hako.logger.info "Deleted target group #{target_group.target_group_arn}"
               end
             end
@@ -208,29 +209,28 @@ module Hako
 
       # @return [nil]
       def create_load_balancer(elb_config)
-          tags = elb_config.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } }
-
-          elb_type = elb_config.fetch('type', nil)
-          if elb_type == 'network'
-            load_balancer = elb_client.create_load_balancer(
-              name: elb_name(elb_config),
-              subnets: elb_config.fetch('subnets'),
-              scheme: elb_config.fetch('scheme', nil),
-              type: 'network',
-              tags: tags.empty? ? nil : tags,
-            ).load_balancers[0]
-            Hako.logger.info "Created ELBv2(NLB) #{load_balancer.dns_name}"
-          else
-            load_balancer = elb_client.create_load_balancer(
-              name: elb_name(elb_config),
-              subnets: elb_config.fetch('subnets'),
-              security_groups: elb_config.fetch('security_groups'),
-              scheme: elb_config.fetch('scheme', nil),
-              type: elb_config.fetch('type', nil),
-              tags: tags.empty? ? nil : tags,
-            ).load_balancers[0]
-            Hako.logger.info "Created ELBv2 #{load_balancer.dns_name}"
-          end        
+        tags = elb_config.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } }
+        elb_type = elb_config.fetch('type', nil)
+        if elb_type == 'network'
+          load_balancer = elb_client.create_load_balancer(
+            name: elb_name(elb_config),
+            subnets: elb_config.fetch('subnets'),
+            scheme: elb_config.fetch('scheme', nil),
+            type: 'network',
+            tags: tags.empty? ? nil : tags,
+          ).load_balancers[0]
+          Hako.logger.info "Created ELBv2(NLB) #{load_balancer.dns_name}"
+        else
+          load_balancer = elb_client.create_load_balancer(
+            name: elb_name(elb_config),
+            subnets: elb_config.fetch('subnets'),
+            security_groups: elb_config.fetch('security_groups'),
+            scheme: elb_config.fetch('scheme', nil),
+            type: elb_config.fetch('type', nil),
+            tags: tags.empty? ? nil : tags,
+          ).load_balancers[0]
+          Hako.logger.info "Created ELBv2 #{load_balancer.dns_name}"
+        end
       end
 
       # @return [nil]
@@ -258,7 +258,7 @@ module Hako
       end
 
       # @return [nil]
-      def set_subnets(elb_config, load_balancer)        
+      def set_subnets(elb_config, load_balancer)
         subnets = elb_config.fetch('subnets').sort
         if load_balancer && subnets != load_balancer.availability_zones.map(&:subnet_id).sort
           if @dry_run
@@ -290,7 +290,7 @@ module Hako
       end
 
       # @return [nil]
-      def set_load_balancer_attributes(elb_config, load_balancer)
+      def set_load_balancer_attributes(_elb_config, load_balancer)
         if @elb_v2s_config.key?('load_balancer_attributes')
           attributes = @elb_v2s_config.fetch('load_balancer_attributes').map { |key, value| { key: key, value: value } }
           if @dry_run
@@ -307,7 +307,7 @@ module Hako
       end
 
       # @return [nil]
-      def set_target_group_attributes(elb_config)
+      def modify_target_group_attributes(elb_config)
         if elb_config.key?('target_group_attributes')
           target_group = describe_tg(elb_config)
           attributes = elb_config.fetch('target_group_attributes').map { |key, value| { key: key, value: value } }
