@@ -46,8 +46,9 @@ module Hako
     # @param [Hash<String, String>] env
     # @param [Boolean] dry_run
     # @param [Boolean] no_wait
+    # @param [Hako::CLI::Oneshot::Overrides, nil] overrides
     # @return [nil]
-    def oneshot(commands, tag:, containers:, env: {}, dry_run: false, no_wait: false)
+    def oneshot(commands, tag:, containers:, env: {}, dry_run: false, no_wait: false, overrides: nil)
       containers = load_containers(tag, dry_run: dry_run, with: containers)
       scripts = @app.definition.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
       volumes = @app.definition.fetch('volumes', {})
@@ -55,7 +56,7 @@ module Hako
 
       scripts.each { |script| script.oneshot_starting(containers) }
       exit_code = with_oneshot_signal_handlers(scheduler) do
-        scheduler.oneshot(containers, commands, env, no_wait: no_wait)
+        scheduler.oneshot(containers, commands, env, no_wait: no_wait, overrides: overrides)
       end
       scripts.each { |script| script.oneshot_finished(containers) }
       exit exit_code

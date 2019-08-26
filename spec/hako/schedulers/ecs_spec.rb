@@ -2,6 +2,7 @@
 
 require 'spec_helper'
 require 'hako/application'
+require 'hako/cli'
 require 'hako/definition_loader'
 require 'hako/loader'
 require 'hako/schedulers/ecs'
@@ -497,6 +498,129 @@ RSpec.describe Hako::Schedulers::Ecs do
         expect(logger_io.string).to include('Created service discovery service')
         expect(logger_io.string).to include('Updated service')
         expect(logger_io.string).to include('Deployment completed')
+      end
+    end
+  end
+
+  describe '#oneshot' do
+    context 'when the same task definition exists' do
+      let(:app) { Hako::Application.new(fixture_root.join('jsonnet', 'ecs.jsonnet')) }
+      let(:task_definition) { "#{app.id}-oneshot" }
+      let(:commands) { 'echo hello' }
+      let(:env) { { 'AWESOME' => '1' } }
+      let(:task_definition_arn) { "arn:aws:ecs:ap-northeast-1:012345678901:task-definition/#{app.id}:1" }
+      let(:task_arn) { 'arn:aws:ecs:ap-northeast-1:012345678901:task/eagletmt/0123456789012345678' }
+      let(:container_instance_arn) { 'arn:aws:ecs:ap-northeast-1:012345678901:container-instance/a1b2c3d4-5678-90ab-cdef-11111EXAMPLE' }
+      let(:ec2_instance_id) { 'i-A1B2C3D4' }
+
+      before do
+        allow(ecs_client).to receive(:describe_task_definition).with(task_definition: task_definition).and_return(Aws::ECS::Types::DescribeTaskDefinitionResponse.new(
+          task_definition: Aws::ECS::Types::TaskDefinition.new(
+            task_definition_arn: task_definition_arn,
+            container_definitions: [dummy_container_definition],
+            volumes: [],
+          ),
+        )).once
+        allow(ecs_client).to receive(:run_task).with(
+          cluster: 'eagletmt',
+          task_definition: task_definition_arn,
+          overrides: overrides_option,
+          count: 1,
+          placement_constraints: [],
+          started_by: 'hako oneshot',
+          launch_type: nil,
+          platform_version: nil,
+          network_configuration: nil,
+        ).and_return(Aws::ECS::Types::RunTaskResponse.new(
+          failures: [],
+          tasks: [
+            Aws::ECS::Types::Task.new(
+              task_arn: task_arn,
+            ),
+          ]
+        )).once
+        allow(ecs_client).to receive(:describe_tasks).with(
+          cluster: 'eagletmt',
+          tasks: [task_arn],
+        ).and_return(Aws::ECS::Types::DescribeTasksResponse.new(
+          failures: [],
+          tasks: [
+            Aws::ECS::Types::Task.new(
+              task_arn: task_arn,
+              started_at: Time.parse('2019-07-05'),
+              container_instance_arn: container_instance_arn,
+              last_status: 'STOPPED',
+              stopped_reason: 'Essential container in task exited',
+              containers: [
+                Aws::ECS::Types::Container.new(name: 'app'),
+              ],
+            ),
+          ]
+        )).once
+        allow(ecs_client).to receive(:describe_container_instances).with(
+          cluster: 'eagletmt',
+          container_instances: [container_instance_arn],
+        ).and_return(Aws::ECS::Types::DescribeContainerInstancesResponse.new(
+          failures: [],
+          container_instances: [
+            Aws::ECS::Types::ContainerInstance.new(
+              ec2_instance_id: ec2_instance_id,
+            ),
+          ]
+        )).once
+      end
+
+      context 'when no overrides' do
+        let(:overrides_option) do
+          {
+            container_overrides: [
+              {
+                command: commands,
+                cpu: nil,
+                environment: [
+                  { name: 'AWESOME', value: '1' },
+                ],
+                memory: nil,
+                memory_reservation: nil,
+                name: 'app',
+              },
+            ],
+          }
+        end
+
+        it 'runs task' do
+          scheduler.oneshot(containers, commands, env, no_wait: false, overrides: nil)
+        end
+      end
+
+      context 'with overrides' do
+        let(:overrides) do
+          Hako::CLI::Oneshot::Overrides.new.tap do |o|
+            o.app_cpu = 128
+            o.app_memory = 128
+            o.app_memory_reservation = 256
+          end
+        end
+        let(:overrides_option) do
+          {
+            container_overrides: [
+              {
+                command: commands,
+                cpu: 128,
+                environment: [
+                  { name: 'AWESOME', value: '1' },
+                ],
+                memory: 128,
+                memory_reservation: 256,
+                name: 'app',
+              },
+            ],
+          }
+        end
+
+        it 'runs task with overrides option' do
+          scheduler.oneshot(containers, commands, env, no_wait: false, overrides: overrides)
+        end
       end
     end
   end

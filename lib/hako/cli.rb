@@ -147,6 +147,8 @@ module Hako
     end
 
     class Oneshot
+      Overrides = Struct.new(:app_cpu, :app_memory, :app_memory_reservation)
+
       def run(argv)
         parse!(argv)
         require 'hako/application'
@@ -162,7 +164,7 @@ module Hako
           else
             {}
           end
-        Commander.new(Application.new(@definition_path, options)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run, no_wait: @no_wait)
+        Commander.new(Application.new(@definition_path, options)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run, no_wait: @no_wait, overrides: @overrides)
       end
 
       def parse!(argv)
@@ -171,6 +173,7 @@ module Hako
         @env = {}
         @verbose = false
         @no_wait = false
+        @overrides = Overrides.new
         parser.parse!(argv)
         @definition_path = argv.shift
         @argv = argv
@@ -194,6 +197,9 @@ module Hako
             k, v = arg.split('=', 2)
             @env[k] = v
           end
+          opts.on('--app-cpu=VAL', Integer, 'Override the default cpu for the app container') { |v| @overrides.app_cpu = v }
+          opts.on('--app-memory=VAL', Integer, 'Override the default memory for the app container') { |v| @overrides.app_memory = v }
+          opts.on('--app-memory-reservation=VAL', Integer, 'Override the default memory reservation for the app container') { |v| @overrides.app_memory_reservation = v }
         end
       end
     end
