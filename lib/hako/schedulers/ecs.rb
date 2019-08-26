@@ -1255,9 +1255,6 @@ module Hako
             cmd << '--tmpfs' << "#{tmpfs[:container_path]}:#{options.join(',')}"
           end
         end
-        definition.fetch(:volumes_from).each do |volumes_from|
-          p volumes_from
-        end
         if definition[:user]
           cmd << '--user' << definition[:user]
         end
