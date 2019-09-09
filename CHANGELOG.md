@@ -1,3 +1,13 @@
+# 2.12.0 (2019-09-09)
+## New features
+- Support more overrides options for `hako oneshot`
+  - `--app-cpu`, `--app-memory` and `--app-memory-reservation` are added
+
+## Bug fixes
+- Show `--health-*` options in dry-run
+
+## Bug fixes
+
 # 2.11.1 (2019-05-17)
 ## Bug fixes
 - Fix comparison of `system_controls` parameter
