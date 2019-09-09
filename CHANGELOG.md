@@ -6,8 +6,6 @@
 ## Bug fixes
 - Show `--health-*` options in dry-run
 
-## Bug fixes
-
 # 2.11.1 (2019-05-17)
 ## Bug fixes
 - Fix comparison of `system_controls` parameter
