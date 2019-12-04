@@ -74,6 +74,15 @@ module Hako
         @memory = options.fetch('memory', nil)
         @requires_compatibilities = options.fetch('requires_compatibilities', nil)
         @launch_type = options.fetch('launch_type', nil)
+        if options.key?('capacity_provider_strategy')
+          @capacity_provider_strategy = options.fetch('capacity_provider_strategy').map do |strategy|
+            {
+              capacity_provider: strategy.fetch('capacity_provider'),
+              weight: strategy.fetch('weight', nil),
+              base: strategy.fetch('base', nil),
+            }
+          end
+        end
         @platform_version = options.fetch('platform_version', nil)
         if options.key?('network_configuration')
           network_configuration = options.fetch('network_configuration')
@@ -670,6 +679,7 @@ module Hako
           placement_constraints: @placement_constraints,
           started_by: 'hako oneshot',
           launch_type: @launch_type,
+          capacity_provider_strategy: @capacity_provider_strategy,
           platform_version: @platform_version,
           network_configuration: @network_configuration,
         )
@@ -864,6 +874,7 @@ module Hako
           desired_count: @desired_count,
           task_definition: task_definition_arn,
           deployment_configuration: @deployment_configuration,
+          capacity_provider_strategy: @capacity_provider_strategy,
           platform_version: @platform_version,
           network_configuration: @network_configuration,
           health_check_grace_period_seconds: @health_check_grace_period_seconds,
@@ -871,6 +882,19 @@ module Hako
         if @autoscaling
           # Keep current desired_count if autoscaling is enabled
           params[:desired_count] = current_service.desired_count
+        end
+        # Copy the curreent capacity provider strategy in order to avoid a
+        # perpetual diff when the service specifies no strategy and uses the
+        # cluster's default capacity.
+        # It is not allowed to update the service to use the cluster's default
+        # capacity provider strategy when it is using a non-default capacity
+        # provider strategy.
+        params[:capacity_provider_strategy] ||= current_service.capacity_provider_strategy&.map(&:to_h)
+        if different_capacity_provider_strategy?(params[:capacity_provider_strategy], current_service.capacity_provider_strategy)
+          # Switching from launch type to capacity provider strategy or making
+          # a change to a capacity provider strategy requires to force a new
+          # deployment.
+          params[:force_new_deployment] = true
         end
         warn_placement_policy_change(current_service)
         warn_service_registries_change(current_service)
@@ -895,6 +919,7 @@ module Hako
           placement_strategy: @placement_strategy,
           scheduling_strategy: @scheduling_strategy,
           launch_type: @launch_type,
+          capacity_provider_strategy: @capacity_provider_strategy,
           platform_version: @platform_version,
           network_configuration: @network_configuration,
           health_check_grace_period_seconds: @health_check_grace_period_seconds,
@@ -1346,6 +1371,15 @@ module Hako
         end
 
         nil
+      end
+
+      # @param [Hash, nil] expected_strategy
+      # @param [Aws::ECS::Types::CapacityProviderStrategyItem, nil] actual_strategy
+      # @return [Boolean]
+      def different_capacity_provider_strategy?(expected_strategy, actual_strategy)
+        expected = (expected_strategy || []).map { |s| [s[:capacity_provider], s[:weight] || 0, s[:base] || 0] }.sort
+        actual = (actual_strategy || []).map { |s| [s.capacity_provider, s.weight, s.base] }.sort
+        expected != actual
       end
 
       # @param [Aws::ECS::Types::Service] service
