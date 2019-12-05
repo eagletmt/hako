@@ -91,6 +91,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         docker_security_options: nil,
         system_controls: nil,
         repository_credentials: nil,
+        firelens_configuration: nil,
       }],
       volumes: [],
       requires_compatibilities: nil,
