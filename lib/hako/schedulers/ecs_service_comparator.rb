@@ -46,7 +46,7 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:subnets, Schema::UnorderedArray.new(Schema::String.new))
           struct.member(:security_groups, Schema::UnorderedArray.new(Schema::String.new))
-          struct.member(:assign_public_ip, Schema::String.new)
+          struct.member(:assign_public_ip, Schema::WithDefault.new(Schema::String.new, 'DISABLED'))
         end
       end
 
