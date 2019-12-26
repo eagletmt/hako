@@ -158,6 +158,16 @@ module Hako
                   elb_client.modify_listener(listener_arn: current_listener.listener_arn, ssl_policy: new_listener['ssl_policy'])
                 end
               end
+
+              if current_listener && new_listener['certificate_arn'] && new_listener['certificate_arn'] != current_listener.certificates[0]&.certificate_arn
+                certificates = [{ certificate_arn: new_listener['certificate_arn'] }]
+                if @dry_run
+                  Hako.logger.info("elb_client.modify_listener(listener_arn: #{current_listener.listener_arn}, certificates: #{certificates.inspect}) (dry-run)")
+                else
+                  Hako.logger.info("Updating ELBv2 listener #{new_listener['port']} certificates to #{certificates.inspect}")
+                  elb_client.modify_listener(listener_arn: current_listener.listener_arn, certificates: certificates)
+                end
+              end
             end
           end
 
