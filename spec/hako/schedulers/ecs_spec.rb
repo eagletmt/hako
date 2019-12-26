@@ -341,6 +341,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           listeners << Aws::ElasticLoadBalancingV2::Types::Listener.new(
             listener_arn: "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:listener/app/#{app.id}/0123456789abcdef/0123456789abcdef",
             port: 80,
+            certificates: [],
           )
           Aws::ElasticLoadBalancingV2::Types::CreateListenerOutput.new(listeners: listeners)
         end.once
@@ -356,6 +357,12 @@ RSpec.describe Hako::Schedulers::Ecs do
             listener_arn: "arn:aws:elasticloadbalancing:ap-northeast-1:012345678901:listener/app/#{app.id}/0123456789abcdef/abcdef0123456789",
             port: 443,
             ssl_policy: 'ELBSecurityPolicy-2016-08',
+            certificates: [
+              Aws::ElasticLoadBalancingV2::Types::Certificate.new(
+                certificate_arn: 'arn:aws:acm:ap-northeast-1:012345678901:certificate/01234567-89ab-cdef-0123-456789abcdef',
+                is_default: false,
+              ),
+            ],
           )
           Aws::ElasticLoadBalancingV2::Types::CreateListenerOutput.new(listeners: listeners)
         end.once
