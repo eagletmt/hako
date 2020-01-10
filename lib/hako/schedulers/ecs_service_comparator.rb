@@ -23,6 +23,7 @@ module Hako
           struct.member(:desired_count, Schema::Integer.new)
           struct.member(:task_definition, Schema::String.new)
           struct.member(:deployment_configuration, Schema::WithDefault.new(deployment_configuration_schema, default_configuration))
+          struct.member(:capacity_provider_strategy, Schema::Nullable.new(Schema::UnorderedArray.new(capacity_provider_strategy_schema)))
           struct.member(:platform_version, Schema::WithDefault.new(Schema::String.new, 'LATEST'))
           struct.member(:network_configuration, Schema::Nullable.new(network_configuration_schema))
           struct.member(:health_check_grace_period_seconds, Schema::Nullable.new(Schema::Integer.new))
@@ -33,6 +34,14 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:maximum_percent, Schema::Integer.new)
           struct.member(:minimum_healthy_percent, Schema::Integer.new)
+        end
+      end
+
+      def capacity_provider_strategy_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:capacity_provider, Schema::String.new)
+          struct.member(:weight, Schema::WithDefault.new(Schema::Integer.new, 0))
+          struct.member(:base, Schema::WithDefault.new(Schema::Integer.new, 0))
         end
       end
 

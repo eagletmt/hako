@@ -38,6 +38,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       placement_strategy: [],
       scheduling_strategy: nil,
       launch_type: nil,
+      capacity_provider_strategy: nil,
       platform_version: nil,
       network_configuration: nil,
       health_check_grace_period_seconds: nil,
@@ -49,6 +50,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       service: app.id,
       desired_count: 1,
       deployment_configuration: nil,
+      capacity_provider_strategy: nil,
       platform_version: nil,
       network_configuration: nil,
       health_check_grace_period_seconds: nil,
@@ -529,6 +531,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           placement_constraints: [],
           started_by: 'hako oneshot',
           launch_type: nil,
+          capacity_provider_strategy: nil,
           platform_version: nil,
           network_configuration: nil,
         ).and_return(Aws::ECS::Types::RunTaskResponse.new(
