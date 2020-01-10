@@ -1,3 +1,10 @@
+# 2.13.0 (2020-01-10)
+## New features
+- Support capacity provider strategy
+
+## Bug fixes
+- Do not try to update assign_public_ip when it is not changed
+
 # 2.12.0 (2019-09-09)
 ## New features
 - Support more overrides options for `hako oneshot`
