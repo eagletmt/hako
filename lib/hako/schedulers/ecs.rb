@@ -883,9 +883,10 @@ module Hako
           # Keep current desired_count if autoscaling is enabled
           params[:desired_count] = current_service.desired_count
         end
-        # Copy the curreent capacity provider strategy in order to avoid a
-        # perpetual diff when the service specifies no strategy and uses the
-        # cluster's default capacity.
+        # Copy the current capacity provider strategy in order to avoid a
+        # perpetual diff when the service is created with no strategy to use the
+        # cluster's default capacity provider strategy, which results in the
+        # strategy being set to the default strategy at that moment.
         # It is not allowed to update the service to use the cluster's default
         # capacity provider strategy when it is using a non-default capacity
         # provider strategy.
