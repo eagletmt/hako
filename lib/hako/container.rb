@@ -213,6 +213,16 @@ module Hako
       end
     end
 
+    def firelens_configuration
+      if @definition.key?('firelens_configuration')
+        conf = @definition['firelens_configuration']
+        {
+          type: conf.fetch('type'),
+          options: conf.fetch('options', nil),
+        }
+      end
+    end
+
     private
 
     PROVIDERS_KEY = '$providers'
