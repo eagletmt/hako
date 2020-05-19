@@ -466,7 +466,7 @@ module Hako
       # @param [Array<Hash>] desired_definitions
       # @param [Aws::ECS::Types::TaskDefinition] actual_definition
       # @param [Array<Aws::ECS::Types::Tag>] actual_tags
-      # @return [Array<Boolean]
+      # @return [Array<Boolean>]
       def task_definition_changed?(desired_definitions, actual_definition, actual_tags)
         if @force
           return true
