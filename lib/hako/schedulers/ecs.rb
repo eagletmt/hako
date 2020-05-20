@@ -100,6 +100,7 @@ module Hako
         if options['service_discovery']
           @service_discovery = EcsServiceDiscovery.new(options.fetch('service_discovery'), @region, dry_run: @dry_run)
         end
+        @tags = options.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } }
 
         @started_at = nil
         @container_instance_arn = nil
@@ -464,8 +465,9 @@ module Hako
 
       # @param [Array<Hash>] desired_definitions
       # @param [Aws::ECS::Types::TaskDefinition] actual_definition
-      # @return [Array<Boolean]
-      def task_definition_changed?(desired_definitions, actual_definition)
+      # @param [Array<Aws::ECS::Types::Tag>] actual_tags
+      # @return [Array<Boolean>]
+      def task_definition_changed?(desired_definitions, actual_definition, actual_tags)
         if @force
           return true
         end
@@ -513,6 +515,11 @@ module Hako
         if actual_definition.requires_compatibilities != @requires_compatibilities
           return true
         end
+        actual_tags_set = Set.new(actual_tags.map { |t| {key: t.key, value: t.value } })
+        tags_set = Set.new(@tags)
+        if actual_tags_set != tags_set
+          return true
+        end
 
         false
       end
@@ -535,7 +542,10 @@ module Hako
       # @return [Array<Boolean, Aws::ECS::Types::TaskDefinition>]
       def register_task_definition(definitions)
         current_task_definition = describe_task_definition(@app_id)
-        if task_definition_changed?(definitions, current_task_definition)
+        if current_task_definition
+          current_tags = ecs_client.list_tags_for_resource(resource_arn: current_task_definition.task_definition_arn).tags
+        end
+        if task_definition_changed?(definitions, current_task_definition, current_tags)
           new_task_definition = ecs_client.register_task_definition(
             family: @app_id,
             task_role_arn: @task_role_arn,
@@ -546,6 +556,7 @@ module Hako
             requires_compatibilities: @requires_compatibilities,
             cpu: @cpu,
             memory: @memory,
+            tags: @tags.empty? ? nil : @tags,
           ).task_definition
           [true, new_task_definition]
         else
@@ -568,7 +579,10 @@ module Hako
           begin
             family = "#{@app_id}-oneshot"
             current_task_definition = describe_task_definition(family)
-            if task_definition_changed?(definitions, current_task_definition)
+            if current_task_definition
+              current_tags = ecs_client.list_tags_for_resource(resource_arn: current_task_definition.task_definition_arn).tags
+            end
+            if task_definition_changed?(definitions, current_task_definition, current_tags)
               new_task_definition = ecs_client.register_task_definition(
                 family: family,
                 task_role_arn: @task_role_arn,
@@ -579,6 +593,7 @@ module Hako
                 requires_compatibilities: @requires_compatibilities,
                 cpu: @cpu,
                 memory: @memory,
+                tags: @tags.empty? ? nil : @tags,
               ).task_definition
               return [true, new_task_definition]
             else
@@ -682,6 +697,7 @@ module Hako
           capacity_provider_strategy: @capacity_provider_strategy,
           platform_version: @platform_version,
           network_configuration: @network_configuration,
+          propagate_tags: 'TASK_DEFINITION',
         )
         result.failures.each do |failure|
           Hako.logger.error("#{failure.arn} #{failure.reason}")
@@ -924,6 +940,7 @@ module Hako
           platform_version: @platform_version,
           network_configuration: @network_configuration,
           health_check_grace_period_seconds: @health_check_grace_period_seconds,
+          propagate_tags: 'TASK_DEFINITION',
         }
         if @scheduling_strategy != 'DAEMON'
           params[:desired_count] = 0

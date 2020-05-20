@@ -42,6 +42,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       platform_version: nil,
       network_configuration: nil,
       health_check_grace_period_seconds: nil,
+      propagate_tags: 'TASK_DEFINITION',
     }
   end
   let(:update_service_params) do
@@ -94,6 +95,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       requires_compatibilities: nil,
       cpu: nil,
       memory: nil,
+      tags: nil,
     }
   end
   let(:dummy_service_response) do
@@ -185,6 +187,7 @@ RSpec.describe Hako::Schedulers::Ecs do
             volumes: [],
           ),
         )).once
+        allow(ecs_client).to receive(:list_tags_for_resource).with(resource_arn: task_definition_arn).and_return(Aws::ECS::Types::ListTagsForResourceResponse.new(tags: [])).once
       end
 
       it 'does nothing' do
@@ -210,6 +213,7 @@ RSpec.describe Hako::Schedulers::Ecs do
             volumes: [],
           ),
         )).once
+        allow(ecs_client).to receive(:list_tags_for_resource).with(resource_arn: task_definition_arn).and_return(Aws::ECS::Types::ListTagsForResourceResponse.new(tags: [])).once
       end
 
       it 'updates service' do
@@ -241,6 +245,7 @@ RSpec.describe Hako::Schedulers::Ecs do
             volumes: [],
           ),
         )).once
+        allow(ecs_client).to receive(:list_tags_for_resource).with(resource_arn: running_task_definition_arn).and_return(Aws::ECS::Types::ListTagsForResourceResponse.new(tags: [])).once
       end
       it 'updates task definition and service' do
         expect(ecs_client).to receive(:register_task_definition).with(register_task_definition_params).and_return(Aws::ECS::Types::RegisterTaskDefinitionResponse.new(
@@ -273,6 +278,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       before do
         allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [])).once
         allow(ecs_client).to receive(:describe_task_definition).with(task_definition: app.id).and_raise(Aws::ECS::Errors::ClientException.new(nil, 'Unable to describe task definition')).once
+        allow(ecs_client).to receive(:list_tags_for_resource).with(resource_arn: task_definition_arn).and_return(Aws::ECS::Types::ListTagsForResourceResponse.new(tags: [])).once
 
         allow(Aws::ElasticLoadBalancingV2::Client).to receive(:new).and_return(elb_v2_client)
         @created_load_balancer = nil
@@ -410,6 +416,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       before do
         allow(ecs_client).to receive(:describe_services).with(cluster: 'eagletmt', services: [app.id]).and_return(Aws::ECS::Types::DescribeServicesResponse.new(failures: [], services: [])).once
         allow(ecs_client).to receive(:describe_task_definition).with(task_definition: app.id).and_raise(Aws::ECS::Errors::ClientException.new(nil, 'Unable to describe task definition')).once
+        allow(ecs_client).to receive(:list_tags_for_resource).with(resource_arn: task_definition_arn).and_return(Aws::ECS::Types::ListTagsForResourceResponse.new(tags: [])).once
 
         allow(Aws::ServiceDiscovery::Client).to receive(:new).and_return(service_discovery_client)
         namespace = Aws::ServiceDiscovery::Types::Namespace.new(type: 'DNS_PRIVATE')
@@ -523,6 +530,7 @@ RSpec.describe Hako::Schedulers::Ecs do
             volumes: [],
           ),
         )).once
+        allow(ecs_client).to receive(:list_tags_for_resource).with(resource_arn: task_definition_arn).and_return(Aws::ECS::Types::ListTagsForResourceResponse.new(tags: [])).once
         allow(ecs_client).to receive(:run_task).with(
           cluster: 'eagletmt',
           task_definition: task_definition_arn,
@@ -534,6 +542,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           capacity_provider_strategy: nil,
           platform_version: nil,
           network_configuration: nil,
+          propagate_tags: 'TASK_DEFINITION',
         ).and_return(Aws::ECS::Types::RunTaskResponse.new(
           failures: [],
           tasks: [
