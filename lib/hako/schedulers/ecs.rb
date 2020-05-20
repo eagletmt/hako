@@ -677,6 +677,7 @@ module Hako
           readonly_root_filesystem: container.readonly_root_filesystem,
           docker_security_options: container.docker_security_options,
           system_controls: container.system_controls,
+          repository_credentials: container.repository_credentials,
         }
       end
 
