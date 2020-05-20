@@ -150,22 +150,25 @@ module Hako
             current_listeners = elb_client.describe_listeners(load_balancer_arn: load_balancer.load_balancer_arn).listeners
             new_listeners.each do |new_listener|
               current_listener = current_listeners.find { |l| l.port == new_listener['port'] }
+              modify_listener_properties = {}
+
               if current_listener && new_listener['ssl_policy'] && new_listener['ssl_policy'] != current_listener.ssl_policy
-                if @dry_run
-                  Hako.logger.info("elb_client.modify_listener(listener_arn: #{current_listener.listener_arn}, ssl_policy: #{new_listener['ssl_policy']}) (dry-run)")
-                else
-                  Hako.logger.info("Updating ELBv2 listener #{new_listener['port']} ssl_policy to #{new_listener['ssl_policy']}")
-                  elb_client.modify_listener(listener_arn: current_listener.listener_arn, ssl_policy: new_listener['ssl_policy'])
-                end
+                modify_listener_properties[:ssl_policy] = new_listener['ssl_policy']
               end
 
               if current_listener && new_listener['certificate_arn'] && new_listener['certificate_arn'] != current_listener.certificates[0]&.certificate_arn
-                certificates = [{ certificate_arn: new_listener['certificate_arn'] }]
+                modify_listener_properties[:certificates] = [{ certificate_arn: new_listener['certificate_arn'] }]
+              end
+
+              unless modify_listener_properties.empty?
+                modify_listener_arguments = modify_listener_properties.merge(listener_arn: current_listener.listener_arn)
                 if @dry_run
-                  Hako.logger.info("elb_client.modify_listener(listener_arn: #{current_listener.listener_arn}, certificates: #{certificates.inspect}) (dry-run)")
+                  Hako.logger.info("elb_client.modify_listener(#{modify_listener_arguments.map { |k, v| "#{k}: #{v.inspect}" }.join(", ")}) (dry-run)")
                 else
-                  Hako.logger.info("Updating ELBv2 listener #{new_listener['port']} certificates to #{certificates.inspect}")
-                  elb_client.modify_listener(listener_arn: current_listener.listener_arn, certificates: certificates)
+                  modify_listener_properties.each do |k, v|
+                    Hako.logger.info("Updating ELBv2 listener #{new_listener['port']} #{k} to #{v.inspect}")
+                    elb_client.modify_listener(modify_listener_arguments)
+                  end
                 end
               end
             end
