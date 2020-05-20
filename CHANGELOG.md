@@ -1,3 +1,9 @@
+# 2.14.0 (2020-05-20)
+## New features
+- Support tags for task definition and propagate them to ECS tasks
+    - Now all created ECS services and launched ECS tasks have `propagate_tags=TASK_DEFINITION` parameter.
+- Support repository_credentials
+
 # 2.13.0 (2020-01-10)
 ## New features
 - Support capacity provider strategy
