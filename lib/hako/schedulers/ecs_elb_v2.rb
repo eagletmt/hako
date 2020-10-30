@@ -89,13 +89,22 @@ module Hako
                              target_type: @elb_v2_config.fetch('target_type', nil),
                            ).target_groups[0]
                          else
+                           matcher =
+                             if @elb_v2_config.key?('matcher')
+                               {
+                                 http_code: @elb_v2_config.fetch('matcher')['http_code'],
+                                 grpc_code: @elb_v2_config.fetch('matcher')['grpc_code'],
+                               }
+                             end
                            elb_client.create_target_group(
                              name: target_group_name,
                              port: 80,
                              protocol: 'HTTP',
+                             protocol_version: @elb_v2_config.fetch('protocol_version', 'HTTP1'),
                              vpc_id: @elb_v2_config.fetch('vpc_id'),
                              health_check_path: @elb_v2_config.fetch('health_check_path', nil),
                              target_type: @elb_v2_config.fetch('target_type', nil),
+                             matcher: matcher,
                            ).target_groups[0]
                          end
 
