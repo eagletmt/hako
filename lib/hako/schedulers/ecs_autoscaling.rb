@@ -162,9 +162,7 @@ module Hako
       end
 
       class Policy
-        attr_reader :policy_type
-        attr_reader :alarms, :cooldown, :adjustment_type, :scaling_adjustment, :metric_interval_lower_bound, :metric_interval_upper_bound, :metric_aggregation_type
-        attr_reader :target_value, :predefined_metric_type, :scale_out_cooldown, :scale_in_cooldown, :disable_scale_in
+        attr_reader :policy_type, :alarms, :cooldown, :adjustment_type, :scaling_adjustment, :metric_interval_lower_bound, :metric_interval_upper_bound, :metric_aggregation_type, :target_value, :predefined_metric_type, :scale_out_cooldown, :scale_in_cooldown, :disable_scale_in
 
         # @param [Hash] options
         def initialize(options)

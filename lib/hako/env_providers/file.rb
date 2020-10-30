@@ -7,7 +7,7 @@ module Hako
     class File < EnvProvider
       # @param [Pathname] root_path
       # @param [Hash<String, Object>] options
-      def initialize(root_path, options)
+      def initialize(root_path, options) # rubocop:disable Lint/MissingSuper
         unless options['path']
           validation_error!('path must be set')
         end

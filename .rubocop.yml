@@ -3,8 +3,11 @@ inherit_from: .rubocop_todo.yml
 AllCops:
   DisplayCopNames: true
   TargetRubyVersion: 2.5
+  NewCops: disable
 
 Layout/FirstArgumentIndentation:
+  Enabled: false
+Layout/LineLength:
   Enabled: false
 
 Naming/PredicateName:
@@ -34,6 +37,8 @@ Style/PercentLiteralDelimiters:
 Style/RaiseArgs:
   EnforcedStyle: compact
 Style/SignalException:
+  Enabled: false
+Style/SoleNestedConditional:
   Enabled: false
 Style/StderrPuts:
   Enabled: false

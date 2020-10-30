@@ -18,7 +18,7 @@ module Hako
     # @param [String, nil] tag
     # @param [Boolean] dry_run
     # @return [nil]
-    def deploy(force: false, tag:, dry_run: false, timeout:)
+    def deploy(tag:, timeout:, force: false, dry_run: false)
       containers = load_containers(tag, dry_run: dry_run)
       scripts = @app.definition.fetch('scripts', []).map { |config| load_script(config, dry_run: dry_run) }
       volumes = @app.definition.fetch('volumes', {})
@@ -126,7 +126,7 @@ module Hako
     # @param [Boolean] dry_run
     # @param [Integer] timeout
     # @return [Scheduler]
-    def load_scheduler(scheduler_definition, scripts, volumes: {}, force: false, dry_run:, timeout: nil)
+    def load_scheduler(scheduler_definition, scripts, dry_run:, volumes: {}, force: false, timeout: nil)
       Loader.new(Hako::Schedulers, 'hako/schedulers').load(scheduler_definition.fetch('type')).new(@app.id, scheduler_definition, volumes: volumes, scripts: scripts, force: force, dry_run: dry_run, timeout: timeout)
     end
 
