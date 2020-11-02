@@ -1,3 +1,7 @@
+# 2.15.0 (2020-11-02)
+## New features
+- Support protocol_version and matcher option of ALB target groups
+
 # 2.14.0 (2020-05-20)
 ## New features
 - Support tags for task definition and propagate them to ECS tasks
