@@ -58,6 +58,10 @@ module Hako
           containers[name].volumes_from.each do |volumes_from|
             names << volumes_from[:source_container]
           end
+
+          containers[name].depends_on&.each do |depends_on|
+            names << depends_on[:container_name]
+          end
         end
       end
       containers
