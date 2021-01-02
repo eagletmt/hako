@@ -1,6 +1,5 @@
 # Hako
 [![Gem Version](https://badge.fury.io/rb/hako.svg)](http://badge.fury.io/rb/hako)
-[![Build Status](https://travis-ci.org/eagletmt/hako.svg)](https://travis-ci.org/eagletmt/hako)
 
 Deploy Docker container.
 
