@@ -1,12 +1,10 @@
 # frozen_string_literal: true
 
-require 'coveralls'
 require 'pathname'
 require 'simplecov'
 
 SimpleCov.formatters = [
   SimpleCov::Formatter::HTMLFormatter,
-  Coveralls::SimpleCov::Formatter,
 ]
 SimpleCov.start do
   add_filter __dir__
