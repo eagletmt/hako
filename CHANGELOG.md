@@ -1,3 +1,7 @@
+# 2.16.0 (2021-01-21)
+## New features
+- Support `efs_volume_configuration` parameter
+
 # 2.15.0 (2020-11-02)
 ## New features
 - Support protocol_version and matcher option of ALB target groups

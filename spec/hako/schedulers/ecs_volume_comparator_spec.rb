@@ -18,6 +18,16 @@ RSpec.describe Hako::Schedulers::EcsVolumeComparator do
           'foo' => 'bar',
         },
       },
+      efs_volume_configuration: {
+        authorization_config: {
+          access_point_id: 'foo',
+          iam: 'foo',
+        },
+        file_system_id: 'foo',
+        root_directory: '/foo',
+        transit_encryption: 'DISABLED',
+        transit_encryption_port: 1234,
+      },
       host: {
         source_path: '/tmp',
       },
@@ -37,6 +47,16 @@ RSpec.describe Hako::Schedulers::EcsVolumeComparator do
           'foo' => 'bar',
         },
         scope: 'task',
+      ),
+      efs_volume_configuration: Aws::ECS::Types::EFSVolumeConfiguration.new(
+        authorization_config: Aws::ECS::Types::EFSAuthorizationConfig.new(
+          access_point_id: 'foo',
+          iam: 'foo',
+        ),
+        file_system_id: 'foo',
+        root_directory: '/foo',
+        transit_encryption: 'DISABLED',
+        transit_encryption_port: 1234,
       ),
       host: Aws::ECS::Types::HostVolumeProperties.new(
         source_path: '/tmp',

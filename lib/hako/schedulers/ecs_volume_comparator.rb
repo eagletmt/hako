@@ -37,6 +37,23 @@ module Hako
         end
       end
 
+      def efs_volume_configuration_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:authorization_config, Schema::Nullable.new(efs_authorization_config_schema))
+          struct.member(:file_system_id, Schema::String.new)
+          struct.member(:root_directory, Schema::Nullable.new(Schema::String.new))
+          struct.member(:transit_encryption, Schema::Nullable.new(Schema::String.new))
+          struct.memberr(:transit_encryption_port, Schema::Nullable.new(Schema::Integer.new))
+        end
+      end
+
+      def efs_authorization_config_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:access_point_id, Schema::Nullable.new(Schema::String.new))
+          struct.member(:iam, Schema::Nullable.new(Schema::String.new))
+        end
+      end
+
       def host_schema
         Schema::Structure.new.tap do |struct|
           struct.member(:source_path, Schema::Nullable.new(Schema::String.new))
