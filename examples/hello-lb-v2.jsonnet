@@ -15,6 +15,14 @@
       // scheme: internal
       // Health check path of the target group
       health_check_path: '/site/sha',
+      // Health check timeout of the target group
+      health_check_timeout_seconds: 5,
+      // Health check interval of the target group
+      health_check_interval_seconds: 30,
+      // Required successful health check requests to targets to become healthy
+      healthy_threshold_count: 5,
+      // Target group consecutive failed health checks before considered unhealthy
+      unhealthy_threshold_count: 2,
       listeners: [
         {
           port: 80,

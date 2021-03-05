@@ -87,6 +87,8 @@ module Hako
                              protocol: 'TCP',
                              vpc_id: @elb_v2_config.fetch('vpc_id'),
                              target_type: @elb_v2_config.fetch('target_type', nil),
+                             healthy_threshold_count: @elb_v2_config.fetch('healthy_threshold_count', nil),
+                             unhealthy_threshold_count: @elb_v2_config.fetch('unhealthy_threshold_count', nil),
                            ).target_groups[0]
                          else
                            matcher =
@@ -103,6 +105,10 @@ module Hako
                              protocol_version: @elb_v2_config.fetch('protocol_version', 'HTTP1'),
                              vpc_id: @elb_v2_config.fetch('vpc_id'),
                              health_check_path: @elb_v2_config.fetch('health_check_path', nil),
+                             health_check_timeout_seconds: @elb_v2_config.fetch('health_check_timeout_seconds', nil),
+                             healthy_threshold_count: @elb_v2_config.fetch('healthy_threshold_count', nil),
+                             health_check_interval_seconds: elb_v2_config.fetch('health_check_interval_seconds', nil),
+                             unhealthy_threshold_count: elb_v2_config.fetch('unhealthy_threshold_count', nil),
                              target_type: @elb_v2_config.fetch('target_type', nil),
                              matcher: matcher,
                            ).target_groups[0]

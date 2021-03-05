@@ -1,3 +1,11 @@
+# 2.16.0 (2020-11-02)
+## New features
+- Support for parameters in elbv2 
+  - `health_check_timeout_seconds`
+  - `health_check_interval_seconds`
+  - `healthy_threshold_count`
+  - `unhealthy_threshold_count`
+
 # 2.15.0 (2020-11-02)
 ## New features
 - Support protocol_version and matcher option of ALB target groups
