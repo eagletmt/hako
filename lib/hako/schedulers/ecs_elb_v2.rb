@@ -206,6 +206,25 @@ module Hako
               elb_client.modify_target_group_attributes(target_group_arn: target_group.target_group_arn, attributes: attributes)
             end
           end
+          # modify health_check_path
+          if @elb_v2_config.key?('health_check_path')
+            target_group = describe_target_group
+            attributes = @elb_v2_config.fetch('health_check_path')
+            if @dry_run
+              if target_group
+                Hako.logger.info("elb_client.modify_target_group(target_group_arn: #{target_group.target_group_arn}, health_check_path: #{health_check_path}) (dry-run)")
+              else
+                Hako.logger.info("elb_client.modify_target_group_attributes(target_group_arn: unknown, attributes: #{attributes.inspect}) (dry-run)")
+              end
+            else
+              Hako.logger.info("Updating target group health_check_path to #{health_check_path}")
+              elb_client.modify_target_group(target_group_arn: target_group.target_group_arn, health_check_path: health_check_path)
+            end
+          end
+          # TODO modify health_check_timeout_seconds
+          # TODO modify healthy_threshold_count
+          # TODO modify health_check_interval_seconds
+          # TODO modify unhealthy_threshold_count
         end
         nil
       end
