@@ -107,8 +107,8 @@ module Hako
                              health_check_path: @elb_v2_config.fetch('health_check_path', nil),
                              health_check_timeout_seconds: @elb_v2_config.fetch('health_check_timeout_seconds', nil),
                              healthy_threshold_count: @elb_v2_config.fetch('healthy_threshold_count', nil),
-                             health_check_interval_seconds: elb_v2_config.fetch('health_check_interval_seconds', nil),
-                             unhealthy_threshold_count: elb_v2_config.fetch('unhealthy_threshold_count', nil),
+                             health_check_interval_seconds: @elb_v2_config.fetch('health_check_interval_seconds', nil),
+                             unhealthy_threshold_count: @elb_v2_config.fetch('unhealthy_threshold_count', nil),
                              target_type: @elb_v2_config.fetch('target_type', nil),
                              matcher: matcher,
                            ).target_groups[0]
@@ -206,28 +206,84 @@ module Hako
               elb_client.modify_target_group_attributes(target_group_arn: target_group.target_group_arn, attributes: attributes)
             end
           end
-          # modify health_check_path
-          if @elb_v2_config.key?('health_check_path')
+          # modify health_check_timeout
+          if @elb_v2_config.key?('health_check_timeout_seconds')
             target_group = describe_target_group
-            attributes = @elb_v2_config.fetch('health_check_path')
+            health_check_timeout_seconds = @elb_v2_config.fetch('health_check_timeout_seconds')
             if @dry_run
               if target_group
-                Hako.logger.info("elb_client.modify_target_group(target_group_arn: #{target_group.target_group_arn}, health_check_path: #{health_check_path}) (dry-run)")
+                Hako.logger.info("elb_client.modify_target_group(target_group_arn: #{target_group.target_group_arn}, health_check_timeout_seconds: #{health_check_timeout_seconds}) (dry-run)")
               else
-                Hako.logger.info("elb_client.modify_target_group_attributes(target_group_arn: unknown, attributes: #{attributes.inspect}) (dry-run)")
+                Hako.logger.info("elb_client.modify_target_group(#{target_group.target_group_arn}, health_check_timeout_seconds: #{health_check_timeout_seconds}) (dry-run)")
               end
             else
-              Hako.logger.info("Updating target group health_check_path to #{health_check_path}")
-              elb_client.modify_target_group(target_group_arn: target_group.target_group_arn, health_check_path: health_check_path)
+              Hako.logger.info("Updating target group health_check_timeout_seconds to #{health_check_timeout_seconds}")
+              elb_client.modify_target_group(target_group_arn: target_group.target_group_arn, health_check_timeout_seconds: health_check_timeout_seconds)
             end
           end
-          # TODO modify health_check_timeout_seconds
-          # TODO modify healthy_threshold_count
-          # TODO modify health_check_interval_seconds
-          # TODO modify unhealthy_threshold_count
+          # modify healthy_threshold_count
+          if @elb_v2_config.key?('healthy_threshold_count')
+            target_group = describe_target_group
+            healthy_threshold_count = @elb_v2_config.fetch('healthy_threshold_count')
+            if @dry_run
+              if target_group
+                Hako.logger.info("elb_client.modify_target_group(target_group_arn: #{target_group.target_group_arn}, healthy_threshold_count: #{healthy_threshold_count}) (dry-run)")
+              else
+                Hako.logger.info("elb_client.modify_target_group(#{target_group.target_group_arn}, healthy_threshold_count: #{healthy_threshold_count}) (dry-run)")
+              end
+            else
+              Hako.logger.info("Updating target group healthy_threshold_count to #{healthy_threshold_count}")
+              elb_client.modify_target_group(target_group_arn: target_group.target_group_arn, healthy_threshold_count: healthy_threshold_count)
+            end
+          end
+          # modify health_check_interval_seconds
+          if @elb_v2_config.key?('health_check_interval_seconds')
+            target_group = describe_target_group
+            health_check_interval_seconds = @elb_v2_config.fetch('health_check_interval_seconds')
+            if @dry_run
+              if target_group
+                Hako.logger.info("elb_client.modify_target_group(target_group_arn: #{target_group.target_group_arn}, health_check_interval_seconds: #{health_check_interval_seconds}) (dry-run)")
+              else
+                Hako.logger.info("elb_client.modify_target_group(#{target_group.target_group_arn}, health_check_interval_seconds: #{health_check_interval_seconds}) (dry-run)")
+              end
+            else
+              Hako.logger.info("Updating target group health_check_interval_seconds to #{health_check_interval_seconds}")
+              elb_client.modify_target_group(target_group_arn: target_group.target_group_arn, health_check_interval_seconds: health_check_interval_seconds)
+            end
+          end
+          # modify unhealthy_threshold_count
+          if @elb_v2_config.key?('unhealthy_threshold_count')
+            target_group = describe_target_group
+            unhealthy_threshold_count = @elb_v2_config.fetch('unhealthy_threshold_count')
+            if @dry_run
+              if target_group
+                Hako.logger.info("elb_client.modify_target_group(target_group_arn: #{target_group.target_group_arn}, unhealthy_threshold_count: #{unhealthy_threshold_count}) (dry-run)")
+              else
+                Hako.logger.info("elb_client.modify_target_group(#{target_group.target_group_arn}, unhealthy_threshold_count: #{unhealthy_threshold_count}) (dry-run)")
+              end
+            else
+              Hako.logger.info("Updating target group unhealthy_threshold_count to #{unhealthy_threshold_count}")
+              elb_client.modify_target_group(target_group_arn: target_group.target_group_arn, unhealthy_threshold_count: unhealthy_threshold_count)
+            end
+          end
         end
         nil
       end
+      
+      def modify_health_check(target_group, health_check_parameter)
+        health_check_value = @elb_v2_config.fetch(health_check_parameter)
+        if @dry_run
+          if target_group
+            Hako.logger.info("elb_client.modify_target_group(target_group_arn: #{target_group.target_group_arn}, #{health_check_parameter}: #{health_check_value}) (dry-run)")
+          else
+            Hako.logger.info("elb_client.modify_target_group(#{target_group.target_group_arn}, #{health_check_parameter}: #{health_check_value}) (dry-run)")
+          end
+        else
+          Hako.logger.info("Updating target group #{health_check_parameter} to #{health_check_value}")
+          elb_client.modify_target_group(target_group_arn: target_group.target_group_arn, health_check_parameter: health_check_value)
+        end
+      end
+
 
       # @return [nil]
       def destroy

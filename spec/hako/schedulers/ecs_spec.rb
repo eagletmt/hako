@@ -337,6 +337,10 @@ RSpec.describe Hako::Schedulers::Ecs do
           health_check_path: '/site/sha',
           target_type: nil,
           matcher: nil,
+          healthy_threshold_count: nil,
+          unhealthy_threshold_count: nil,
+          health_check_interval_seconds: nil,
+          health_check_timeout_seconds: nil,
         ) {
           target_group = Aws::ElasticLoadBalancingV2::Types::TargetGroup.new(target_group_arn: target_group_arn)
           target_groups << target_group
