@@ -73,7 +73,7 @@ module Hako
           else
             {}
           end
-        Commander.new(Application.new(@definition_path, options)).deploy(force: @force, tag: @tag, dry_run: @dry_run, timeout: @timeout)
+        Commander.new(Application.new(@definition_path, **options)).deploy(force: @force, tag: @tag, dry_run: @dry_run, timeout: @timeout)
       end
 
       DEFAULT_TIMEOUT = 1200 # 20 minutes
@@ -121,7 +121,7 @@ module Hako
           else
             {}
           end
-        Commander.new(Application.new(@definition_path, options)).rollback(dry_run: @dry_run)
+        Commander.new(Application.new(@definition_path, **options)).rollback(dry_run: @dry_run)
       end
 
       def parse!(argv)
@@ -164,7 +164,7 @@ module Hako
           else
             {}
           end
-        Commander.new(Application.new(@definition_path, options)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run, no_wait: @no_wait, overrides: @overrides)
+        Commander.new(Application.new(@definition_path, **options)).oneshot(@argv, tag: @tag, containers: @containers, env: @env, dry_run: @dry_run, no_wait: @no_wait, overrides: @overrides)
       end
 
       def parse!(argv)
