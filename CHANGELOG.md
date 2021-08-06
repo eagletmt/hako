@@ -1,3 +1,7 @@
+# 2.15.1 (2021-08-06)
+## Bug fixes
+- Fix keyword arguments for Ruby 3.0
+
 # 2.15.0 (2020-11-02)
 ## New features
 - Support protocol_version and matcher option of ALB target groups
