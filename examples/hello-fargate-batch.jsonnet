@@ -7,6 +7,9 @@
     execution_role_arn: 'arn:aws:iam::012345678901:role/ecsTaskExecutionRole',
     cpu: '1024',
     memory: '2048',
+    ephemeral_storage: {
+      size_in_gi_b: '25',
+    },
     requires_compatibilities: ['FARGATE'],
     network_mode: 'awsvpc',
     launch_type: 'FARGATE',
