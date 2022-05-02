@@ -72,6 +72,14 @@ module Hako
         @execution_role_arn = options.fetch('execution_role_arn', nil)
         @cpu = options.fetch('cpu', nil)
         @memory = options.fetch('memory', nil)
+        if options.key?('ephemeral_storage')
+          ephemeral_storage = options.fetch('ephemeral_storage')
+          if ephemeral_storage.key?('size_in_gi_b')
+            @ephemeral_storage = {
+              size_in_gi_b: ephemeral_storage.fetch('size_in_gi_b')
+            }
+          end
+        end
         @requires_compatibilities = options.fetch('requires_compatibilities', nil)
         @launch_type = options.fetch('launch_type', nil)
         if options.key?('capacity_provider_strategy')
@@ -515,6 +523,9 @@ module Hako
         if actual_definition.requires_compatibilities != @requires_compatibilities
           return true
         end
+        if actual_definition.ephemeral_storage != @ephemeral_storage
+          return true
+        end
 
         actual_tags_set = Set.new(actual_tags.map { |t| { key: t.key, value: t.value } })
         tags_set = Set.new(@tags)
@@ -557,6 +568,7 @@ module Hako
             requires_compatibilities: @requires_compatibilities,
             cpu: @cpu,
             memory: @memory,
+            ephemeral_storage: @ephemeral_storage,
             tags: @tags.empty? ? nil : @tags,
           ).task_definition
           [true, new_task_definition]
@@ -593,6 +605,7 @@ module Hako
               requires_compatibilities: @requires_compatibilities,
               cpu: @cpu,
               memory: @memory,
+              ephemeral_storage: @ephemeral_storage,
               tags: @tags.empty? ? nil : @tags,
             ).task_definition
             return [true, new_task_definition]
