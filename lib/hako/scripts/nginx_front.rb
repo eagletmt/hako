@@ -107,7 +107,7 @@ module Hako
 
         # @return [String]
         def render
-          ERB.new(File.read(nginx_conf_erb), nil, '-').result(binding)
+          ERB.new(File.read(nginx_conf_erb), trim_mode: '-').result(binding)
         end
 
         private
@@ -150,7 +150,7 @@ module Hako
         # @param [Location] location
         # @return [String]
         def render_location(listen_spec, location)
-          ERB.new(File.read(nginx_location_conf_erb), nil, '-').result(binding).each_line.map do |line|
+          ERB.new(File.read(nginx_location_conf_erb), trim_mode: '-').result(binding).each_line.map do |line|
             "    #{line}"
           end.join('')
         end

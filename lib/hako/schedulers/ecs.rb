@@ -1335,7 +1335,7 @@ module Hako
             when 'NONE'
               cmd << '--no-healthcheck'
             when 'CMD', 'CMD-SHELL'
-              health_check_command = definition[:health_check][:command][1..-1].join(' ')
+              health_check_command = definition[:health_check][:command][1..].join(' ')
               cmd << '--health-cmd' << health_check_command.inspect
             else
               raise "Health check command type #{health_check_command_type} is not supported. CMD, CMD-SHELL and NONE are supported."
