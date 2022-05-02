@@ -1,3 +1,13 @@
+# 2.16.0 (2022-05-02)
+## New features
+- Support ephemeral_storage option in ECS scheduler
+
+## Bug fixes
+- Fix keyword arguments for Ruby 3.0
+
+## Changes
+- Drop support for Ruby 2.5 (EOL on 2021-04-05)
+
 # 2.15.1 (2021-08-06)
 ## Bug fixes
 - Fix keyword arguments for Ruby 3.0
