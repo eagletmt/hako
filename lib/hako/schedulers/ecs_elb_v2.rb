@@ -127,7 +127,7 @@ module Hako
             end
 
             unless listener_ports.include?(params[:port])
-              listener = elb_client.create_listener(params).listeners[0]
+              listener = elb_client.create_listener(**params).listeners[0]
               Hako.logger.info("Created listener #{listener.listener_arn}")
             end
           end

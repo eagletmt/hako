@@ -134,7 +134,7 @@ module Hako
             condition: 'EQ',
           ],
         }
-        services = service_discovery_client.list_services(params).flat_map(&:services)
+        services = service_discovery_client.list_services(**params).flat_map(&:services)
         services.find { |service| service.name == service_name }
       end
 
@@ -146,7 +146,7 @@ module Hako
       # @param [Hash] service
       # @return [Aws::ServiceDiscovery::Types::Service]
       def create_service(service)
-        service_discovery_client.create_service(create_service_params(service)).service
+        service_discovery_client.create_service(**create_service_params(service)).service
       end
 
       # @param [Hash] service

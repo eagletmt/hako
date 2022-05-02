@@ -929,7 +929,7 @@ module Hako
         warn_placement_policy_change(current_service)
         warn_service_registries_change(current_service)
         if service_changed?(current_service, params)
-          ecs_client.update_service(params).service
+          ecs_client.update_service(**params).service
         else
           :noop
         end
@@ -965,7 +965,7 @@ module Hako
           @service_discovery.apply
           params[:service_registries] = @service_discovery.service_registries
         end
-        ecs_client.create_service(params).service
+        ecs_client.create_service(**params).service
       end
 
       # @param [Aws::ECS::Types::Service] service
