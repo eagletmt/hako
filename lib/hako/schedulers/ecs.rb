@@ -81,6 +81,13 @@ module Hako
           end
         end
         @requires_compatibilities = options.fetch('requires_compatibilities', nil)
+        if options.key?('runtime_platform')
+          runtime_platform = options.fetch('runtime_platform')
+          @runtime_platform = {
+            cpu_architecture: runtime_platform.fetch('cpu_architecture', nil),
+            operating_system_family: runtime_platform.fetch('operating_system_family', nil),
+          }
+        end
         @launch_type = options.fetch('launch_type', nil)
         if options.key?('capacity_provider_strategy')
           @capacity_provider_strategy = options.fetch('capacity_provider_strategy').map do |strategy|
@@ -523,6 +530,9 @@ module Hako
         if actual_definition.requires_compatibilities != @requires_compatibilities
           return true
         end
+        if actual_definition.runtime_platform != @runtime_platform
+          return true
+        end
         if actual_definition.ephemeral_storage != @ephemeral_storage
           return true
         end
@@ -566,6 +576,7 @@ module Hako
             container_definitions: definitions,
             volumes: volumes_definition,
             requires_compatibilities: @requires_compatibilities,
+            runtime_platform: @runtime_platform,
             cpu: @cpu,
             memory: @memory,
             ephemeral_storage: @ephemeral_storage,
@@ -603,6 +614,7 @@ module Hako
               container_definitions: definitions,
               volumes: volumes_definition,
               requires_compatibilities: @requires_compatibilities,
+              runtime_platform: @runtime_platform,
               cpu: @cpu,
               memory: @memory,
               ephemeral_storage: @ephemeral_storage,

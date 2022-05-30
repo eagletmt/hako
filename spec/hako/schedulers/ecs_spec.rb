@@ -94,6 +94,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       }],
       volumes: [],
       requires_compatibilities: nil,
+      runtime_platform: nil,
       cpu: nil,
       memory: nil,
       ephemeral_storage: nil,
