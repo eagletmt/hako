@@ -1,3 +1,7 @@
+# 2.17.0 (2022-05-31)
+## New features
+- Support runtime_platform option
+
 # 2.16.0 (2022-05-02)
 ## New features
 - Support ephemeral_storage option in ECS scheduler
