@@ -36,6 +36,8 @@ Style/PercentLiteralDelimiters:
     '%i': '[]'
 Style/RaiseArgs:
   EnforcedStyle: compact
+Style/RedundantCondition:
+  Enabled: false
 Style/SignalException:
   Enabled: false
 Style/SoleNestedConditional:
