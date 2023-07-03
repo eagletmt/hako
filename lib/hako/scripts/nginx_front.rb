@@ -10,7 +10,7 @@ module Hako
     class NginxFront < Script
       S3Config = Struct.new(:region, :bucket, :prefix) do
         # @param [Hash] options
-        def initialize(options) # rubocop:disable Lint/MissingSuper
+        def initialize(options)
           self.region = options.fetch('region')
           self.bucket = options.fetch('bucket')
           self.prefix = options.fetch('prefix', nil)

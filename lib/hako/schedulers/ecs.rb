@@ -652,6 +652,23 @@ module Hako
               labels: configuration['labels'],
               scope: configuration['scope'],
             }
+          elsif volume.key?('efs_volume_configuration')
+            configuration = volume['efs_volume_configuration']
+            authorization_config =
+              if volume.key?('authorization_config')
+                ac = volume['authorization_config']
+                {
+                  access_point_id: ac['access_point_id'],
+                  iam: ac['iam'],
+                }
+              end
+            definition[:efs_volume_configuration] = {
+              file_system_id: configuration.fetch('file_system_id'),
+              root_directory: configuration['root_directory'],
+              transit_encryption: configuration['transit_encryption'],
+              transit_encryptoin_port: configuration['transit_encryptoin_port'],
+              authorization_config: authorization_config,
+            }
           else
             # When neither 'host' nor 'docker_volume_configuration' is
             # specified, ECS API treats it as if 'host' is specified without
@@ -1211,6 +1228,7 @@ module Hako
       # @return [nil]
       def print_volume_definition_in_cli_format(definition)
         return if definition.dig(:docker_volume_configuration, :autoprovision)
+        return if definition[:efs_volume_configuration]
         # From version 1.20.0 of ECS agent, a local volume is provisioned when
         # 'host' is specified without 'source_path'.
         return if definition.dig(:host, :source_path)
