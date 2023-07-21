@@ -43,7 +43,7 @@ module Hako
           struct.member(:file_system_id, Schema::String.new)
           struct.member(:root_directory, Schema::WithDefault.new(Schema::String.new, '/'))
           struct.member(:transit_encryption, Schema::Nullable.new(Schema::String.new))
-          struct.member(:transit_encryptoin_port, Schema::Nullable.new(Schema::Integer.new))
+          struct.member(:transit_encryption_port, Schema::Nullable.new(Schema::Integer.new))
           struct.member(:authorization_config, Schema::Nullable.new(efs_authorization_config_schema))
         end
       end

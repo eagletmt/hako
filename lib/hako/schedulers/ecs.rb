@@ -666,7 +666,7 @@ module Hako
               file_system_id: configuration.fetch('file_system_id'),
               root_directory: configuration['root_directory'],
               transit_encryption: configuration['transit_encryption'],
-              transit_encryptoin_port: configuration['transit_encryptoin_port'],
+              transit_encryption_port: configuration['transit_encryption_port'],
               authorization_config: authorization_config,
             }
           else
