@@ -719,6 +719,7 @@ module Hako
           docker_security_options: container.docker_security_options,
           system_controls: container.system_controls,
           repository_credentials: container.repository_credentials,
+          resource_requirements: container.resource_requirements,
         }
       end
 
