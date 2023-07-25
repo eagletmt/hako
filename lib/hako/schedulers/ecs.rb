@@ -655,8 +655,8 @@ module Hako
           elsif volume.key?('efs_volume_configuration')
             configuration = volume['efs_volume_configuration']
             authorization_config =
-              if volume.key?('authorization_config')
-                ac = volume['authorization_config']
+              if configuration.key?('authorization_config')
+                ac = configuration['authorization_config']
                 {
                   access_point_id: ac['access_point_id'],
                   iam: ac['iam'],
