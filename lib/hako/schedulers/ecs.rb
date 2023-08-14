@@ -1321,6 +1321,7 @@ module Hako
               opts = dev[:host_path]
               opts += ":#{dev[:container_path]}" if dev[:container_path]
               if dev[:permissions]
+                opts += ':'
                 dev[:permissions].each do |permission|
                   opts += permission[0] if %w[read write mknod].include?(permission)
                 end
