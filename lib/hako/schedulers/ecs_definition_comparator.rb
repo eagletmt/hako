@@ -45,7 +45,7 @@ module Hako
           struct.member(:linux_parameters, Schema::Nullable.new(linux_parameters_schema))
           struct.member(:readonly_root_filesystem, Schema::Nullable.new(Schema::Boolean.new))
           struct.member(:docker_security_options, Schema::Nullable.new(Schema::UnorderedArray.new(Schema::String.new)))
-          struct.member(:system_controls, Schema::Nullable.new(system_controls_schema))
+          struct.member(:system_controls, Schema::WithDefault.new(system_controls_schema, []))
           struct.member(:repository_credentials, Schema::Nullable.new(repository_credentials_schema))
           struct.member(:resource_requirements, Schema::Nullable.new(Schema::UnorderedArray.new(resource_requirement_schema)))
         end
