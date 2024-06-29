@@ -115,6 +115,7 @@ module Hako
         if options['service_discovery']
           @service_discovery = EcsServiceDiscovery.new(options.fetch('service_discovery'), @region, dry_run: @dry_run)
         end
+        @volume_configurations = options.fetch('volume_configurations', nil)
         @tags = options.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } }
 
         @started_at = nil
@@ -669,6 +670,8 @@ module Hako
               transit_encryption_port: configuration['transit_encryption_port'],
               authorization_config: authorization_config,
             }
+          elsif volume.key?('configured_at_launch')
+            definition[:configured_at_launch] = volume['configured_at_launch']
           else
             # When neither 'host' nor 'docker_volume_configuration' is
             # specified, ECS API treats it as if 'host' is specified without
@@ -741,6 +744,7 @@ module Hako
           platform_version: @platform_version,
           network_configuration: @network_configuration,
           propagate_tags: 'TASK_DEFINITION',
+          volume_configurations: @volume_configurations,
         )
         result.failures.each do |failure|
           Hako.logger.error("#{failure.arn} #{failure.reason}")
@@ -937,6 +941,7 @@ module Hako
           platform_version: @platform_version,
           network_configuration: @network_configuration,
           health_check_grace_period_seconds: @health_check_grace_period_seconds,
+          volume_configurations: @volume_configurations,
         }
         if @autoscaling
           # Keep current desired_count if autoscaling is enabled
@@ -984,6 +989,7 @@ module Hako
           network_configuration: @network_configuration,
           health_check_grace_period_seconds: @health_check_grace_period_seconds,
           propagate_tags: 'TASK_DEFINITION',
+          volume_configurations: @volume_configurations,
         }
         if @scheduling_strategy != 'DAEMON'
           params[:desired_count] = 0
