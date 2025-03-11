@@ -42,6 +42,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       platform_version: nil,
       network_configuration: nil,
       health_check_grace_period_seconds: nil,
+      volume_configurations: nil,
       propagate_tags: 'TASK_DEFINITION',
     }
   end
@@ -55,6 +56,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       platform_version: nil,
       network_configuration: nil,
       health_check_grace_period_seconds: nil,
+      volume_configurations: nil,
     }
   end
   let(:register_task_definition_params) do
@@ -549,6 +551,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           platform_version: nil,
           network_configuration: nil,
           propagate_tags: 'TASK_DEFINITION',
+          volume_configurations: nil,
         ).and_return(Aws::ECS::Types::RunTaskResponse.new(
           failures: [],
           tasks: [
