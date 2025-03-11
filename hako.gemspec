@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.bindir        = 'exe'
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
-  spec.required_ruby_version = '>= 2.6.0'
+  spec.required_ruby_version = '>= 3.1.0'
 
   spec.add_dependency 'aws-sdk-applicationautoscaling'
   spec.add_dependency 'aws-sdk-autoscaling'
@@ -36,6 +36,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'jsonnet'
 
   spec.add_development_dependency 'bundler'
+  spec.add_development_dependency 'oga' # XML library for aws-sdk
   spec.add_development_dependency 'rake'
   spec.add_development_dependency 'rspec'
   spec.add_development_dependency 'rubocop', '>= 0.53.0'
