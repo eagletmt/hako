@@ -642,4 +642,150 @@ RSpec.describe Hako::Schedulers::Ecs do
       end
     end
   end
+
+  describe '#check_secrets' do
+    let(:dry_run) { true }
+
+    context 'with Parameter Store values' do
+      let(:app) { Hako::Application.new(fixture_root.join('jsonnet', 'parameter_store.jsonnet')) }
+      let(:ssm_client) { Aws::SSM::Client.new(stub_responses: true) }
+
+      before do
+        allow(scheduler).to receive(:ssm_client).and_return(ssm_client)
+        allow(scheduler).to receive(:puts) # Suppress dry-run output
+      end
+
+      it 'checks Parameter Store values' do
+        scheduler.deploy(containers)
+        expect(ssm_client.api_requests.size).to eq(2)
+        expect(ssm_client.api_requests).to match_array(
+          [
+            hash_including(
+              operation_name: :get_parameters,
+              params: {
+                names: match_array(
+                  [
+                    'arn:aws:ssm:ap-northeast-1:012345678901:parameter/hoge/fuga/SECRET_MESSAGE1',
+                    'arn:aws:ssm:ap-northeast-1:012345678901:parameter/hoge/fuga/SECRET_MESSAGE2',
+                  ],
+                ),
+              },
+            ),
+            hash_including(
+              operation_name: :get_parameters,
+              params: {
+                names: ['arn:aws:ssm:us-east-1:012345678901:parameter/hoge/fuga/SECRET_MESSAGE3'],
+              },
+            ),
+          ],
+        )
+      end
+
+      context 'with invalid parameters' do
+        before do
+          ssm_client.stub_responses(:get_parameters, lambda { |context|
+            if context.params[:names].include?('arn:aws:ssm:ap-northeast-1:012345678901:parameter/hoge/fuga/SECRET_MESSAGE2')
+              Aws::SSM::Types::GetParametersResult.new(
+                invalid_parameters: ['arn:aws:ssm:ap-northeast-1:012345678901:parameter/hoge/fuga/SECRET_MESSAGE2'],
+              )
+            else
+              Aws::SSM::Types::GetParametersResult.new(invalid_parameters: [])
+            end
+          })
+        end
+
+        it 'raises an error' do
+          expect { scheduler.deploy(containers) }.to raise_error(Hako::Error) { |e|
+            expect(e.message).to_not include('SECRET_MESSAGE1')
+            expect(e.message).to include('SECRET_MESSAGE2')
+            expect(e.message).to_not include('SECRET_MESSAGE3')
+          }
+        end
+      end
+    end
+
+    context 'with SecretsManager values' do
+      let(:app) { Hako::Application.new(fixture_root.join('jsonnet', 'secretsmanager.jsonnet')) }
+      let(:secretsmanager_client) { Aws::SecretsManager::Client.new(stub_responses: true) }
+      let(:secrets) do
+        {
+          'arn:aws:secretsmanager:ap-northeast-1:012345678901:secret:hoge/fuga1-abcdef' => 'SECRET_VALUE0',
+          'arn:aws:secretsmanager:ap-northeast-1:012345678901:secret:hoge/fuga2-abcdef' => '{"SECRET_MESSAGE1":"SECRET_VALUE1","SECRET_MESSAGE2":"SECRET_VALUE2"}',
+          'arn:aws:secretsmanager:us-east-1:012345678901:secret:hoge/fuga3-abcdef' => '{"SECRET_MESSAGE3":"SECRET_VALUE3"}',
+        }
+      end
+
+      before do
+        allow(scheduler).to receive(:secretsmanager_client).and_return(secretsmanager_client)
+        allow(scheduler).to receive(:puts) # Suppress dry-run output
+        secretsmanager_client.stub_responses(:get_secret_value, lambda { |context|
+          secret_string = secrets[context.params[:secret_id]]
+          if secret_string
+            Aws::SecretsManager::Types::GetSecretValueResponse.new(secret_string: secret_string)
+          else
+            'ResourceNotFoundException'
+          end
+        })
+      end
+
+      it 'checks SecretsManager values' do
+        scheduler.deploy(containers)
+        expect(secretsmanager_client.api_requests.size).to eq(3)
+        expect(secretsmanager_client.api_requests).to match_array(
+          [
+            hash_including(
+              operation_name: :get_secret_value,
+              params: { secret_id: 'arn:aws:secretsmanager:ap-northeast-1:012345678901:secret:hoge/fuga1-abcdef', version_stage: nil, version_id: nil, },
+            ),
+            hash_including(
+              operation_name: :get_secret_value,
+              params: {
+                secret_id: 'arn:aws:secretsmanager:ap-northeast-1:012345678901:secret:hoge/fuga2-abcdef',
+                version_stage: nil,
+                version_id: nil,
+              },
+            ),
+            hash_including(
+              operation_name: :get_secret_value,
+              params: {
+                secret_id: 'arn:aws:secretsmanager:us-east-1:012345678901:secret:hoge/fuga3-abcdef',
+                version_stage: nil,
+                version_id: nil,
+              },
+            ),
+          ],
+        )
+      end
+
+      context 'when json-key is missing' do
+        before do
+          secrets['arn:aws:secretsmanager:ap-northeast-1:012345678901:secret:hoge/fuga2-abcdef'] = '{"SECRET_MESSAGE1":"SECRET_VALUE1"}'
+        end
+
+        it 'raises an error' do
+          expect { scheduler.deploy(containers) }.to raise_error(Hako::Error) { |e|
+            expect(e.message).to_not include('SECRET_VALUE')
+            expect(e.message).to_not include('SECRET_MESSAGE1')
+            expect(e.message).to include('SECRET_MESSAGE2')
+            expect(e.message).to_not include('SECRET_MESSAGE3')
+          }
+        end
+      end
+
+      context 'when secret value is missing' do
+        before do
+          secrets.delete('arn:aws:secretsmanager:ap-northeast-1:012345678901:secret:hoge/fuga2-abcdef')
+        end
+
+        it 'raises an error' do
+          expect { scheduler.deploy(containers) }.to raise_error(Hako::Error) { |e|
+            expect(e.message).to_not include('SECRET_VALUE')
+            expect(e.message).to include('SECRET_MESSAGE1')
+            expect(e.message).to include('SECRET_MESSAGE2')
+            expect(e.message).to_not include('SECRET_MESSAGE3')
+          }
+        end
+      end
+    end
+  end
 end

@@ -4,6 +4,7 @@ require 'aws-sdk-autoscaling'
 require 'aws-sdk-ec2'
 require 'aws-sdk-ecs'
 require 'aws-sdk-s3'
+require 'aws-sdk-secretsmanager'
 require 'aws-sdk-sns'
 require 'aws-sdk-ssm'
 require 'hako'
@@ -400,9 +401,18 @@ module Hako
         @ec2_client ||= Aws::EC2::Client.new(region: @region)
       end
 
+      # @param [String] region
       # @return [Aws::SSM::Client]
-      def ssm_client
-        @ssm_client ||= Aws::SSM::Client.new(region: @region)
+      def ssm_client(region)
+        @ssm_clients ||= {}
+        @ssm_clients[region] ||= Aws::SSM::Client.new(region: region)
+      end
+
+      # @param [String] region
+      # @return [Aws::SecretsManager::Client]
+      def secretsmanager_client(region)
+        @secretsmanager_clients ||= {}
+        @secretsmanager_clients[region] ||= Aws::SecretsManager::Client.new(region: region)
       end
 
       # @return [EcsElb, EcsElbV2]
@@ -1415,22 +1425,74 @@ module Hako
         nil
       end
 
+      SecretValueFrom = Struct.new(:arn, :secret_name, :json_key, :version_stage, :version_id)
+
       # @param [Hash] container_definition
       # @return [nil]
       def check_secrets(container_definition)
-        parameter_names = (container_definition[:secrets] || []).map { |secret| secret.fetch(:value_from) }
-        invalid_parameter_names = parameter_names.each_slice(10).flat_map do |names|
-          names = names.map do |name|
-            if name.start_with?('arn:')
-              name.slice(%r{:parameter(/.+)\z}, 1)
+        parameter_arns = []
+        secret_value_arns = []
+        invalid_arns = []
+
+        (container_definition[:secrets] || []).each do |secret|
+          arn = Aws::ARNParser.parse(secret.fetch(:value_from))
+          case arn.service
+          when 'ssm'
+            parameter_arns << arn
+          when 'secretsmanager'
+            secret_value_arns << arn
+          else
+            invalid_arns << arn.to_s
+          end
+        end
+
+        parameter_arns.group_by(&:region).each do |region, region_arns|
+          region_arns.each_slice(10) do |arns|
+            invalid_arns += ssm_client(region).get_parameters(names: arns.map(&:to_s)).invalid_parameters
+          end
+        end
+
+        secret_value_arns.group_by(&:region).each do |region, region_arns|
+          secret_value_froms = region_arns.filter_map do |arn|
+            m = arn.resource.match(/\Asecret:(?<secret_name>[^:]+):(?<json_key>[^:]*):(?<version_stage>[^:]*):(?<version_id>[^:]*)\z/)
+            if m
+              f = SecretValueFrom.new(arn, m[:secret_name])
+              unless m[:json_key].empty?
+                f.json_key = m[:json_key]
+              end
+              unless m[:version_stage].empty?
+                f.version_stage = m[:version_stage]
+              end
+              unless m[:version_id].empty?
+                f.version_id = m[:version_id]
+              end
+              f
             else
-              name
+              invalid_arns << arn.to_s
+              nil
             end
           end
-          ssm_client.get_parameters(names: names).invalid_parameters
+          secret_value_froms.group_by { |f| [f.secret_name, f.version_stage, f.version_id] }.each do |(secret_name, version_stage, version_id), fs|
+            secret_arn = Aws::ARN.new(**fs[0].arn.to_h.merge(resource: "secret:#{secret_name}")).to_s
+            begin
+              secret_string = secretsmanager_client(region).get_secret_value(secret_id: secret_arn, version_stage: version_stage, version_id: version_id).secret_string
+              secret_json = nil
+              fs.each do |f|
+                if f.json_key
+                  secret_json ||= JSON.parse(secret_string)
+                  unless secret_json.key?(f.json_key)
+                    invalid_arns << f.arn.to_s
+                  end
+                end
+              end
+            rescue Aws::SecretsManager::Errors::ResourceNotFoundException
+              invalid_arns += fs.map { |f| f.arn.to_s }
+            end
+          end
         end
-        unless invalid_parameter_names.empty?
-          raise Error.new("Invalid parameters for secrets: #{invalid_parameter_names}")
+
+        unless invalid_arns.empty?
+          raise Error.new("Invalid ARNs for secrets: #{invalid_arns}")
         end
 
         nil
