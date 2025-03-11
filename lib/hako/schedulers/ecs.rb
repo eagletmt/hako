@@ -1074,7 +1074,7 @@ module Hako
         end
       end
 
-      TASK_ID_RE = /\(task ([\h-]+)\)\.\z/.freeze
+      TASK_ID_RE = /\(task ([\h-]+)\)\.\z/
       # @param [String] message
       # @return [String, nil]
       def extract_task_id(message)
