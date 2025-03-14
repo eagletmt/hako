@@ -63,5 +63,22 @@ RSpec.describe Hako::DefinitionLoader do
         end
       end
     end
+
+    context 'with depends_on' do
+      let(:fixture_name) { 'default_with_depends_on.jsonnet' }
+
+      it 'loads all containers' do
+        containers = definition_loader.load
+        expect(containers.keys).to match_array(%w[app redis memcached fluentd])
+        expect(containers.values).to all(be_a(Hako::Container))
+      end
+
+      context 'with `with`' do
+        it 'loads specified definition and referenced containers' do
+          containers = definition_loader.load(with: [])
+          expect(containers.keys).to match_array(%w[app redis memcached])
+        end
+      end
+    end
   end
 end
