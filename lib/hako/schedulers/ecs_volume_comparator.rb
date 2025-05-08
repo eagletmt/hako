@@ -25,6 +25,7 @@ module Hako
           struct.member(:efs_volume_configuration, Schema::Nullable.new(efs_volume_configuration_schema))
           struct.member(:host, Schema::Nullable.new(host_schema))
           struct.member(:name, Schema::String.new)
+          struct.member(:configured_at_launch, Schema::Nullable.new(Schema::Boolean.new))
         end
       end
 
