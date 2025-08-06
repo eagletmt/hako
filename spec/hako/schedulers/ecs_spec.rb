@@ -55,6 +55,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       platform_version: nil,
       network_configuration: nil,
       health_check_grace_period_seconds: nil,
+      service_registries: [],
     }
   end
   let(:register_task_definition_params) do
@@ -391,6 +392,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         expect(ecs_client).to receive(:update_service).with(update_service_params.merge(
           task_definition: task_definition_arn,
           health_check_grace_period_seconds: 0,
+          service_registries: [],
         )).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
           service: Aws::ECS::Types::Service.new(
             cluster_arn: cluster_arn,
@@ -499,6 +501,11 @@ RSpec.describe Hako::Schedulers::Ecs do
         )).once
         expect(ecs_client).to receive(:update_service).with(update_service_params.merge(
           task_definition: task_definition_arn,
+          service_registries: [{
+            container_name: 'app',
+            container_port: 80,
+            registry_arn: service_discovery_service_arn,
+          }],
         )).and_return(Aws::ECS::Types::UpdateServiceResponse.new(
           service: Aws::ECS::Types::Service.new(
             cluster_arn: cluster_arn,

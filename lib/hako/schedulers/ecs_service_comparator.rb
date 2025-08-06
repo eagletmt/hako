@@ -27,6 +27,7 @@ module Hako
           struct.member(:platform_version, Schema::WithDefault.new(Schema::String.new, 'LATEST'))
           struct.member(:network_configuration, Schema::Nullable.new(network_configuration_schema))
           struct.member(:health_check_grace_period_seconds, Schema::Nullable.new(Schema::Integer.new))
+          struct.member(:service_registries, Schema::UnorderedArray.new(service_registry_schema))
         end
       end
 
@@ -56,6 +57,15 @@ module Hako
           struct.member(:subnets, Schema::UnorderedArray.new(Schema::String.new))
           struct.member(:security_groups, Schema::UnorderedArray.new(Schema::String.new))
           struct.member(:assign_public_ip, Schema::WithDefault.new(Schema::String.new, 'DISABLED'))
+        end
+      end
+
+      def service_registry_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:registry_arn, Schema::String.new)
+          struct.member(:container_name, Schema::String.new)
+          struct.member(:container_port, Schema::Integer.new)
+          struct.member(:port, Schema::Nullable.new(Schema::Integer.new))
         end
       end
 

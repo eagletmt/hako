@@ -166,18 +166,12 @@ module Hako
               @autoscaling.apply(current_service)
             end
             ecs_elb_client.modify_attributes
-            if @service_discovery
-              @service_discovery.apply
-            end
           else
             Hako.logger.info "Updated service: #{service.service_arn}"
             if @autoscaling
               @autoscaling.apply(service)
             end
             ecs_elb_client.modify_attributes
-            if @service_discovery
-              @service_discovery.apply
-            end
             unless wait_for_ready(service)
               @scripts.each { |script| script.deploy_failed(containers, task_ids: @started_task_ids) }
               if task_definition_changed
@@ -967,7 +961,13 @@ module Hako
           params[:force_new_deployment] = true
         end
         warn_placement_policy_change(current_service)
-        warn_service_registries_change(current_service)
+        params[:service_registries] =
+          if @service_discovery
+            @service_discovery.apply
+            @service_discovery.service_registries
+          else
+            []
+          end
         if service_changed?(current_service, params)
           ecs_client.update_service(**params).service
         else
@@ -1530,16 +1530,6 @@ module Hako
         end
         if @placement_strategy != placement_strategy
           Hako.logger.warn "Ignoring updated placement_strategy in the configuration, because AWS doesn't allow updating them for now."
-        end
-      end
-
-      # @param [Aws::ECS::Types::Service] service
-      # @return [void]
-      def warn_service_registries_change(service)
-        actual_service_registries = service.service_registries.sort_by(&:registry_arn).map(&:to_h)
-        expected_service_registries = @service_discovery&.service_registries&.sort_by { |s| s[:registry_arn] } || []
-        if actual_service_registries != expected_service_registries
-          Hako.logger.warn "Ignoring updated service_registries in the configuration, because AWS doesn't allow updating them for now."
         end
       end
 
