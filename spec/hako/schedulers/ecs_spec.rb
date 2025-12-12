@@ -92,6 +92,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         system_controls: nil,
         repository_credentials: nil,
         resource_requirements: nil,
+        firelens_configuration: nil,
       }],
       volumes: [],
       requires_compatibilities: nil,
