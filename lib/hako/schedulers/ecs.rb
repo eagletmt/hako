@@ -59,9 +59,18 @@ module Hako
         end
         @oneshot_notification_prefix = options.fetch('oneshot_notification_prefix', nil)
         if options.key?('deployment_configuration')
+          deployment_configuration = options.fetch('deployment_configuration')
+
           @deployment_configuration = {}
+          if deployment_configuration.key?('deployment_circuit_breaker')
+            circuit_breaker = deployment_configuration.fetch('deployment_circuit_breaker')
+            @deployment_configuration[:deployment_circuit_breaker] = {
+              enable: circuit_breaker.fetch('enable'),
+              rollback: circuit_breaker.fetch('rollback'),
+            }
+          end
           %i[maximum_percent minimum_healthy_percent].each do |key|
-            @deployment_configuration[key] = options.fetch('deployment_configuration')[key.to_s]
+            @deployment_configuration[key] = deployment_configuration[key.to_s]
           end
         else
           @deployment_configuration = nil
@@ -1046,6 +1055,10 @@ module Hako
           Hako.logger.debug "  latest_event_id=#{latest_event_id}, deployments=#{s.deployments}"
           no_active = s.deployments.all? { |d| d.status != 'ACTIVE' }
           primary = s.deployments.find { |d| d.status == 'PRIMARY' }
+          if primary.rollout_state == 'FAILED'
+            Hako.logger.error("New deployment is failing: #{primary.rollout_state_reason}")
+            return false
+          end
           if primary.desired_count * 2 < @started_task_ids.size
             Hako.logger.error('Some started tasks are stopped. It seems new deployment is failing to start')
             @started_task_ids.each_slice(100) do |task_ids|
