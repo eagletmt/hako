@@ -1057,15 +1057,12 @@ module Hako
           primary = s.deployments.find { |d| d.status == 'PRIMARY' }
           if primary.rollout_state == 'FAILED'
             Hako.logger.error("New deployment is failing: #{primary.rollout_state_reason}")
+            report_task_diagnostics(@started_task_ids)
             return false
           end
           if primary.desired_count * 2 < @started_task_ids.size && !ecs_circuit_breaker_enabled?
             Hako.logger.error('Some started tasks are stopped. It seems new deployment is failing to start')
-            @started_task_ids.each_slice(100) do |task_ids|
-              ecs_client.describe_tasks(cluster: service.cluster_arn, tasks: task_ids).tasks.each do |task|
-                report_task_diagnostics(task)
-              end
-            end
+            report_task_diagnostics(@started_task_ids)
             return false
           end
           primary_ready = primary && primary.running_count == primary.desired_count
@@ -1099,13 +1096,17 @@ module Hako
         message.slice(TASK_ID_RE, 1)
       end
 
-      # @param [Aws::ECS::Types::Task] task
+      # @param [Array<String>] task_ids
       # @return [nil]
-      def report_task_diagnostics(task)
-        Hako.logger.error("task_definition_arn=#{task.task_definition_arn} last_status=#{task.last_status}")
-        Hako.logger.error("  stopped_reason: #{task.stopped_reason}")
-        task.containers.sort_by(&:name).each do |container|
-          Hako.logger.error("    Container #{container.name}: last_status=#{container.last_status} exit_code=#{container.exit_code.inspect} reason=#{container.reason.inspect}")
+      def report_task_diagnostics(task_ids)
+        task_ids.each_slice(100) do |batch|
+          ecs_client.describe_tasks(cluster: service.cluster_arn, tasks: batch).tasks.each do |task|
+            Hako.logger.error("task_definition_arn=#{task.task_definition_arn} last_status=#{task.last_status}")
+            Hako.logger.error("  stopped_reason: #{task.stopped_reason}")
+            task.containers.sort_by(&:name).each do |container|
+              Hako.logger.error("    Container #{container.name}: last_status=#{container.last_status} exit_code=#{container.exit_code.inspect} reason=#{container.reason.inspect}")
+            end
+          end
         end
       end
 
