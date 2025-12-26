@@ -1059,7 +1059,7 @@ module Hako
             Hako.logger.error("New deployment is failing: #{primary.rollout_state_reason}")
             return false
           end
-          if primary.desired_count * 2 < @started_task_ids.size
+          if primary.desired_count * 2 < @started_task_ids.size && !ecs_circuit_breaker_enabled?
             Hako.logger.error('Some started tasks are stopped. It seems new deployment is failing to start')
             @started_task_ids.each_slice(100) do |task_ids|
               ecs_client.describe_tasks(cluster: service.cluster_arn, tasks: task_ids).tasks.each do |task|
@@ -1075,6 +1075,11 @@ module Hako
             sleep 1
           end
         end
+      end
+
+      # @return [Boolean]
+      def ecs_circuit_breaker_enabled?
+        @deployment_configuration&.dig(:circuit_breaker, :enable)
       end
 
       # @param [Array<Aws::ECS::Types::ServiceEvent>] events
