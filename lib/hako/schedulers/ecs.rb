@@ -64,9 +64,12 @@ module Hako
           @deployment_configuration = {}
           if deployment_configuration.key?('deployment_circuit_breaker')
             circuit_breaker = deployment_configuration.fetch('deployment_circuit_breaker')
+            if circuit_breaker.fetch('rollback', nil)
+              validation_error!('rollback option of deployment_circuit_breaker is not supported because Hako handles rollback instead of the circuit breaker')
+            end
             @deployment_configuration[:deployment_circuit_breaker] = {
               enable: circuit_breaker.fetch('enable'),
-              rollback: circuit_breaker.fetch('rollback'),
+              rollback: false,
             }
           end
           %i[maximum_percent minimum_healthy_percent].each do |key|
