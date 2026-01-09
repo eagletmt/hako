@@ -1089,7 +1089,7 @@ module Hako
 
       # @return [Boolean]
       def ecs_circuit_breaker_enabled?
-        @deployment_configuration&.dig(:circuit_breaker, :enable)
+        @deployment_configuration&.dig(:deployment_circuit_breaker, :enable)
       end
 
       # @param [Array<Aws::ECS::Types::ServiceEvent>] events
