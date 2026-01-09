@@ -742,6 +742,7 @@ module Hako
           system_controls: container.system_controls,
           repository_credentials: container.repository_credentials,
           resource_requirements: container.resource_requirements,
+          firelens_configuration: container.firelens_configuration,
         }
       end
 
