@@ -1070,12 +1070,12 @@ module Hako
           primary = s.deployments.find { |d| d.status == 'PRIMARY' }
           if primary.rollout_state == 'FAILED'
             Hako.logger.error("New deployment is failing: #{primary.rollout_state_reason}")
-            report_task_diagnostics(@started_task_ids)
+            report_task_diagnostics(service.cluster_arn, @started_task_ids)
             return false
           end
           if primary.desired_count * 2 < @started_task_ids.size && !ecs_circuit_breaker_enabled?
             Hako.logger.error('Some started tasks are stopped. It seems new deployment is failing to start')
-            report_task_diagnostics(@started_task_ids)
+            report_task_diagnostics(service.cluster_arn, @started_task_ids)
             return false
           end
           primary_ready = primary && primary.running_count == primary.desired_count
@@ -1111,9 +1111,9 @@ module Hako
 
       # @param [Array<String>] task_ids
       # @return [nil]
-      def report_task_diagnostics(task_ids)
+      def report_task_diagnostics(cluster, task_ids)
         task_ids.each_slice(100) do |batch|
-          ecs_client.describe_tasks(cluster: service.cluster_arn, tasks: batch).tasks.each do |task|
+          ecs_client.describe_tasks(cluster: cluster, tasks: batch).tasks.each do |task|
             Hako.logger.error("task_definition_arn=#{task.task_definition_arn} last_status=#{task.last_status}")
             Hako.logger.error("  stopped_reason: #{task.stopped_reason}")
             task.containers.sort_by(&:name).each do |container|
