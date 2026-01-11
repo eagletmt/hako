@@ -27,6 +27,7 @@ module Hako
           struct.member(:platform_version, Schema::WithDefault.new(Schema::String.new, 'LATEST'))
           struct.member(:network_configuration, Schema::Nullable.new(network_configuration_schema))
           struct.member(:health_check_grace_period_seconds, Schema::Nullable.new(Schema::Integer.new))
+          struct.member(:volume_configurations, Schema::Nullable.new(volume_configurations_schema))
         end
       end
 
@@ -64,6 +65,45 @@ module Hako
           maximum_percent: 200,
           minimum_healthy_percent: 100,
         }
+      end
+
+      def volume_configurations_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:name, Schema::String.new)
+          struct.member(:managed_ebs_volume, Schema::Nullable.new(managed_ebs_volume_schema))
+        end
+      end
+
+      def managed_ebs_volume_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:encrypted, Schema::Nullable.new(Schema::Boolean.new))
+          struct.member(:kms_key_id, Schema::Nullable.new(Schema::String.new))
+          struct.member(:volume_type, Schema::Nullable.new(Schema::String.new))
+          struct.member(:size_in_gi_b, Schema::Nullable.new(Schema::Integer.new))
+          struct.member(:snapshot_id, Schema::Nullable.new(Schema::String.new))
+          struct.member(:iops, Schema::Nullable.new(Schema::Integer.new))
+          struct.member(:throughput, Schema::Nullable.new(Schema::Integer.new))
+          struct.member(:role_arn, Schema::String.new)
+          struct.member(:tag_specifications, Schema::Nullable.new(tag_specifications_schema))
+          struct.member(:file_system_type, Schema::Nullable.new(Schema::String.new))
+        end
+      end
+
+      def tag_specifications_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:resource_type, Schema::String.new)
+          struct.member(:tags, Schema::Nullable.new(tags_schema))
+          struct.member(:propatage_tags, Schema::Nullable.new(Schema::String.new))
+        end
+      end
+
+      def tags_schema
+        Schema::UnorderedArray.new(
+          Schema::Structure.new.tap do |struct|
+            struct.member(:key, Schema::String.new)
+            struct.member(:value, Schema::String.new)
+          end
+        )
       end
     end
   end
