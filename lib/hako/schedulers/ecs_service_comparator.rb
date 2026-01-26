@@ -27,6 +27,7 @@ module Hako
           struct.member(:platform_version, Schema::WithDefault.new(Schema::String.new, 'LATEST'))
           struct.member(:network_configuration, Schema::Nullable.new(network_configuration_schema))
           struct.member(:health_check_grace_period_seconds, Schema::Nullable.new(Schema::Integer.new))
+          struct.member(:enable_execute_command, Schema::Boolean.new)
         end
       end
 

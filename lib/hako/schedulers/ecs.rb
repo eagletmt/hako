@@ -129,6 +129,7 @@ module Hako
           @service_discovery = EcsServiceDiscovery.new(options.fetch('service_discovery'), @region, dry_run: @dry_run)
         end
         @tags = options.fetch('tags', {}).map { |k, v| { key: k, value: v.to_s } }
+        @enable_execute_command = options.fetch('enable_execute_command', false)
 
         @started_at = nil
         @container_instance_arn = nil
@@ -764,6 +765,7 @@ module Hako
           platform_version: @platform_version,
           network_configuration: @network_configuration,
           propagate_tags: 'TASK_DEFINITION',
+          enable_execute_command: @enable_execute_command,
         )
         result.failures.each do |failure|
           Hako.logger.error("#{failure.arn} #{failure.reason}")
@@ -960,6 +962,7 @@ module Hako
           platform_version: @platform_version,
           network_configuration: @network_configuration,
           health_check_grace_period_seconds: @health_check_grace_period_seconds,
+          enable_execute_command: @enable_execute_command,
         }
         if @autoscaling
           # Keep current desired_count if autoscaling is enabled
@@ -1007,6 +1010,7 @@ module Hako
           network_configuration: @network_configuration,
           health_check_grace_period_seconds: @health_check_grace_period_seconds,
           propagate_tags: 'TASK_DEFINITION',
+          enable_execute_command: @enable_execute_command,
         }
         if @scheduling_strategy != 'DAEMON'
           params[:desired_count] = 0
