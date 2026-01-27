@@ -58,6 +58,8 @@ RSpec.describe Hako::Schedulers::Ecs do
       health_check_grace_period_seconds: nil,
       service_registries: [],
       enable_execute_command: false,
+      placement_constraints: [],
+      placement_strategy: [],
     }
   end
   let(:register_task_definition_params) do

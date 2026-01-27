@@ -17,6 +17,8 @@ RSpec.describe Hako::Schedulers::EcsServiceComparator do
         minimum_healthy_percent: 0,
       },
       service_registries: [],
+      placement_constraints: [],
+      placement_strategy: [],
     }
   end
   let(:actual_service) do
@@ -28,6 +30,8 @@ RSpec.describe Hako::Schedulers::EcsServiceComparator do
         minimum_healthy_percent: 0,
       ),
       service_registries: [],
+      placement_constraints: [],
+      placement_strategy: [],
     )
   end
 
@@ -44,6 +48,18 @@ RSpec.describe Hako::Schedulers::EcsServiceComparator do
       end
 
       it 'returns true' do
+        expect(comparator).to be_different(actual_service)
+      end
+    end
+
+    context 'when placement_constraints changes' do
+      it 'detects memberOf changes' do
+        expected_service[:placement_constraints] = [{ type: 'memberOf', expression: 'ecs.cpu-architecture == arm64' }]
+        expect(comparator).to be_different(actual_service)
+      end
+
+      it 'detects distinctInstances changes' do
+        expected_service[:placement_constraints] = [{ type: 'distinctInstances' }]
         expect(comparator).to be_different(actual_service)
       end
     end
