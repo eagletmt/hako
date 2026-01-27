@@ -554,6 +554,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           overrides: overrides_option,
           count: 1,
           placement_constraints: [],
+          placement_strategy: [],
           started_by: 'hako oneshot',
           launch_type: nil,
           capacity_provider_strategy: nil,
