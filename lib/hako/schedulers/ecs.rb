@@ -753,6 +753,7 @@ module Hako
           overrides: overrides_option(commands, env, overrides),
           count: 1,
           placement_constraints: @placement_constraints,
+          placement_strategy: @placement_strategy,
           started_by: 'hako oneshot',
           launch_type: @launch_type,
           capacity_provider_strategy: @capacity_provider_strategy,
