@@ -48,6 +48,7 @@ module Hako
           struct.member(:system_controls, Schema::WithDefault.new(system_controls_schema, []))
           struct.member(:repository_credentials, Schema::Nullable.new(repository_credentials_schema))
           struct.member(:resource_requirements, Schema::Nullable.new(Schema::UnorderedArray.new(resource_requirement_schema)))
+          struct.member(:firelens_configuration, Schema::Nullable.new(firelens_configuration_schema))
         end
       end
 
@@ -195,6 +196,13 @@ module Hako
         Schema::Structure.new.tap do |struct|
           struct.member(:type, Schema::String.new)
           struct.member(:value, Schema::String.new)
+        end
+      end
+
+      def firelens_configuration_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:type, Schema::String.new)
+          struct.member(:options, Schema::Nullable.new(Schema::Table.new(Schema::String.new, Schema::String.new)))
         end
       end
     end

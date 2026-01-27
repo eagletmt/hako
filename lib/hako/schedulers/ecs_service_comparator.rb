@@ -28,6 +28,7 @@ module Hako
           struct.member(:network_configuration, Schema::Nullable.new(network_configuration_schema))
           struct.member(:health_check_grace_period_seconds, Schema::Nullable.new(Schema::Integer.new))
           struct.member(:service_registries, Schema::UnorderedArray.new(service_registry_schema))
+          struct.member(:enable_execute_command, Schema::Boolean.new)
         end
       end
 

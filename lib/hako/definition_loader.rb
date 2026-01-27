@@ -50,9 +50,18 @@ module Hako
               Container.new(@app, sidecars.fetch(name), dry_run: @dry_run)
             end
 
+          # Load linked containers
           containers[name].links.each do |link|
             m = link.match(/\A([^:]+):([^:]+)\z/)
             names << (m ? m[1] : link)
+          end
+
+          # Load dependent containers
+          depends_on = containers[name].depends_on
+          if depends_on
+            depends_on.each do |depend_on|
+              names << depend_on.fetch(:container_name)
+            end
           end
 
           containers[name].volumes_from.each do |volumes_from|

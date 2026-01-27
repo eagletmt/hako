@@ -43,6 +43,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       network_configuration: nil,
       health_check_grace_period_seconds: nil,
       propagate_tags: 'TASK_DEFINITION',
+      enable_execute_command: false,
     }
   end
   let(:update_service_params) do
@@ -56,6 +57,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       network_configuration: nil,
       health_check_grace_period_seconds: nil,
       service_registries: [],
+      enable_execute_command: false,
     }
   end
   let(:register_task_definition_params) do
@@ -93,6 +95,7 @@ RSpec.describe Hako::Schedulers::Ecs do
         system_controls: nil,
         repository_credentials: nil,
         resource_requirements: nil,
+        firelens_configuration: nil,
       }],
       volumes: [],
       requires_compatibilities: nil,
@@ -115,6 +118,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       placement_strategy: [],
       deployments: [Aws::ECS::Types::Deployment.new(status: 'PRIMARY', desired_count: 1, running_count: 1)],
       service_registries: [],
+      enable_execute_command: false,
     )
   end
   let(:dummy_container_definition) do
@@ -556,6 +560,7 @@ RSpec.describe Hako::Schedulers::Ecs do
           platform_version: nil,
           network_configuration: nil,
           propagate_tags: 'TASK_DEFINITION',
+          enable_execute_command: false,
         ).and_return(Aws::ECS::Types::RunTaskResponse.new(
           failures: [],
           tasks: [

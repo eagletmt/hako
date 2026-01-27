@@ -1,3 +1,12 @@
+# 2.18.0 (2026-01-26)
+## New features
+- Support EFS
+- Support resource_requirements for GPU
+- Support SecretsManager secrets in dry-run
+- Launch dependent containers on `hako oneshot`
+- Support deployment circuit breaker
+- Support FireLens
+
 # 2.17.0 (2022-05-31)
 ## New features
 - Support runtime_platform option
