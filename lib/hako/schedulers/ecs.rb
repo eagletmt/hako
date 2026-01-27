@@ -79,8 +79,8 @@ module Hako
         else
           @deployment_configuration = nil
         end
-        @placement_constraints = options.fetch('placement_constraints', [])
-        @placement_strategy = options.fetch('placement_strategy', [])
+        @placement_constraints = options.fetch('placement_constraints', []).map { |c| c.transform_keys(&:to_sym) }
+        @placement_strategy = options.fetch('placement_strategy', []).map { |s| s.transform_keys(&:to_sym) }
         @scheduling_strategy = options.fetch('scheduling_strategy', nil)
         @execution_role_arn = options.fetch('execution_role_arn', nil)
         @cpu = options.fetch('cpu', nil)
@@ -958,6 +958,8 @@ module Hako
           network_configuration: @network_configuration,
           health_check_grace_period_seconds: @health_check_grace_period_seconds,
           enable_execute_command: @enable_execute_command,
+          placement_constraints: @placement_constraints,
+          placement_strategy: @placement_strategy,
         }
         if @autoscaling
           # Keep current desired_count if autoscaling is enabled
@@ -977,7 +979,6 @@ module Hako
           # deployment.
           params[:force_new_deployment] = true
         end
-        warn_placement_policy_change(current_service)
         params[:service_registries] =
           if @service_discovery
             @service_discovery.apply
@@ -1533,32 +1534,6 @@ module Hako
         expected = (expected_strategy || []).map { |s| [s[:capacity_provider], s[:weight] || 0, s[:base] || 0] }.sort
         actual = (actual_strategy || []).map { |s| [s.capacity_provider, s.weight, s.base] }.sort
         expected != actual
-      end
-
-      # @param [Aws::ECS::Types::Service] service
-      # @return [nil]
-      def warn_placement_policy_change(service)
-        placement_constraints = service.placement_constraints.map do |c|
-          h = { 'type' => c.type }
-          unless c.expression.nil?
-            h['expression'] = c.expression
-          end
-          h
-        end
-        if @placement_constraints != placement_constraints
-          Hako.logger.warn "Ignoring updated placement_constraints in the configuration, because AWS doesn't allow updating them for now."
-        end
-
-        placement_strategy = service.placement_strategy.map do |s|
-          h = { 'type' => s.type }
-          unless s.field.nil?
-            h['field'] = s.field.downcase
-          end
-          h
-        end
-        if @placement_strategy != placement_strategy
-          Hako.logger.warn "Ignoring updated placement_strategy in the configuration, because AWS doesn't allow updating them for now."
-        end
       end
 
       # @param [Aws::ECS::Types::TaskDefinition] task_definition
