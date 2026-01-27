@@ -16,6 +16,7 @@ RSpec.describe Hako::Schedulers::EcsServiceComparator do
         maximum_percent: 100,
         minimum_healthy_percent: 0,
       },
+      service_registries: [],
     }
   end
   let(:actual_service) do
@@ -26,6 +27,7 @@ RSpec.describe Hako::Schedulers::EcsServiceComparator do
         maximum_percent: 100,
         minimum_healthy_percent: 0,
       ),
+      service_registries: [],
     )
   end
 
