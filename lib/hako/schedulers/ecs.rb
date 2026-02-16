@@ -42,6 +42,7 @@ module Hako
           validation_error!('Cannot specify both elb and elb_v2')
         end
         @network_mode = options.fetch('network_mode', nil)
+        @pid_mode = options.fetch('pid_mode', nil)
         if @network_mode == 'awsvpc' && @ecs_elb_v2_options
           # awsvpc network mode requires ELB target group with target_type=ip
           @ecs_elb_v2_options['target_type'] = 'ip'
@@ -541,6 +542,9 @@ module Hako
         if actual_definition.network_mode != @network_mode
           return true
         end
+        if actual_definition.pid_mode != @pid_mode
+          return true
+        end
         if actual_definition.execution_role_arn != @execution_role_arn
           return true
         end
@@ -590,6 +594,7 @@ module Hako
             task_role_arn: @task_role_arn,
             execution_role_arn: @execution_role_arn,
             network_mode: @network_mode,
+            pid_mode: @pid_mode,
             container_definitions: definitions,
             volumes: volumes_definition,
             requires_compatibilities: @requires_compatibilities,
@@ -628,6 +633,7 @@ module Hako
               task_role_arn: @task_role_arn,
               execution_role_arn: @execution_role_arn,
               network_mode: @network_mode,
+              pid_mode: @pid_mode,
               container_definitions: definitions,
               volumes: volumes_definition,
               requires_compatibilities: @requires_compatibilities,
