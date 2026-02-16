@@ -4,13 +4,14 @@ AllCops:
   DisplayCopNames: true
   TargetRubyVersion: 3.1
   NewCops: disable
+  SuggestExtensions: false
 
 Layout/FirstArgumentIndentation:
   Enabled: false
 Layout/LineLength:
   Enabled: false
 
-Naming/PredicateName:
+Naming/PredicatePrefix:
   Enabled: false
 Naming/MethodParameterName:
   Enabled: false

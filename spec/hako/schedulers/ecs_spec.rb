@@ -436,11 +436,11 @@ RSpec.describe Hako::Schedulers::Ecs do
         namespace = Aws::ServiceDiscovery::Types::Namespace.new(type: 'DNS_PRIVATE')
         allow(service_discovery_client).to receive(:get_namespace).with(id: namespace_id).and_return(Aws::ServiceDiscovery::Types::GetNamespaceResponse.new(namespace: namespace)).twice
         allow(service_discovery_client).to receive(:list_services).with(
-          filters: [
+          filters: [{
             name: 'NAMESPACE_ID',
             values: [namespace_id],
             condition: 'EQ',
-          ],
+          }],
         ) do
           services = Aws::PageableResponse.apply(Aws::ServiceDiscovery::Types::ListServicesResponse.new(services: service_discovery_services))
           services.pager = double('Aws::Pager', truncated?: false)
