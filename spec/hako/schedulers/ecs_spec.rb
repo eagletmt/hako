@@ -68,6 +68,7 @@ RSpec.describe Hako::Schedulers::Ecs do
       task_role_arn: nil,
       execution_role_arn: nil,
       network_mode: nil,
+      pid_mode: nil,
       container_definitions: [{
         name: 'app',
         image: 'busybox:latest',
