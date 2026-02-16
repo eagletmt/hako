@@ -30,7 +30,7 @@ module Hako
           struct.member(:service_registries, Schema::UnorderedArray.new(service_registry_schema))
           struct.member(:enable_execute_command, Schema::Boolean.new)
           struct.member(:placement_constraints, Schema::UnorderedArray.new(placement_constraint_schema))
-          struct.member(:placement_strategy, Schema::UnorderedArray.new(placement_strategy_schema))
+          struct.member(:placement_strategy, Schema::OrderedArray.new(placement_strategy_schema))
         end
       end
 
