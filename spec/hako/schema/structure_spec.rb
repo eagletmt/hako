@@ -16,7 +16,7 @@ RSpec.describe Hako::Schema::Structure do
     it do
       expect(schema).to be_valid(foo: 1, bar: 2)
       expect(schema).to_not be_valid(foo: 1)
-      expect(schema).to_not be_valid([bar: 2])
+      expect(schema).to_not be_valid([{ bar: 2 }])
       expect(schema).to_not be_valid(foo: '1', bar: 2)
       expect(schema).to be_valid(foo: 1, bar: 2, baz: '3')
     end

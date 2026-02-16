@@ -29,6 +29,8 @@ module Hako
           struct.member(:health_check_grace_period_seconds, Schema::Nullable.new(Schema::Integer.new))
           struct.member(:service_registries, Schema::UnorderedArray.new(service_registry_schema))
           struct.member(:enable_execute_command, Schema::Boolean.new)
+          struct.member(:placement_constraints, Schema::UnorderedArray.new(placement_constraint_schema))
+          struct.member(:placement_strategy, Schema::OrderedArray.new(placement_strategy_schema))
         end
       end
 
@@ -75,6 +77,20 @@ module Hako
           maximum_percent: 200,
           minimum_healthy_percent: 100,
         }
+      end
+
+      def placement_constraint_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:type, Schema::String.new)
+          struct.member(:expression, Schema::Nullable.new(Schema::String.new))
+        end
+      end
+
+      def placement_strategy_schema
+        Schema::Structure.new.tap do |struct|
+          struct.member(:type, Schema::String.new)
+          struct.member(:field, Schema::Nullable.new(Schema::String.new))
+        end
       end
     end
   end

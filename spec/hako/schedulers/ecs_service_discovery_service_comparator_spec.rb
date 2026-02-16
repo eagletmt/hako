@@ -10,10 +10,10 @@ RSpec.describe Hako::Schedulers::EcsServiceDiscoveryServiceComparator do
     {
       description: 'foo',
       dns_config: {
-        dns_records: [
+        dns_records: [{
           ttl: 60,
           type: 'A',
-        ],
+        }],
       },
     }
   end

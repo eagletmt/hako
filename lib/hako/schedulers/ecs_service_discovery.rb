@@ -128,11 +128,11 @@ module Hako
       # @return [Aws::ServiceDiscovery::Types::ServiceSummary, nil]
       def find_service(namespace_id, service_name)
         params = {
-          filters: [
+          filters: [{
             name: 'NAMESPACE_ID',
             values: [namespace_id],
             condition: 'EQ',
-          ],
+          }],
         }
         services = service_discovery_client.list_services(**params).flat_map(&:services)
         services.find { |service| service.name == service_name }
