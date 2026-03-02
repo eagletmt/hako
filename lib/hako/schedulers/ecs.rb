@@ -256,7 +256,18 @@ module Hako
           else
             Hako.logger.info "Task definition isn't changed: #{task_definition.task_definition_arn}"
           end
-          @task = run_task(task_definition, commands, env, overrides)
+
+          begin
+            @task = run_task(task_definition, commands, env, overrides)
+          rescue NoTasksStarted
+            if no_wait
+              puts JSON.dump({ error: 'NoTasksStarted' })
+              return 1
+            else
+              raise
+            end
+          end
+
           Hako.logger.info "Started task: #{@task.task_arn}"
           @scripts.each { |script| script.oneshot_started(self) }
           if no_wait
