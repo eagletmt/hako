@@ -263,6 +263,8 @@ module Hako
             if no_wait
               puts JSON.dump({ error: 'NoTasksStarted' })
               return 1
+            else
+              raise
             end
           end
 
