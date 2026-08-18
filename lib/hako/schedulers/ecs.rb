@@ -14,6 +14,7 @@ require 'hako/schedulers/ecs_autoscaling'
 require 'hako/schedulers/ecs_definition_comparator'
 require 'hako/schedulers/ecs_elb'
 require 'hako/schedulers/ecs_elb_v2'
+require 'hako/schedulers/ecs_runtime_platform_comparator'
 require 'hako/schedulers/ecs_service_comparator'
 require 'hako/schedulers/ecs_service_discovery'
 require 'hako/schedulers/ecs_volume_comparator'
@@ -562,7 +563,7 @@ module Hako
         if actual_definition.requires_compatibilities != @requires_compatibilities
           return true
         end
-        if actual_definition.runtime_platform != @runtime_platform
+        if different_runtime_platform?(@runtime_platform, actual_definition.runtime_platform)
           return true
         end
         if actual_definition.ephemeral_storage != @ephemeral_storage
@@ -590,6 +591,20 @@ module Hako
       # @return [Boolean]
       def different_definition?(expected_container, actual_container)
         EcsDefinitionComparator.new(expected_container).different?(actual_container)
+      end
+
+      # @param [Hash, nil] expected_runtime_platform
+      # @param [Aws::ECS::Types::RuntimePlatform, nil] actual_runtime_platform
+      # @return [Boolean]
+      def different_runtime_platform?(expected_runtime_platform, actual_runtime_platform)
+        case [expected_runtime_platform.nil?, actual_runtime_platform.nil?]
+        when [true, true]
+          false
+        when [true, false], [false, true]
+          true
+        when [false, false]
+          EcsRuntimePlatformComparator.new(expected_runtime_platform).different?(actual_runtime_platform)
+        end
       end
 
       # @param [Array<Hash>] definitions
