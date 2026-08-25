@@ -20,6 +20,11 @@ Or install it yourself as:
 
     $ gem install hako
 
+Or run it in a docker container:
+
+    $ docker build -t hako .
+    $ docker run -it --rm hako --help
+
 ## Usage
 
 ```
